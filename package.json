@@ -1,0 +1,16 @@
+{
+  "name": "mackinac",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "George Hotelling <george.hotelling@automattic.com>",
+  "devDependencies": {
+    "mocha": "^3.1.2"
+  }
+}
