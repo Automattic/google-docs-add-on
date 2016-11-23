@@ -1,16 +1,19 @@
 {
-  "name": "mackinac",
+  "name": "overpasswget",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
+  "private": true,
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "deploy": "$(npm bin)/gapps upload"
   },
   "author": "George Hotelling <george.hotelling@automattic.com>",
   "devDependencies": {
-    "mocha": "^3.1.2"
+    "mocha": "^3.1.2",
+    "node-google-apps-script": "^1.1.5"
   }
 }
