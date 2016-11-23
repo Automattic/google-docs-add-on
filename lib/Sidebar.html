@@ -8,6 +8,8 @@
 
 <body>
 	<h1>Hello world</h1>
+	<textarea id="foo"></textarea>
+	<button id="bar">Fnord</button>
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 	<script>
 /**
@@ -15,71 +17,23 @@
  * user's origin and destination language preferences if previously set.
  */
 $(function() {
-	$('#run-translation').click(runTranslation);
-	$('#insert-text').click(insertText);
-	google.script.run.withSuccessHandler(loadPreferences)
-		.withFailureHandler(showError).getPreferences();
+	$('#bar').click(getDocumentAsHTML);
 });
 
-/**
- * Callback function that populates the origin and destination selection
- * boxes with user preferences from the server.
- *
- * @param {Object} languagePrefs The saved origin and destination languages.
- */
-function loadPreferences(languagePrefs) {
-	$('input:radio[name="origin"]')
-		.filter('[value=' + languagePrefs.originLang + ']')
-		.attr('checked', true);
-	$('input:radio[name="dest"]')
-		.filter('[value=' + languagePrefs.destLang + ']')
-		.attr('checked', true);
-}
-
-/**
- * Runs a server-side function to translate the user-selected text and update
- * the sidebar UI with the resulting translation.
- */
-function runTranslation() {
-	this.disabled = true;
-	$('#error').remove();
-	var origin = $('input[name=origin]:checked').val();
-	var dest = $('input[name=dest]:checked').val();
-	var savePrefs = $('#save-prefs').is(':checked');
+function getDocumentAsHTML() {
+	var self = this;
+	self.disabled = true;
 	google.script.run
-		.withSuccessHandler(
-			function(textAndTranslation, element) {
-			$('#translated-text').val(textAndTranslation.translation);
-			element.disabled = false;
-			})
-		.withFailureHandler(
-			function(msg, element) {
-			showError(msg, $('#button-bar'));
-			element.disabled = false;
-			})
+		.withSuccessHandler(function(html, element) {
+			$('#foo').val(html);
+			self.disabled = false;
+		})
+		.withFailureHandler(function(msg, element) {
+			showError(msg, $('#bar'));
+			self.disabled = false;
+		})
 		.withUserObject(this)
-		.getTextAndTranslation(origin, dest, savePrefs);
-}
-
-/**
- * Runs a server-side function to insert the translated text into the document
- * at the user's cursor or selection.
- */
-function insertText() {
-this.disabled = true;
-$('#error').remove();
-google.script.run
-	.withSuccessHandler(
-		function(returnSuccess, element) {
-		element.disabled = false;
-		})
-	.withFailureHandler(
-		function(msg, element) {
-		showError(msg, $('#button-bar'));
-		element.disabled = false;
-		})
-	.withUserObject(this)
-	.insertText($('#translated-text').val());
+		.postToWordPress();
 }
 
 /**
@@ -89,8 +43,8 @@ google.script.run
  * @param element The element after which to display the error.
  */
 function showError(msg, element) {
-var div = $('<div id="error" class="error">' + msg + '</div>');
-$(element).after(div);
+	var div = $('<div id="error" class="error">' + msg + '</div>');
+	$(element).after(div);
 }
 	</script>
 </body>
