@@ -77,7 +77,6 @@ function exportAsHtml() {
 
 function getWordPressService() {
 	var props = PropertiesService.getScriptProperties().getProperties();
-
 	return OAuth2.createService('wordpress')
 		.setAuthorizationBaseUrl('https://public-api.wordpress.com/oauth2/authorize')
 		.setTokenUrl('https://public-api.wordpress.com/oauth2/token')
