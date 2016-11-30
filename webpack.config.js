@@ -10,6 +10,9 @@ module.exports = {
 			test: /\.js$/,
 			exclude: /node_modules/,
 			loader: 'babel-loader'
-		}]
+		}],
+		"resolveLoader": {
+			"modulesDirectories": [ "src" ]
+		}
 	}
 }

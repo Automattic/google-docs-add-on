@@ -7,6 +7,10 @@
  * and not all of the user's files. The authorization request message
  * presented to users will reflect this limited scope.
  */
+import "babel-polyfill";
+
+import { getWordPressService, get } from './wpService';
+import { exportAsHtml } from './docService';
 
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -17,9 +21,9 @@
  *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
  *     running in, inspect e.authMode.
  */
-function onOpen(e) {
+export function onOpen(e) {
 	DocumentApp.getUi().createAddonMenu()
-		.addItem('Start', 'showSidebar')
+		.addItem("Start", "showSidebar")
 		.addToUi();
 }
 
@@ -34,7 +38,7 @@ function onOpen(e) {
  *     run in AuthMode.FULL, but onOpen triggers may be AuthMode.LIMITED or
  *     AuthMode.NONE.)
  */
-function onInstall(e) {
+export function onInstall(e) {
 	onOpen(e);
 }
 
@@ -43,9 +47,9 @@ function onInstall(e) {
  * This method is only used by the regular add-on, and is never called by
  * the mobile add-on version.
  */
-function showSidebar() {
-	var wpService = getWordPressService();
-	if (!wpService.hasAccess()) {
+export function showSidebar() {
+	 const wpService = getWordPressService();
+	if ( ! wpService.hasAccess() ) {
 		var authorizationUrl = wpService.getAuthorizationUrl();
 		var template = HtmlService.createTemplate(
 			'<a href="<?= authorizationUrl ?>" target="_blank">Authorize</a>. ' +
@@ -55,62 +59,45 @@ function showSidebar() {
 		var page = template.evaluate();
 		DocumentApp.getUi().showSidebar(page);
 	} else {
-		var ui = HtmlService.createHtmlOutputFromFile('Sidebar')
-			.setTitle('WordPress');
-		DocumentApp.getUi().showSidebar(ui);
+		const { blog_id } = wpService.getToken_();
+		const siteInfo = get( `/sites/${ blog_id }` )
+		Logger.log( JSON.stringify( siteInfo ) )
+		var ui = HtmlService.createTemplateFromFile('Sidebar')
+		Object.assign( ui, siteInfo );
+		const output = ui.evaluate()
+		output.setTitle('WordPress')
+		DocumentApp.getUi().showSidebar(output)
 	}
 }
 
-// HACK HACK HACK but it's either this or write a custom HTML generator?
-function exportAsHtml() {
-	var forDriveScope = DriveApp.getStorageUsed(); //needed to get Drive Scope requested
-	var docID = DocumentApp.getActiveDocument().getId();
-	var url = "https://docs.google.com/feeds/download/documents/export/Export?id=" + docID + "&exportFormat=html";
-	var param = {
-		method: "get",
-		headers: { "Authorization": "Bearer " + ScriptApp.getOAuthToken() },
-		muteHttpExceptions: true,
-	};
-	var html = UrlFetchApp.fetch(url, param).getContentText();
-	return html;
-}
 
-function getWordPressService() {
-	var props = PropertiesService.getScriptProperties().getProperties();
-	return OAuth2.createService('wordpress')
-		.setAuthorizationBaseUrl('https://public-api.wordpress.com/oauth2/authorize')
-		.setTokenUrl('https://public-api.wordpress.com/oauth2/token')
-		.setClientId( props.OauthClientId )
-		.setClientSecret( props.OauthClientSecret )
-		.setCallbackFunction('authCallback')
-		.setPropertyStore(PropertiesService.getUserProperties())
-}
+export function authCallback(request) {
+	const wpService = getWordPressService();
+	var isAuthorized = wpService.handleCallback( request );
 
-function authCallback(request) {
-	var wpService = getWordPressService();
-	var isAuthorized = wpService.handleCallback(request);
 	if (isAuthorized) {
-		return HtmlService.createHtmlOutput('Success! You can close this tab.');
+		return HtmlService.createHtmlOutput( 'Success! You can close this tab.' );
 	} else {
 		return HtmlService.createHtmlOutput('Denied. You can close this tab');
 	}
 }
 
-function postToWordPress() {
+export function postToWordPress() {
+	const wpService = getWordPressService();
 	var docProps = PropertiesService.getDocumentProperties();
 	var postId = docProps.getProperty('postId');
 	var html = exportAsHtml();
 	var body = /<body[^>]*>(.*?)<\/body>/.exec(html)[1]; // http://stackoverflow.com/a/1732454
 	var doc = DocumentApp.getActiveDocument();
 
-	var wpService = getWordPressService();
 	var urlBase = 'https://public-api.wordpress.com/rest/v1.1';
-	var path = '/sites/georgehtest2.wordpress.com/posts/new'
-	if ( postId ) {
-		path = '/sites/georgehtest2.wordpress.com/posts/' + postId
+	const { blog_id } = wpService.getToken_();
+	var path = `/sites/${ blog_id }/posts/new`
+	if (postId) {
+		path = `/sites/${ blog_id }/posts/${ postId }`
 	}
 
-	var response = UrlFetchApp.fetch( urlBase + path, {
+	var response = UrlFetchApp.fetch(urlBase + path, {
 		headers: {
 			Authorization: 'Bearer ' + wpService.getAccessToken()
 		},
@@ -121,11 +108,8 @@ function postToWordPress() {
 		}
 	});
 
-	response = JSON.parse( response );
+	response = JSON.parse(response);
 	docProps.setProperty('postId', response.ID.toString());
-
 	delete response.content;
-	Logger.log( response );
-
-	return JSON.stringify( response );
+	return JSON.stringify(response);
 }
