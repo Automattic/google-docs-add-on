@@ -94,6 +94,9 @@
 	 * and not all of the user's files. The authorization request message
 	 * presented to users will reflect this limited scope.
 	 */
+
+	/* globals PropertiesService */
+
 	function onInstall(e) {
 		onOpen(e);
 	}
@@ -137,12 +140,15 @@
 	}
 
 	function postToWordPress() {
+		var doc = DocumentApp.getActiveDocument();
+		return (0, _docService.childrenToHtml)(doc.getBody());
+
 		var wpService = (0, _wpService.getWordPressService)();
 		var docProps = PropertiesService.getDocumentProperties();
 		var postId = docProps.getProperty('postId');
 		var html = (0, _docService.exportAsHtml)();
 		var body = /<body[^>]*>(.*?)<\/body>/.exec(html)[1]; // http://stackoverflow.com/a/1732454
-		var doc = DocumentApp.getActiveDocument();
+
 
 		var urlBase = 'https://public-api.wordpress.com/rest/v1.1';
 
@@ -8328,7 +8334,9 @@
 		return OAuth2.createService('wordpress').setAuthorizationBaseUrl('https://public-api.wordpress.com/oauth2/authorize').setTokenUrl('https://public-api.wordpress.com/oauth2/token').setClientId(props.OauthClientId).setClientSecret(props.OauthClientSecret).setCallbackFunction('authCallback').setPropertyStore(PropertiesService.getUserProperties());
 	}
 
-	function get(path, options) {
+	function get(path) {
+		var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
 		var defaultOptions = {
 			headers: {
 				Authorization: 'Bearer ' + getWordPressService().getAccessToken()
@@ -8343,24 +8351,140 @@
 /* 299 */
 /***/ function(module, exports) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
 	exports.exportAsHtml = exportAsHtml;
+	exports.renderText = renderText;
+	exports.childrenToHtml = childrenToHtml;
+	/* globals DriveApp, DocumentApp, UrlFetchApp, ScriptApp */
+
 	// HACK HACK HACK but it's either this or write a custom HTML generator?
 	function exportAsHtml() {
-		var forDriveScope = DriveApp.getStorageUsed(); //needed to get Drive Scope requested
+		DriveApp.getStorageUsed(); //needed to get Drive Scope requested
 		var docID = DocumentApp.getActiveDocument().getId();
-		var url = "https://docs.google.com/feeds/download/documents/export/Export?id=" + docID + "&exportFormat=html";
+		var url = 'https://docs.google.com/feeds/download/documents/export/Export?id=' + docID + '&exportFormat=html';
 		var param = {
-			method: "get",
-			headers: { "Authorization": "Bearer " + ScriptApp.getOAuthToken() },
+			method: 'get',
+			headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
 			muteHttpExceptions: true
 		};
-		var html = UrlFetchApp.fetch(url, param).getContentText();
-		return html;
+		return UrlFetchApp.fetch(url, param).getContentText();
+	}
+
+	/**
+	 * Return an object with the unique values from the second object
+	 */
+	function objectDiff(obj1, obj2) {
+		return Object.keys(obj2).reduce(function (acc, key) {
+			if (obj1[key] !== obj2[key]) {
+				acc[key] = obj2[key];
+			}
+			return acc;
+		}, {});
+	}
+
+	/**
+	 * Convert an object diff into HTML tags
+	 *
+	 * @param diff object
+	 * @returns string
+	 */
+	function tagsForAttrDiff(diff) {
+		var tags = '';
+
+		if (diff.LINK_URL) {
+			tags += '<a href="' + diff.LINK_URL + '">';
+		}
+
+		if (diff.LINK_URL === null) {
+			tags += '</a>';
+		}
+
+		if (diff.BOLD === true) {
+			tags += '<b>';
+		}
+
+		if (diff.BOLD === null) {
+			tags += '</b>';
+		}
+
+		return tags;
+	}
+
+	function chunkTextByAttribute(text) {
+		var _arguments = arguments;
+
+		var asString = text.getText();
+		var attributeIndices = text.getTextAttributeIndices();
+		return attributeIndices.reduce(function (chunks, attrIdx, i) {
+			if (!chunks) console.log(_arguments);
+			var nextIdx = attributeIndices[i + 1] || undefined;
+			chunks.push(asString.substring(attrIdx, nextIdx));
+			return chunks;
+		}, []);
+	}
+
+	function renderText(text) {
+		if ('string' === typeof text) {
+			return text;
+		}
+
+		var attributeIndices = text.getTextAttributeIndices();
+		var chunks = chunkTextByAttribute(text);
+
+		var lastAttributes = text.getAttributes();
+
+		return attributeIndices.reduce(function (markup, attrIdx, chunkIdx) {
+			var attrs = text.getAttributes(attrIdx);
+			var diff = objectDiff(lastAttributes, attrs);
+			lastAttributes = attrs;
+			return markup + tagsForAttrDiff(diff) + chunks[chunkIdx];
+		}, '');
+	}
+
+	var childToHtml = function childToHtml(element) {
+		switch (element.getType()) {
+			case DocumentApp.ElementType.PARAGRAPH:
+				return '<p>' + childrenToHtml(element) + '</p>\n';
+			case DocumentApp.ElementType.TEXT:
+				return renderText(element);
+			case DocumentApp.ElementType.INLINE_IMAGE:
+				var imgWidth = element.getWidth(),
+				    imgHeight = element.getHeight();
+				return '<img src="//placekitten.com/' + imgWidth + '/' + imgHeight + '" width="' + imgWidth + '" height="' + imgHeight + '">';
+			case DocumentApp.ElementType.LIST_ITEM:
+				var listItem = '';
+				if (element.getPreviousSibling().getType() !== DocumentApp.ElementType.LIST_ITEM) {
+					listItem += '<ul>\n';
+				}
+				listItem += '<li>' + childrenToHtml(element) + '</li>\n';
+				if (element.getNextSibling().getType() !== DocumentApp.ElementType.LIST_ITEM) {
+					listItem += '</ul>\n';
+				}
+				return listItem;
+			default:
+				return element.getType() + ': ' + element.toString();
+		}
+	};
+
+	var range = function range(n) {
+		if (!n) {
+			return [];
+		}
+
+		return Array.apply(null, Array(n)).map(function (_, i) {
+			return i;
+		});
+	};
+
+	function childrenToHtml(element) {
+		var numOfChildren = element.getNumChildren();
+		return range(numOfChildren).map(function (i) {
+			return element.getChild(i);
+		}).map(childToHtml).join('');
 	}
 
 /***/ }

@@ -7,10 +7,13 @@
  * and not all of the user's files. The authorization request message
  * presented to users will reflect this limited scope.
  */
+
+/* globals PropertiesService */
+
 import "babel-polyfill";
 
 import { getWordPressService, get } from './wpService';
-import { exportAsHtml } from './docService';
+import { exportAsHtml, childrenToHtml } from './docService';
 
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -83,12 +86,15 @@ export function authCallback(request) {
 }
 
 export function postToWordPress() {
+	var doc = DocumentApp.getActiveDocument();
+	return childrenToHtml( doc.getBody() );
+
 	const wpService = getWordPressService();
 	var docProps = PropertiesService.getDocumentProperties();
 	var postId = docProps.getProperty('postId');
 	var html = exportAsHtml();
 	var body = /<body[^>]*>(.*?)<\/body>/.exec(html)[1]; // http://stackoverflow.com/a/1732454
-	var doc = DocumentApp.getActiveDocument();
+
 
 	var urlBase = 'https://public-api.wordpress.com/rest/v1.1';
 	const { blog_id } = wpService.getToken_();
@@ -108,8 +114,8 @@ export function postToWordPress() {
 		}
 	});
 
-	response = JSON.parse(response);
-	docProps.setProperty('postId', response.ID.toString());
+	response = JSON.parse( response );
+	docProps.setProperty( 'postId', response.ID.toString() );
 	delete response.content;
-	return JSON.stringify(response);
+	return JSON.stringify( response )
 }

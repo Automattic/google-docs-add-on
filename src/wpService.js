@@ -23,7 +23,7 @@ export function createWordPressService() {
 		.setPropertyStore(PropertiesService.getUserProperties())
 }
 
-export function get( path, options ) {
+export function get( path, options = {} ) {
 	const defaultOptions = {
 		headers: {
 			Authorization: `Bearer ${getWordPressService().getAccessToken()}`
