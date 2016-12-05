@@ -1,39 +1,82 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-	<base target="_top">
-	<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+<title>Draft to WordPress</title>
+<base target="_top">
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+<style type="text/css">
+/**
+ * Reset
+ */
+html, body {
+	margin: 0;
+	padding: 0;
+}
+
+* {
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+
+body {
+	font: 11pt/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen-Sans", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
+	background: #e8eff3;
+	color: #2E4453;
+}
+
+/**
+ * General
+ */
+
+.header {
+	background: #0087be;
+	color: #fff;
+}
+
+.header h1 {
+	font-size: 100%;
+}
+</style>
 </head>
 
 <body>
-	<h1>Hello world</h1>
+
+<div class="container">
+
+	<div class="header">
+		<h1>Draft to WordPress</h1>
+	</div>
+
 	<a href="<?= URL ?>"><?= name ?></a>
 	<textarea id="foo"></textarea>
 	<button id="bar">Fnord</button>
-	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-	<script>
+
+</div>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript">
 /**
  * On document load, assign click handlers to each button and try to load the
  * user's origin and destination language preferences if previously set.
  */
-$(function() {
-	$('#bar').click(postToWordPress);
-});
+$( function() {
+	$( '#bar' ).click( postToWordPress );
+} );
 
 function postToWordPress() {
 	var self = this;
 	self.disabled = true;
 	google.script.run
-		.withSuccessHandler(function(html, element) {
-			$('#foo').val(html);
+		.withSuccessHandler( function( html, element ) {
+			$( '#foo' ).val( html );
 			self.disabled = false;
 		})
-		.withFailureHandler(function(msg, element) {
-			showError(msg, $('#bar'));
+		.withFailureHandler( function( msg, element ) {
+			showError( msg, $( '#bar' ) );
 			self.disabled = false;
 		})
-		.withUserObject(this)
+		.withUserObject( this )
 		.postToWordPress();
 }
 
@@ -43,11 +86,11 @@ function postToWordPress() {
  * @param msg The error message to display.
  * @param element The element after which to display the error.
  */
-function showError(msg, element) {
-	var div = $('<div id="error" class="error">' + msg + '</div>');
-	$(element).after(div);
+function showError( msg, element ) {
+	var div = $( '<div id="error" class="error">' + msg + '</div>' );
+	$( element ).after( div );
 }
-	</script>
-</body>
+</script>
 
+</body>
 </html>
