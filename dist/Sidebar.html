@@ -31,24 +31,31 @@ body {
 	color: #2E4453;
 }
 
+svg {
+	fill: currentColor;
+}
 
 /**
  * General
  */
 
 .container {
+	height: 100%;
+	overflow: hidden;
 	display: flex;
 	flex-direction: column;
-	height: 100%;
 }
 
 .header {
-	background: #0087be;
 	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	flex-shrink: 0;
 }
 
 .header h1 {
 	font-size: 100%;
+	background: #0087be;
 	margin: 0;
 	padding: 12px 16px;
 	color: #fff;
@@ -58,16 +65,22 @@ body {
 
 .header h1 svg {
 	float: left;
-	fill: #fff;
 	margin-right: 8px;
 	width: 24px;
 	height: 24px;
 }
 
-.help-text {
+.header .header__help-text {
 	background: #fff;
 	padding: 4px 16px;
 	border-bottom: 1px solid #c8d7e0;
+}
+
+.sites-list {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: auto;
 }
 
 .sites-list ul {
@@ -95,6 +108,11 @@ body {
 	padding: 1px;
 }
 
+.sites-list ul li .sites-list__blavatar img {
+	width: 32px;
+	height: 32px;
+}
+
 .sites-list ul li .sites-list__sitename {
 	line-height: 1.4;
 }
@@ -117,28 +135,53 @@ body {
  */
 
 .footer {
+	border-top: 1px solid #c8d7e0;
+	margin: auto 0 0;
 	display: flex;
-	flex: 1;
-	align-items: flex-end;
+	flex-direction: row;
+	flex-shrink: 0;
+	height: 40px;
 }
 
 .footer a {
-	border-top: 1px solid #c8d7e0;
 	text-decoration: none;
 	color: #668eaa;
 	text-transform: uppercase;
 	font-size: 12px;
+	margin: 0;
+	line-height: 2.1;
+	padding: 8px;
+	display: inline-block;
 }
 
-.footer .footer__help-link {
-	float: right;
-	border-left: 1px solid #c8d7e0;
+.footer a:hover {
+	color: #2e4453;
 }
 
 .footer svg {
 	width: 24px;
 	height: 24px;
-	fill: #668eaa;
+}
+
+.footer .footer__add-site {
+	flex: 1;
+}
+
+.footer .footer__add-site svg {
+	float: left;
+	margin-right: 4px;
+}
+
+.footer .footer__help-link {
+	display: inline-block;
+	flex: 0 1 40px;
+	margin: 0 0 0 auto;
+}
+
+.footer .footer__help-link a {
+	overflow: hidden;
+	outline: 0;
+	border-left: 1px solid #c8d7e0;
 }
 
 
@@ -193,10 +236,11 @@ button:focus {
 
 	<div class="header">
 		<h1><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M21 11v8c0 1.105-.895 2-2 2H5c-1.105 0-2-.895-2-2V5c0-1.105.895-2 2-2h8l-2 2H5v14h14v-6l2-2zM7 17h3l7.5-7.5-3-3L7 14v3zm9.94-12.94L15.5 5.5l3 3 1.44-1.44c.585-.585.585-1.535 0-2.12l-.88-.88c-.585-.585-1.535-.585-2.12 0z"/></g></svg> Draft to WordPress</h1>
-	</div>
 
-	<div class="help-text">
-		<p>Pick a site to copy this document to below. It will be saved on your site as a draft.</p>
+		<div class="header__help-text">
+			<p>Pick a site to copy this document to below. It will be saved on your site as a draft.</p>
+		</div>
+
 	</div>
 
 	<div class="sites-list">
@@ -204,7 +248,7 @@ button:focus {
 			<li>
 				<button id="bar">Save Draft</button>
 				<div class="sites-list__blavatar">
-
+					<img src="" alt="" />
 				</div>
 				<div class="sites-list__sitename">
 					<a href="<?= URL ?>"><?= name ?></a>
@@ -217,8 +261,12 @@ button:focus {
 	</div>
 
 	<div class="footer">
-		<p class="footer__help-link"><a href="#"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4 8c0-2.21-1.79-4-4-4s-4 1.79-4 4h2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2c-.552 0-1 .448-1 1v2h2v-1.14c1.722-.447 3-1.998 3-3.86zm-3 6h-2v2h2v-2z"/></g></svg> Help</a></p>
-		<p><a href="#"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 9h-4V7h-2v4H7v2h4v4h2v-4h4v-2z"/></g></svg> Add WordPress site</a></p>
+		<div class="footer__add-site">
+			<a href="#"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 9h-4V7h-2v4H7v2h4v4h2v-4h4v-2z"/></g></svg> Add WordPress site</a>
+		</div>
+		<div class="footer__help-link">
+			<a title="Help" href="#"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4 8c0-2.21-1.79-4-4-4s-4 1.79-4 4h2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2c-.552 0-1 .448-1 1v2h2v-1.14c1.722-.447 3-1.998 3-3.86zm-3 6h-2v2h2v-2z"/></g></svg></a>
+		</div>
 	</div>
 
 </div>
