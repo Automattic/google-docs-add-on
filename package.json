@@ -10,6 +10,7 @@
   "scripts": {
     "build": "webpack --config webpack.config.js",
     "test": "mocha --require babel-register",
+    "test:watch": "npm test -- --watch -R min",
     "deploy": "npm run build && $(npm bin)/gapps upload"
   },
   "author": "George Hotelling <george.hotelling@automattic.com>",

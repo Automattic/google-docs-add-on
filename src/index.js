@@ -8,12 +8,15 @@
  * presented to users will reflect this limited scope.
  */
 
-/* globals PropertiesService */
+/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities */
 
-import "babel-polyfill";
+import 'babel-polyfill';
 
 import { getWordPressService, get } from './wpService';
-import { exportAsHtml, childrenToHtml } from './docService';
+import docServiceFactory from './docService';
+import base64ImageLinker from './base64-image-linker';
+
+const renderContainer = docServiceFactory( DocumentApp, base64ImageLinker( Utilities ) )
 
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -26,7 +29,7 @@ import { exportAsHtml, childrenToHtml } from './docService';
  */
 export function onOpen(e) {
 	DocumentApp.getUi().createAddonMenu()
-		.addItem("Start", "showSidebar")
+		.addItem( 'Start', 'showSidebar')
 		.addToUi();
 }
 
@@ -51,7 +54,7 @@ export function onInstall(e) {
  * the mobile add-on version.
  */
 export function showSidebar() {
-	 const wpService = getWordPressService();
+	const wpService = getWordPressService();
 	if ( ! wpService.hasAccess() ) {
 		var authorizationUrl = wpService.getAuthorizationUrl();
 		var template = HtmlService.createTemplate(
@@ -73,7 +76,6 @@ export function showSidebar() {
 	}
 }
 
-
 export function authCallback(request) {
 	const wpService = getWordPressService();
 	var isAuthorized = wpService.handleCallback( request );
@@ -87,23 +89,20 @@ export function authCallback(request) {
 
 export function postToWordPress() {
 	var doc = DocumentApp.getActiveDocument();
-	return childrenToHtml( doc.getBody() );
+	const body = renderContainer( doc.getBody() );
 
 	const wpService = getWordPressService();
-	var docProps = PropertiesService.getDocumentProperties();
-	var postId = docProps.getProperty('postId');
-	var html = exportAsHtml();
-	var body = /<body[^>]*>(.*?)<\/body>/.exec(html)[1]; // http://stackoverflow.com/a/1732454
+	const docProps = PropertiesService.getDocumentProperties();
+	const postId = docProps.getProperty( 'postId' );
 
-
-	var urlBase = 'https://public-api.wordpress.com/rest/v1.1';
+	const urlBase = 'https://public-api.wordpress.com/rest/v1.1';
 	const { blog_id } = wpService.getToken_();
-	var path = `/sites/${ blog_id }/posts/new`
-	if (postId) {
+	let path = `/sites/${ blog_id }/posts/new`
+	if ( postId ) {
 		path = `/sites/${ blog_id }/posts/${ postId }`
 	}
 
-	var response = UrlFetchApp.fetch(urlBase + path, {
+	const response = UrlFetchApp.fetch( urlBase + path, {
 		headers: {
 			Authorization: 'Bearer ' + wpService.getAccessToken()
 		},
@@ -116,6 +115,5 @@ export function postToWordPress() {
 
 	response = JSON.parse( response );
 	docProps.setProperty( 'postId', response.ID.toString() );
-	delete response.content;
-	return JSON.stringify( response )
+	return response
 }
