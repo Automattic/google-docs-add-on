@@ -1,7 +1,7 @@
 module.exports = {
 	entry: './src/index.js',
 	output: {
-		libraryTarget: "this",
+		libraryTarget: 'this',
 		filename: 'Code.js',
 		path: './dist'
 	},
@@ -11,8 +11,8 @@ module.exports = {
 			exclude: /node_modules/,
 			loader: 'babel-loader'
 		}],
-		"resolveLoader": {
-			"modulesDirectories": [ "src" ]
+		resolveLoader: {
+			modulesDirectories: [ "src" ]
 		}
 	}
 }

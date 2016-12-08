@@ -231,7 +231,6 @@ button:focus {
 </head>
 
 <body>
-
 <div class="container">
 
 	<div class="header">
@@ -251,10 +250,10 @@ button:focus {
 					<img src="" alt="" />
 				</div>
 				<div class="sites-list__sitename">
-					<a href="<?= URL ?>"><?= name ?></a>
-					<em>siteurl</em>
+					<a href="<?= URL ?>"><?= name ?>
+					<em><?= URL ?></em></a>
 
-					<br /><textarea id="foo"></textarea>
+					<br /><textarea style="width: 100%" id="foo"></textarea>
 				</div>
 			</li>
 		</ul>
@@ -286,7 +285,7 @@ function postToWordPress() {
 	self.disabled = true;
 	google.script.run
 		.withSuccessHandler( function( html, element ) {
-			$( '#foo' ).val( html );
+			$( '#foo' ).val( JSON.stringify( html ) );
 			self.disabled = false;
 		})
 		.withFailureHandler( function( msg, element ) {
@@ -296,6 +295,23 @@ function postToWordPress() {
 		.withUserObject( this )
 		.postToWordPress();
 }
+
+function testUploadImage() {
+	var self = this;
+	self.disabled = true;
+	google.script.run
+		.withSuccessHandler( function( response, element ) {
+			$( '#foo' ).val( JSON.stringify( response ) );
+			self.disabled = false;
+		} )
+		.withFailureHandler(function( msg, element ) {
+			showError( msg, $( '#bar' ) );
+			self.disabled = false;
+		})
+		.withUserObject( this )
+		.uploadImageTest();
+}
+
 
 /**
  * Inserts a div that contains an error message after a given element.

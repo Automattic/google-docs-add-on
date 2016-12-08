@@ -8,15 +8,16 @@
  * presented to users will reflect this limited scope.
  */
 
-/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities */
+/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
 
 import 'babel-polyfill';
 
-import { getWordPressService, get } from './wpService';
-import docServiceFactory from './docService';
-import base64ImageLinker from './base64-image-linker';
+import { wpClientFactory } from './wp-client';
+import { docServiceFactory } from './doc-service';
+import { imageUploadLinker } from './image-upload-linker';
+import { base64ImageLinkerFactory } from './base64-image-linker';
 
-const renderContainer = docServiceFactory( DocumentApp, base64ImageLinker( Utilities ) )
+const wpClient = wpClientFactory( PropertiesService, OAuth2, UrlFetchApp )
 
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -27,9 +28,9 @@ const renderContainer = docServiceFactory( DocumentApp, base64ImageLinker( Utili
  *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
  *     running in, inspect e.authMode.
  */
-export function onOpen(e) {
+export function onOpen() {
 	DocumentApp.getUi().createAddonMenu()
-		.addItem( 'Start', 'showSidebar')
+		.addItem( 'Start', 'showSidebar' )
 		.addToUi();
 }
 
@@ -44,8 +45,8 @@ export function onOpen(e) {
  *     run in AuthMode.FULL, but onOpen triggers may be AuthMode.LIMITED or
  *     AuthMode.NONE.)
  */
-export function onInstall(e) {
-	onOpen(e);
+export function onInstall( e ) {
+	onOpen( e );
 }
 
 /**
@@ -54,66 +55,56 @@ export function onInstall(e) {
  * the mobile add-on version.
  */
 export function showSidebar() {
-	const wpService = getWordPressService();
-	if ( ! wpService.hasAccess() ) {
-		var authorizationUrl = wpService.getAuthorizationUrl();
-		var template = HtmlService.createTemplate(
+	if ( !wpClient.oauthClient.hasAccess() ) {
+		const authorizationUrl = wpClient.oauthClient.getAuthorizationUrl();
+		const template = HtmlService.createTemplate(
 			'<a href="<?= authorizationUrl ?>" target="_blank">Authorize</a>. ' +
 			'Reopen the sidebar when the authorization is complete.'
 		);
 		template.authorizationUrl = authorizationUrl;
-		var page = template.evaluate();
-		DocumentApp.getUi().showSidebar(page);
+		const page = template.evaluate();
+		DocumentApp.getUi().showSidebar( page );
 	} else {
-		const { blog_id } = wpService.getToken_();
-		const siteInfo = get( `/sites/${ blog_id }` )
-		Logger.log( JSON.stringify( siteInfo ) )
-		var ui = HtmlService.createTemplateFromFile('Sidebar')
+		const siteInfo = wpClient.getSiteInfo();
+		const ui = HtmlService.createTemplateFromFile( 'Sidebar' )
 		Object.assign( ui, siteInfo );
 		const output = ui.evaluate()
-		output.setTitle('WordPress')
-		DocumentApp.getUi().showSidebar(output)
+		output.setTitle( 'WordPress' )
+		DocumentApp.getUi().showSidebar( output )
 	}
 }
 
-export function authCallback(request) {
-	const wpService = getWordPressService();
-	var isAuthorized = wpService.handleCallback( request );
+export function authCallback( request ) {
+	var isAuthorized = wpClient.oauthClient.handleCallback( request );
 
-	if (isAuthorized) {
+	if ( isAuthorized ) {
+		// TODO auto-closing tab with JavaScript
+
 		return HtmlService.createHtmlOutput( 'Success! You can close this tab.' );
-	} else {
-		return HtmlService.createHtmlOutput('Denied. You can close this tab');
 	}
+
+	return HtmlService.createHtmlOutput( 'Denied. You can close this tab' );
 }
 
 export function postToWordPress() {
-	var doc = DocumentApp.getActiveDocument();
-	const body = renderContainer( doc.getBody() );
-
-	const wpService = getWordPressService();
+	const doc = DocumentApp.getActiveDocument();
 	const docProps = PropertiesService.getDocumentProperties();
+	const imageUrlMapper = imageUploadLinker( wpClient, docProps, Utilities )
+	// const imageUrlMapper = base64ImageLinkerFactory( Utilities )
+	const renderContainer = docServiceFactory( DocumentApp, imageUrlMapper )
+
+	const body = renderContainer( doc.getBody() );
 	const postId = docProps.getProperty( 'postId' );
 
-	const urlBase = 'https://public-api.wordpress.com/rest/v1.1';
-	const { blog_id } = wpService.getToken_();
-	let path = `/sites/${ blog_id }/posts/new`
-	if ( postId ) {
-		path = `/sites/${ blog_id }/posts/${ postId }`
-	}
-
-	const response = UrlFetchApp.fetch( urlBase + path, {
-		headers: {
-			Authorization: 'Bearer ' + wpService.getAccessToken()
-		},
-		method: 'post',
-		payload: {
-			title: doc.getName(),
-			content: body
-		}
-	});
-
-	response = JSON.parse( response );
+	const response = wpClient.postToWordPress( doc.getName(), body, postId );
 	docProps.setProperty( 'postId', response.ID.toString() );
-	return response
+	return response;
+}
+
+export function uploadImageTest() {
+	const doc = DocumentApp.getActiveDocument();
+	const image = doc.getBody().findElement( DocumentApp.ElementType.INLINE_IMAGE ).getElement()
+	const response = wpClient.uploadImage( image );
+	Logger.log( JSON.stringify( response ) )
+	return response;
 }

@@ -20,8 +20,6 @@ run
 This will use node-google-apps-script to upload the `lib` directory to the
 add-on's script editor.
 
-
-
 # Testing
 
 In the [script editor](https://script.google.com/a/a8c.com/macros/d/1hJ0JBL8vjffwQUzhls0-ihgI7Rb-TcFcKo6qG74TGHE9VFN5gUa8XjUY/edit?splash=yes)
@@ -33,5 +31,9 @@ from the Add-ons menu.
 # Forking
 
 If you create a fork of this project, you will need to update `gapps.config.json`
-with your script's ID. You will also need to [create an OAuth application](https://developer.wordpress.com/apps/)
+with your script's ID.
+
+You will also need to add the
+[OAuth2 for Apps Script](https://github.com/googlesamples/apps-script-oauth2)
+library, [create an OAuth application](https://developer.wordpress.com/apps/)
 and set the Script properties for `OauthClientId` and `OauthClientSecret`
