@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import td from 'testdouble';
-import docServiceFactory from '../src/docService'
+import { docServiceFactory } from '../src/doc-service'
 
 const noop = () => {};
 
@@ -10,6 +10,9 @@ const DocumentApp = {
 		TEXT: 'TEXT',
 		INLINE_IMAGE: 'INLINE_IMAGE',
 		LIST_ITEM: 'LIST_ITEM',
+		TABLE: 'TABLE',
+		TABLE_ROW: 'TABLE_ROW',
+		TABLE_CELL: 'TABLE_CELL'
 	}
 }
 
@@ -30,21 +33,21 @@ function mockElement() {
 }
 
 const MOCK_TEXT = 'Lorem ipsum dolor sit amet'
-function mockText() {
-	const text = td.object( Object.assign( mockElement(), {
+function mockText( text = MOCK_TEXT ) {
+	const textEl = td.object( Object.assign( mockElement(), {
 		getTextAttributeIndices: noop,
 		getText: noop,
 		getAttributes: noop,
 		getType: noop
 	} ) )
 
-	td.when( text.getTextAttributeIndices() ).thenReturn( [ 0 ] )
-	td.when( text.getText() ).thenReturn( MOCK_TEXT )
-	td.when( text.getAttributes() ).thenReturn( blankAttributes() )
-	td.when( text.getAttributes( 0 ) ).thenReturn( blankAttributes() )
-	td.when( text.getType() ).thenReturn( DocumentApp.ElementType.TEXT )
+	td.when( textEl.getTextAttributeIndices() ).thenReturn( [ 0 ] )
+	td.when( textEl.getText() ).thenReturn( text )
+	td.when( textEl.getAttributes() ).thenReturn( blankAttributes() )
+	td.when( textEl.getAttributes( 0 ) ).thenReturn( blankAttributes() )
+	td.when( textEl.getType() ).thenReturn( DocumentApp.ElementType.TEXT )
 
-	return text;
+	return textEl;
 }
 
 function containerOf( ...elements ) {
@@ -71,21 +74,26 @@ function containerOf( ...elements ) {
 	return container
 }
 
+function paragraphOf( ...elements ) {
+	const paragraph = containerOf( ...elements )
+	td.when( paragraph.getType() ).thenReturn( DocumentApp.ElementType.PARAGRAPH )
+	return paragraph
+}
+
 describe( 'renderContainer()', function() {
 	let renderContainer, imageLinker;
 
 	beforeEach( function() {
 		imageLinker = td.function( 'imageLinker' )
-		const docService = docServiceFactory( DocumentApp, imageLinker )
-		renderContainer = docService.renderContainer;
+		renderContainer = docServiceFactory( DocumentApp, imageLinker )
 	} )
 
 	it( 'renders each child of a container', function() {
-		const container = containerOf( mockText(), mockText() )
+		const container = containerOf( mockText( 'foo' ), mockText( 'bar' ) )
 
 		const actual = renderContainer( container )
 
-		expect( actual ).to.equal( MOCK_TEXT + MOCK_TEXT )
+		expect( actual ).to.equal( 'foobar' )
 	} )
 
 	describe( 'Text', function() {
@@ -142,8 +150,7 @@ describe( 'renderContainer()', function() {
 
 	describe( 'Paragraph', function() {
 		it( 'should render everything inside a <p> tag', function() {
-			const paragraph = containerOf( mockText() )
-			td.when( paragraph.getType() ).thenReturn( DocumentApp.ElementType.PARAGRAPH )
+			const paragraph = paragraphOf( mockText() )
 
 			const actual = renderContainer( containerOf( paragraph ) )
 
@@ -152,7 +159,7 @@ describe( 'renderContainer()', function() {
 	} )
 
 	describe( 'InlineImage', function() {
-		it( 'should render with the URL from the ImageLinker', function() {
+		it( 'renders with the URL from the ImageLinker', function() {
 			const image = td.object( Object.assign( {
 				getWidth: noop,
 				getHeight: noop,
@@ -171,6 +178,31 @@ describe( 'renderContainer()', function() {
 			const actual = renderContainer( containerOf( image ) )
 
 			expect( actual ).to.equal( '<img src="https://cldup.com/E0CqGcUcow.gif" width="640" height="480" alt="Wapuu in a winter outfit" title="Wapuu">' )
+		} )
+	} )
+
+	describe( 'Table', function() {
+		it( 'renders a simple table', function() {
+			const table = Object.assign( {}, td.object( [ 'getNumRows', 'getRow' ] ), mockElement() )
+			const row0 = Object.assign( {}, td.object( [ 'getNumCells', 'getCell' ] ), mockElement() )
+			const row1 = Object.assign( {}, td.object( [ 'getNumCells', 'getCell' ] ), mockElement() )
+
+			td.when( table.getNumRows() ).thenReturn( 2 )
+			td.when( table.getRow( 0 ) ).thenReturn( row0 )
+			td.when( table.getRow( 1 ) ).thenReturn( row1 )
+			td.when( table.getType() ).thenReturn( DocumentApp.ElementType.TABLE )
+			td.when( row0.getNumCells() ).thenReturn( 3 )
+			td.when( row0.getCell( 0 ) ).thenReturn( paragraphOf( mockText( 'Homer' ) ) )
+			td.when( row0.getCell( 1 ) ).thenReturn( paragraphOf( mockText( 'Marge' ) ) )
+			td.when( row0.getCell( 2 ) ).thenReturn( paragraphOf( mockText( 'Bart' ) ) )
+			td.when( row1.getNumCells() ).thenReturn( 3 )
+			td.when( row1.getCell( 0 ) ).thenReturn( paragraphOf( mockText( 'Lisa' ) ) )
+			td.when( row1.getCell( 1 ) ).thenReturn( paragraphOf( mockText( 'Maggie' ) ) )
+			td.when( row1.getCell( 2 ) ).thenReturn( paragraphOf( mockText( 'Grandpa' ) ) )
+
+			const actual = renderContainer( containerOf( table ) )
+
+			expect( actual ).to.equal( '<table><tbody><tr><td>Homer</td><td>Marge</td><td>Bart</td></tr><tr><td>Lisa</td><td>Maggie</td><td>Grandpa</td></tr></tbody></table>' )
 		} )
 	} )
 

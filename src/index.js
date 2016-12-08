@@ -79,7 +79,6 @@ export function authCallback( request ) {
 
 	if ( isAuthorized ) {
 		// TODO auto-closing tab with JavaScript
-
 		return HtmlService.createHtmlOutput( 'Success! You can close this tab.' );
 	}
 
@@ -98,13 +97,5 @@ export function postToWordPress() {
 
 	const response = wpClient.postToWordPress( doc.getName(), body, postId );
 	docProps.setProperty( 'postId', response.ID.toString() );
-	return response;
-}
-
-export function uploadImageTest() {
-	const doc = DocumentApp.getActiveDocument();
-	const image = doc.getBody().findElement( DocumentApp.ElementType.INLINE_IMAGE ).getElement()
-	const response = wpClient.uploadImage( image );
-	Logger.log( JSON.stringify( response ) )
 	return response;
 }
