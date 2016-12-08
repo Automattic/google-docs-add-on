@@ -99,6 +99,26 @@ export function docServiceFactory( DocumentApp, imageLinker ) {
 		return `<img src="${ url }" width="${ imgWidth }" height="${ imgHeight }" alt="${ alt }" title="${ title }">`
 	}
 
+	function renderTableRow( row ) {
+		let tRow = '<tr>';
+		const numCells = row.getNumCells();
+		for ( let i = 0; i < numCells; i++ ) {
+			tRow += '<td>'
+			     + renderContainer( row.getCell( i ) )
+			     + '</td>';
+		}
+		return tRow + '</tr>'
+	}
+
+	function renderTable( table ) {
+		const numRows = table.getNumRows();
+		let tBody = '<table><tbody>'
+		for ( let i = 0; i < numRows; i++ ) {
+			tBody += renderTableRow( table.getRow( i ) )
+		}
+		return tBody + '</tbody></table>'
+	}
+
 	function renderElement( element ) {
 		switch ( element.getType() ) {
 			case DocumentApp.ElementType.PARAGRAPH:
@@ -109,6 +129,8 @@ export function docServiceFactory( DocumentApp, imageLinker ) {
 				return renderInlineImage( element )
 			case DocumentApp.ElementType.LIST_ITEM:
 				return renderListItem( element )
+			case DocumentApp.ElementType.TABLE:
+				return renderTable( element )
 			default:
 				return element.getType() + ': ' + element.toString()
 		}

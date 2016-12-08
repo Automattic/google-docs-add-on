@@ -54,7 +54,6 @@
 	exports.showSidebar = showSidebar;
 	exports.authCallback = authCallback;
 	exports.postToWordPress = postToWordPress;
-	exports.uploadImageTest = uploadImageTest;
 
 	__webpack_require__(1);
 
@@ -135,7 +134,6 @@
 
 		if (isAuthorized) {
 			// TODO auto-closing tab with JavaScript
-
 			return HtmlService.createHtmlOutput('Success! You can close this tab.');
 		}
 
@@ -154,14 +152,6 @@
 
 		var response = wpClient.postToWordPress(doc.getName(), body, postId);
 		docProps.setProperty('postId', response.ID.toString());
-		return response;
-	}
-
-	function uploadImageTest() {
-		var doc = DocumentApp.getActiveDocument();
-		var image = doc.getBody().findElement(DocumentApp.ElementType.INLINE_IMAGE).getElement();
-		var response = wpClient.uploadImage(image);
-		Logger.log(JSON.stringify(response));
 		return response;
 	}
 
@@ -8522,6 +8512,24 @@
 			return '<img src="' + url + '" width="' + imgWidth + '" height="' + imgHeight + '" alt="' + alt + '" title="' + title + '">';
 		}
 
+		function renderTableRow(row) {
+			var tRow = '<tr>';
+			var numCells = row.getNumCells();
+			for (var i = 0; i < numCells; i++) {
+				tRow += '<td>' + renderContainer(row.getCell(i)) + '</td>';
+			}
+			return tRow + '</tr>';
+		}
+
+		function renderTable(table) {
+			var numRows = table.getNumRows();
+			var tBody = '<table><tbody>';
+			for (var i = 0; i < numRows; i++) {
+				tBody += renderTableRow(table.getRow(i));
+			}
+			return tBody + '</tbody></table>';
+		}
+
 		function renderElement(element) {
 			switch (element.getType()) {
 				case DocumentApp.ElementType.PARAGRAPH:
@@ -8532,6 +8540,8 @@
 					return renderInlineImage(element);
 				case DocumentApp.ElementType.LIST_ITEM:
 					return renderListItem(element);
+				case DocumentApp.ElementType.TABLE:
+					return renderTable(element);
 				default:
 					return element.getType() + ': ' + element.toString();
 			}
