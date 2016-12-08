@@ -54,12 +54,19 @@
 	exports.showSidebar = showSidebar;
 	exports.authCallback = authCallback;
 	exports.postToWordPress = postToWordPress;
+	exports.uploadImageTest = uploadImageTest;
 
 	__webpack_require__(1);
 
-	var _wpService = __webpack_require__(298);
+	var _wpClient = __webpack_require__(298);
 
 	var _docService = __webpack_require__(299);
+
+	var _imageUploadLinker = __webpack_require__(300);
+
+	var _base64ImageLinker = __webpack_require__(301);
+
+	var wpClient = (0, _wpClient.wpClientFactory)(PropertiesService, OAuth2, UrlFetchApp);
 
 	/**
 	 * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -70,8 +77,20 @@
 	 *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
 	 *     running in, inspect e.authMode.
 	 */
-	function onOpen(e) {
-		DocumentApp.getUi().createAddonMenu().addItem("Start", "showSidebar").addToUi();
+	/**
+	 * @OnlyCurrentDoc
+	 *
+	 * The above comment directs Apps Script to limit the scope of file
+	 * access for this add-on. It specifies that this add-on will only
+	 * attempt to read or modify the files in which the add-on is used,
+	 * and not all of the user's files. The authorization request message
+	 * presented to users will reflect this limited scope.
+	 */
+
+	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
+
+	function onOpen() {
+		DocumentApp.getUi().createAddonMenu().addItem('Start', 'showSidebar').addToUi();
 	}
 
 	/**
@@ -85,18 +104,6 @@
 	 *     run in AuthMode.FULL, but onOpen triggers may be AuthMode.LIMITED or
 	 *     AuthMode.NONE.)
 	 */
-	/**
-	 * @OnlyCurrentDoc
-	 *
-	 * The above comment directs Apps Script to limit the scope of file
-	 * access for this add-on. It specifies that this add-on will only
-	 * attempt to read or modify the files in which the add-on is used,
-	 * and not all of the user's files. The authorization request message
-	 * presented to users will reflect this limited scope.
-	 */
-
-	/* globals PropertiesService */
-
 	function onInstall(e) {
 		onOpen(e);
 	}
@@ -107,19 +114,14 @@
 	 * the mobile add-on version.
 	 */
 	function showSidebar() {
-		var wpService = (0, _wpService.getWordPressService)();
-		if (!wpService.hasAccess()) {
-			var authorizationUrl = wpService.getAuthorizationUrl();
+		if (!wpClient.oauthClient.hasAccess()) {
+			var authorizationUrl = wpClient.oauthClient.getAuthorizationUrl();
 			var template = HtmlService.createTemplate('<a href="<?= authorizationUrl ?>" target="_blank">Authorize</a>. ' + 'Reopen the sidebar when the authorization is complete.');
 			template.authorizationUrl = authorizationUrl;
 			var page = template.evaluate();
 			DocumentApp.getUi().showSidebar(page);
 		} else {
-			var _wpService$getToken_ = wpService.getToken_(),
-			    blog_id = _wpService$getToken_.blog_id;
-
-			var siteInfo = (0, _wpService.get)('/sites/' + blog_id);
-			Logger.log(JSON.stringify(siteInfo));
+			var siteInfo = wpClient.getSiteInfo();
 			var ui = HtmlService.createTemplateFromFile('Sidebar');
 			Object.assign(ui, siteInfo);
 			var output = ui.evaluate();
@@ -129,52 +131,38 @@
 	}
 
 	function authCallback(request) {
-		var wpService = (0, _wpService.getWordPressService)();
-		var isAuthorized = wpService.handleCallback(request);
+		var isAuthorized = wpClient.oauthClient.handleCallback(request);
 
 		if (isAuthorized) {
+			// TODO auto-closing tab with JavaScript
+
 			return HtmlService.createHtmlOutput('Success! You can close this tab.');
-		} else {
-			return HtmlService.createHtmlOutput('Denied. You can close this tab');
 		}
+
+		return HtmlService.createHtmlOutput('Denied. You can close this tab');
 	}
 
 	function postToWordPress() {
 		var doc = DocumentApp.getActiveDocument();
-		return (0, _docService.childrenToHtml)(doc.getBody());
-
-		var wpService = (0, _wpService.getWordPressService)();
 		var docProps = PropertiesService.getDocumentProperties();
+		var imageUrlMapper = (0, _imageUploadLinker.imageUploadLinker)(wpClient, docProps, Utilities);
+		// const imageUrlMapper = base64ImageLinkerFactory( Utilities )
+		var renderContainer = (0, _docService.docServiceFactory)(DocumentApp, imageUrlMapper);
+
+		var body = renderContainer(doc.getBody());
 		var postId = docProps.getProperty('postId');
-		var html = (0, _docService.exportAsHtml)();
-		var body = /<body[^>]*>(.*?)<\/body>/.exec(html)[1]; // http://stackoverflow.com/a/1732454
 
-
-		var urlBase = 'https://public-api.wordpress.com/rest/v1.1';
-
-		var _wpService$getToken_2 = wpService.getToken_(),
-		    blog_id = _wpService$getToken_2.blog_id;
-
-		var path = '/sites/' + blog_id + '/posts/new';
-		if (postId) {
-			path = '/sites/' + blog_id + '/posts/' + postId;
-		}
-
-		var response = UrlFetchApp.fetch(urlBase + path, {
-			headers: {
-				Authorization: 'Bearer ' + wpService.getAccessToken()
-			},
-			method: 'post',
-			payload: {
-				title: doc.getName(),
-				content: body
-			}
-		});
-
-		response = JSON.parse(response);
+		var response = wpClient.postToWordPress(doc.getName(), body, postId);
 		docProps.setProperty('postId', response.ID.toString());
-		delete response.content;
-		return JSON.stringify(response);
+		return response;
+	}
+
+	function uploadImageTest() {
+		var doc = DocumentApp.getActiveDocument();
+		var image = doc.getBody().findElement(DocumentApp.ElementType.INLINE_IMAGE).getElement();
+		var response = wpClient.uploadImage(image);
+		Logger.log(JSON.stringify(response));
+		return response;
 	}
 
 /***/ },
@@ -8312,39 +8300,112 @@
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
-	exports.getWordPressService = getWordPressService;
-	exports.createWordPressService = createWordPressService;
-	exports.get = get;
-	/* globals PropertiesService, OAuth2, UrlFetchApp */
+	exports.wpClientFactory = wpClientFactory;
+	/* globals Utilities, Logger */
 
 	var API_BASE = 'https://public-api.wordpress.com/rest/v1.1';
+	var CRLF = '\r\n';
 
-	var wpService = null;
+	function makeMultipartBody(payload, boundary) {
+		var body = Utilities.newBlob('').getBytes();
 
-	function getWordPressService() {
-		if (!wpService) {
-			wpService = createWordPressService();
+		for (var k in payload) {
+			var v = payload[k];
+
+			if (v.toString() === 'Blob') {
+				// attachment
+				var filename = v.getName() || 'foo.jpg';
+				body = body.concat(Utilities.newBlob('--' + boundary + CRLF + 'Content-Disposition: form-data; name="' + k + '"; filename="' + filename + '"' + CRLF + 'Content-Type: ' + v.getContentType() + CRLF
+				// + 'Content-Transfer-Encoding: base64' + CRLF
+				+ CRLF).getBytes());
+
+				body = body.concat(v.getBytes()).concat(Utilities.newBlob(CRLF).getBytes());
+			} else {
+				// string
+				body = body.concat(Utilities.newBlob('--' + boundary + CRLF + 'Content-Disposition: form-data; name="' + k + '"' + CRLF + CRLF + v + CRLF).getBytes());
+			}
 		}
-		return wpService;
+
+		body = body.concat(Utilities.newBlob(CRLF + '--' + boundary + '--' + CRLF).getBytes());
+
+		return body;
 	}
 
-	function createWordPressService() {
-		var props = PropertiesService.getScriptProperties().getProperties();
+	function wpClientFactory(PropertiesService, OAuth2, UrlFetchApp) {
+		var _PropertiesService$ge = PropertiesService.getScriptProperties().getProperties(),
+		    OauthClientId = _PropertiesService$ge.OauthClientId,
+		    OauthClientSecret = _PropertiesService$ge.OauthClientSecret;
 
-		return OAuth2.createService('wordpress').setAuthorizationBaseUrl('https://public-api.wordpress.com/oauth2/authorize').setTokenUrl('https://public-api.wordpress.com/oauth2/token').setClientId(props.OauthClientId).setClientSecret(props.OauthClientSecret).setCallbackFunction('authCallback').setPropertyStore(PropertiesService.getUserProperties());
-	}
+		var wpService = OAuth2.createService('wordpress').setAuthorizationBaseUrl('https://public-api.wordpress.com/oauth2/authorize').setTokenUrl('https://public-api.wordpress.com/oauth2/token').setClientId(OauthClientId).setClientSecret(OauthClientSecret).setCallbackFunction('authCallback').setPropertyStore(PropertiesService.getUserProperties());
 
-	function get(path) {
-		var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+		function request(path, options) {
+			var defaultOptions = {
+				headers: {
+					Authorization: 'Bearer ' + wpService.getAccessToken()
+				}
+			};
+			var url = API_BASE + path;
 
-		var defaultOptions = {
-			headers: {
-				Authorization: 'Bearer ' + getWordPressService().getAccessToken()
-			},
-			method: 'get'
+			return JSON.parse(UrlFetchApp.fetch(url, Object.assign(defaultOptions, options)));
+		}
+
+		function get(path) {
+			var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+			return request(path, Object.assign({ method: 'get' }, options));
+		}
+
+		function post(path) {
+			var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+			return request(path, Object.assign({ method: 'post' }, options));
+		}
+
+		function postToWordPress(title, content) {
+			var postId = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'new';
+
+			var _wpService$getToken_ = wpService.getToken_(),
+			    blog_id = _wpService$getToken_.blog_id;
+
+			var path = '/sites/' + blog_id + '/posts/' + postId;
+
+			var response = post(path, { payload: { title: title, content: content } });
+
+			return response;
+		}
+
+		function uploadImage(image) {
+			var _wpService$getToken_2 = wpService.getToken_(),
+			    blog_id = _wpService$getToken_2.blog_id;
+
+			var path = '/sites/' + blog_id + '/media/new';
+			var imageBlob = image.getBlob();
+			var boundary = '-----CUTHEREelH7faHNSXWNi72OTh08zH29D28Zhr3Rif3oupOaDrj';
+
+			var options = {
+				method: 'post',
+				contentType: 'multipart/form-data; boundary=' + boundary,
+				payload: makeMultipartBody({ 'media[]': imageBlob }, boundary)
+			};
+
+			var response = post(path, options);
+
+			return response;
+		}
+
+		function getSiteInfo() {
+			var _wpService$getToken_3 = wpService.getToken_(),
+			    blog_id = _wpService$getToken_3.blog_id;
+
+			return get('/sites/' + blog_id);
+		}
+
+		return {
+			oauthClient: wpService,
+			postToWordPress: postToWordPress,
+			getSiteInfo: getSiteInfo,
+			uploadImage: uploadImage
 		};
-
-		return JSON.parse(UrlFetchApp.fetch(API_BASE + path, Object.assign(defaultOptions, options)));
 	}
 
 /***/ },
@@ -8356,24 +8417,7 @@
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
-	exports.exportAsHtml = exportAsHtml;
-	exports.renderText = renderText;
-	exports.childrenToHtml = childrenToHtml;
-	/* globals DriveApp, DocumentApp, UrlFetchApp, ScriptApp */
-
-	// HACK HACK HACK but it's either this or write a custom HTML generator?
-	function exportAsHtml() {
-		DriveApp.getStorageUsed(); //needed to get Drive Scope requested
-		var docID = DocumentApp.getActiveDocument().getId();
-		var url = 'https://docs.google.com/feeds/download/documents/export/Export?id=' + docID + '&exportFormat=html';
-		var param = {
-			method: 'get',
-			headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
-			muteHttpExceptions: true
-		};
-		return UrlFetchApp.fetch(url, param).getContentText();
-	}
-
+	exports.docServiceFactory = docServiceFactory;
 	/**
 	 * Return an object with the unique values from the second object
 	 */
@@ -8415,60 +8459,14 @@
 	}
 
 	function chunkTextByAttribute(text) {
-		var _arguments = arguments;
-
 		var asString = text.getText();
 		var attributeIndices = text.getTextAttributeIndices();
 		return attributeIndices.reduce(function (chunks, attrIdx, i) {
-			if (!chunks) console.log(_arguments);
 			var nextIdx = attributeIndices[i + 1] || undefined;
 			chunks.push(asString.substring(attrIdx, nextIdx));
 			return chunks;
 		}, []);
 	}
-
-	function renderText(text) {
-		if ('string' === typeof text) {
-			return text;
-		}
-
-		var attributeIndices = text.getTextAttributeIndices();
-		var chunks = chunkTextByAttribute(text);
-
-		var lastAttributes = text.getAttributes();
-
-		return attributeIndices.reduce(function (markup, attrIdx, chunkIdx) {
-			var attrs = text.getAttributes(attrIdx);
-			var diff = objectDiff(lastAttributes, attrs);
-			lastAttributes = attrs;
-			return markup + tagsForAttrDiff(diff) + chunks[chunkIdx];
-		}, '');
-	}
-
-	var childToHtml = function childToHtml(element) {
-		switch (element.getType()) {
-			case DocumentApp.ElementType.PARAGRAPH:
-				return '<p>' + childrenToHtml(element) + '</p>\n';
-			case DocumentApp.ElementType.TEXT:
-				return renderText(element);
-			case DocumentApp.ElementType.INLINE_IMAGE:
-				var imgWidth = element.getWidth(),
-				    imgHeight = element.getHeight();
-				return '<img src="//placekitten.com/' + imgWidth + '/' + imgHeight + '" width="' + imgWidth + '" height="' + imgHeight + '">';
-			case DocumentApp.ElementType.LIST_ITEM:
-				var listItem = '';
-				if (element.getPreviousSibling().getType() !== DocumentApp.ElementType.LIST_ITEM) {
-					listItem += '<ul>\n';
-				}
-				listItem += '<li>' + childrenToHtml(element) + '</li>\n';
-				if (element.getNextSibling().getType() !== DocumentApp.ElementType.LIST_ITEM) {
-					listItem += '</ul>\n';
-				}
-				return listItem;
-			default:
-				return element.getType() + ': ' + element.toString();
-		}
-	};
 
 	var range = function range(n) {
 		if (!n) {
@@ -8480,11 +8478,120 @@
 		});
 	};
 
-	function childrenToHtml(element) {
-		var numOfChildren = element.getNumChildren();
-		return range(numOfChildren).map(function (i) {
-			return element.getChild(i);
-		}).map(childToHtml).join('');
+	function docServiceFactory(DocumentApp, imageLinker) {
+		function renderText(text) {
+			if ('string' === typeof text) {
+				return text;
+			}
+
+			var attributeIndices = text.getTextAttributeIndices();
+			var chunks = chunkTextByAttribute(text);
+
+			var lastAttributes = text.getAttributes();
+
+			return attributeIndices.reduce(function (markup, attrIdx, chunkIdx) {
+				var attrs = text.getAttributes(attrIdx);
+				var diff = objectDiff(lastAttributes, attrs);
+				lastAttributes = attrs;
+				return markup + tagsForAttrDiff(diff) + chunks[chunkIdx];
+			}, '');
+		}
+
+		function renderListItem(element) {
+			var listItem = '';
+			var prevSibling = element.getPreviousSibling(),
+			    nextSibling = element.getNextSibling();
+
+			if (!prevSibling || prevSibling.getType() !== DocumentApp.ElementType.LIST_ITEM) {
+				listItem += '<ul>\n';
+			}
+			listItem += '<li>' + renderContainer(element) + '</li>\n';
+			if (!nextSibling || nextSibling.getType() !== DocumentApp.ElementType.LIST_ITEM) {
+				listItem += '</ul>\n';
+			}
+			return listItem;
+		}
+
+		function renderInlineImage(element) {
+			var url = imageLinker(element),
+			    imgWidth = element.getWidth(),
+			    imgHeight = element.getHeight(),
+			    title = element.getAltTitle(),
+			    // TODO ESCAPE THESE
+			alt = element.getAltDescription(); // TODO ESCAPE THESE
+			return '<img src="' + url + '" width="' + imgWidth + '" height="' + imgHeight + '" alt="' + alt + '" title="' + title + '">';
+		}
+
+		function renderElement(element) {
+			switch (element.getType()) {
+				case DocumentApp.ElementType.PARAGRAPH:
+					return '<p>' + renderContainer(element) + '</p>\n';
+				case DocumentApp.ElementType.TEXT:
+					return renderText(element);
+				case DocumentApp.ElementType.INLINE_IMAGE:
+					return renderInlineImage(element);
+				case DocumentApp.ElementType.LIST_ITEM:
+					return renderListItem(element);
+				default:
+					return element.getType() + ': ' + element.toString();
+			}
+		}
+
+		function renderContainer(element) {
+			var numOfChildren = element.getNumChildren();
+			return range(numOfChildren).map(function (i) {
+				return element.getChild(i);
+			}).map(renderElement).join('');
+		}
+
+		return renderContainer;
+	}
+
+/***/ },
+/* 300 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	exports.imageUploadLinker = imageUploadLinker;
+	var DOCUMENT_PROPERTY = 'imageUrlCache';
+
+	function imageUploadLinker(wpClient, docProps, Utilities) {
+		var imageUrlCache = docProps.getProperty(DOCUMENT_PROPERTY) || {};
+
+		return function (image) {
+			var imageBlob = image.getBlob();
+			var md5 = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, imageBlob.getBytes());
+			if (imageUrlCache[md5]) {
+				return imageUrlCache[md5];
+			}
+
+			var response = wpClient.uploadImage(image);
+			var url = response.media[0].URL;
+			imageUrlCache[md5] = url;
+			docProps.setProperty(DOCUMENT_PROPERTY, imageUrlCache);
+			return url;
+		};
+	}
+
+/***/ },
+/* 301 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	exports.base64ImageLinkerFactory = base64ImageLinkerFactory;
+	function base64ImageLinkerFactory(Utilities) {
+		return function (image) {
+			var blob = image.getBlob();
+			return "data:" + blob.getContentType() + "," + Utilities.base64EncodeWebSafe(blob.getBytes());
+		};
 	}
 
 /***/ }

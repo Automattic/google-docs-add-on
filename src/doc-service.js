@@ -56,7 +56,7 @@ const range = ( n ) => {
 	return Array.apply( null, Array( n ) ).map( ( _, i ) => i )
 }
 
-export default ( DocumentApp, imageLinker ) => {
+export function docServiceFactory( DocumentApp, imageLinker ) {
 	function renderText( text ) {
 		if ( 'string' === typeof text ) {
 			return text;
