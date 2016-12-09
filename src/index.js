@@ -10,8 +10,6 @@
 
 /* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
 
-import 'babel-polyfill';
-
 import { wpClientFactory } from './wp-client';
 import { docServiceFactory } from './doc-service';
 import { imageUploadLinker } from './image-upload-linker';
