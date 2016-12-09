@@ -75,7 +75,11 @@ export function wpClientFactory( PropertiesService, OAuth2, UrlFetchApp ) {
 		const { blog_id } = wpService.getToken_();
 		const path = `/sites/${ blog_id }/posts/${ postId }`
 
-		const response = post( path, { payload: { title, content } });
+		const response = post( path, { payload: {
+			status: 'draft',
+			title,
+			content
+		} } );
 
 		return response
 	}
