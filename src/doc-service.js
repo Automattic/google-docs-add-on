@@ -2,6 +2,9 @@
  * Return an object with the unique values from the second object
  */
 function objectDiff( obj1, obj2 ) {
+	if ( ! obj1 || ! obj2 ) {
+		return {}
+	}
 	return Object.keys( obj2 ).reduce( ( acc, key ) => {
 		if ( obj1[ key ] !== obj2[ key ] ) {
 			acc[ key ] = obj2[ key ];
@@ -10,11 +13,23 @@ function objectDiff( obj1, obj2 ) {
 	}, {} )
 }
 
+const blankAttributes = Object.freeze( {
+	FONT_SIZE: null, // TODO
+	ITALIC: null, // TODO
+	STRIKETHROUGH: null, // TODO
+	FOREGROUND_COLOR: null, // TODO
+	BOLD: null,
+	LINK_URL: null,
+	UNDERLINE: null, // TODO
+	FONT_FAMILY: null, // TODO
+	BACKGROUND_COLOR: null // TODO
+} )
+
 /**
  * Convert an object diff into HTML tags
  *
- * @param diff object
- * @returns string
+ * @param {object} diff An object with changed attributes (e.g. `{ BOLD: true }`)
+ * @returns {string} HTML tags that open or close
  */
 function tagsForAttrDiff( diff ) {
 	let tags = '';
@@ -48,6 +63,7 @@ function chunkTextByAttribute( text ) {
 	}, [] )
 }
 
+// http://stackoverflow.com/a/10050831
 const range = ( n ) => {
 	if ( ! n ) {
 		return []
@@ -55,6 +71,8 @@ const range = ( n ) => {
 
 	return Array.apply( null, Array( n ) ).map( ( _, i ) => i )
 }
+
+const changedTags = ( elAttributes, prevAttributes ) => tagsForAttrDiff( objectDiff( prevAttributes, elAttributes ) )
 
 export function docServiceFactory( DocumentApp, imageLinker ) {
 	function renderText( text ) {
@@ -69,9 +87,9 @@ export function docServiceFactory( DocumentApp, imageLinker ) {
 
 		return attributeIndices.reduce( ( markup, attrIdx, chunkIdx ) => {
 			const attrs = text.getAttributes( attrIdx )
-			const diff = objectDiff( lastAttributes, attrs )
+			const newTags = changedTags( attrs, lastAttributes )
 			lastAttributes = attrs
-			return markup + tagsForAttrDiff( diff ) + chunks[ chunkIdx ]
+			return markup + newTags + chunks[ chunkIdx ]
 		}, '' )
 	}
 
@@ -119,10 +137,17 @@ export function docServiceFactory( DocumentApp, imageLinker ) {
 		return tBody + '</tbody></table>'
 	}
 
+	function renderParagraph( paragraph ) {
+		const openTags = changedTags( paragraph.getAttributes(), blankAttributes ),
+		      closedTags = changedTags( blankAttributes, paragraph.getAttributes() ),
+			  contents = renderContainer( paragraph );
+		return '<p>' + openTags + contents + closedTags + '</p>\n'
+	}
+
 	function renderElement( element ) {
 		switch ( element.getType() ) {
 			case DocumentApp.ElementType.PARAGRAPH:
-				return `<p>${ renderContainer( element ) }</p>\n`
+				return renderParagraph( element )
 			case DocumentApp.ElementType.TEXT:
 				return renderText( element )
 			case DocumentApp.ElementType.INLINE_IMAGE:
@@ -138,10 +163,12 @@ export function docServiceFactory( DocumentApp, imageLinker ) {
 
 	function renderContainer( element ) {
 		const numOfChildren = element.getNumChildren();
-		return range( numOfChildren )
+		const contents = range( numOfChildren )
 			.map( i => element.getChild( i ) )
 			.map( renderElement )
 			.join( '' );
+
+		return contents;
 	}
 
 	return renderContainer

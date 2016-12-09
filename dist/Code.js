@@ -64,25 +64,9 @@
 
 	var _docService = __webpack_require__(39);
 
-	var _imageUploadLinker = __webpack_require__(44);
-
-	var _base64ImageLinker = __webpack_require__(45);
+	var _imageUploadLinker = __webpack_require__(48);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	/**
-	 * @OnlyCurrentDoc
-	 *
-	 * The above comment directs Apps Script to limit the scope of file
-	 * access for this add-on. It specifies that this add-on will only
-	 * attempt to read or modify the files in which the add-on is used,
-	 * and not all of the user's files. The authorization request message
-	 * presented to users will reflect this limited scope.
-	 */
-
-	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
-
-	// import 'babel-polyfill';
 
 	var wpClient = (0, _wpClient.wpClientFactory)(PropertiesService, OAuth2, UrlFetchApp);
 
@@ -95,6 +79,18 @@
 	 *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
 	 *     running in, inspect e.authMode.
 	 */
+	/**
+	 * @OnlyCurrentDoc
+	 *
+	 * The above comment directs Apps Script to limit the scope of file
+	 * access for this add-on. It specifies that this add-on will only
+	 * attempt to read or modify the files in which the add-on is used,
+	 * and not all of the user's files. The authorization request message
+	 * presented to users will reflect this limited scope.
+	 */
+
+	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
+
 	function onOpen() {
 		DocumentApp.getUi().createAddonMenu().addItem('Start', 'showSidebar').addToUi();
 	}
@@ -151,7 +147,6 @@
 		var doc = DocumentApp.getActiveDocument();
 		var docProps = PropertiesService.getDocumentProperties();
 		var imageUrlMapper = (0, _imageUploadLinker.imageUploadLinker)(wpClient, docProps, Utilities);
-		// const imageUrlMapper = base64ImageLinkerFactory( Utilities )
 		var renderContainer = (0, _docService.docServiceFactory)(DocumentApp, imageUrlMapper);
 
 		var body = renderContainer(doc.getBody());
@@ -806,7 +801,11 @@
 		value: true
 	});
 
-	var _keys = __webpack_require__(40);
+	var _freeze = __webpack_require__(40);
+
+	var _freeze2 = _interopRequireDefault(_freeze);
+
+	var _keys = __webpack_require__(45);
 
 	var _keys2 = _interopRequireDefault(_keys);
 
@@ -818,6 +817,9 @@
 	 * Return an object with the unique values from the second object
 	 */
 	function objectDiff(obj1, obj2) {
+		if (!obj1 || !obj2) {
+			return {};
+		}
 		return (0, _keys2['default'])(obj2).reduce(function (acc, key) {
 			if (obj1[key] !== obj2[key]) {
 				acc[key] = obj2[key];
@@ -826,11 +828,23 @@
 		}, {});
 	}
 
+	var blankAttributes = (0, _freeze2['default'])({
+		FONT_SIZE: null, // TODO
+		ITALIC: null, // TODO
+		STRIKETHROUGH: null, // TODO
+		FOREGROUND_COLOR: null, // TODO
+		BOLD: null,
+		LINK_URL: null,
+		UNDERLINE: null, // TODO
+		FONT_FAMILY: null, // TODO
+		BACKGROUND_COLOR: null // TODO
+	});
+
 	/**
 	 * Convert an object diff into HTML tags
 	 *
-	 * @param diff object
-	 * @returns string
+	 * @param {object} diff An object with changed attributes (e.g. `{ BOLD: true }`)
+	 * @returns {string} HTML tags that open or close
 	 */
 	function tagsForAttrDiff(diff) {
 		var tags = '';
@@ -864,6 +878,7 @@
 		}, []);
 	}
 
+	// http://stackoverflow.com/a/10050831
 	var range = function range(n) {
 		if (!n) {
 			return [];
@@ -872,6 +887,10 @@
 		return Array.apply(null, Array(n)).map(function (_, i) {
 			return i;
 		});
+	};
+
+	var changedTags = function changedTags(elAttributes, prevAttributes) {
+		return tagsForAttrDiff(objectDiff(prevAttributes, elAttributes));
 	};
 
 	function docServiceFactory(DocumentApp, imageLinker) {
@@ -887,9 +906,9 @@
 
 			return attributeIndices.reduce(function (markup, attrIdx, chunkIdx) {
 				var attrs = text.getAttributes(attrIdx);
-				var diff = objectDiff(lastAttributes, attrs);
+				var newTags = changedTags(attrs, lastAttributes);
 				lastAttributes = attrs;
-				return markup + tagsForAttrDiff(diff) + chunks[chunkIdx];
+				return markup + newTags + chunks[chunkIdx];
 			}, '');
 		}
 
@@ -936,10 +955,17 @@
 			return tBody + '</tbody></table>';
 		}
 
+		function renderParagraph(paragraph) {
+			var openTags = changedTags(paragraph.getAttributes(), blankAttributes),
+			    closedTags = changedTags(blankAttributes, paragraph.getAttributes()),
+			    contents = renderContainer(paragraph);
+			return '<p>' + openTags + contents + closedTags + '</p>\n';
+		}
+
 		function renderElement(element) {
 			switch (element.getType()) {
 				case DocumentApp.ElementType.PARAGRAPH:
-					return '<p>' + renderContainer(element) + '</p>\n';
+					return renderParagraph(element);
 				case DocumentApp.ElementType.TEXT:
 					return renderText(element);
 				case DocumentApp.ElementType.INLINE_IMAGE:
@@ -955,9 +981,11 @@
 
 		function renderContainer(element) {
 			var numOfChildren = element.getNumChildren();
-			return range(numOfChildren).map(function (i) {
+			var contents = range(numOfChildren).map(function (i) {
 				return element.getChild(i);
 			}).map(renderElement).join('');
+
+			return contents;
 		}
 
 		return renderContainer;
@@ -974,24 +1002,82 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(42);
-	module.exports = __webpack_require__(6).Object.keys;
+	module.exports = __webpack_require__(6).Object.freeze;
 
 /***/ },
 /* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// 19.1.2.14 Object.keys(O)
-	var toObject = __webpack_require__(37)
-	  , $keys    = __webpack_require__(20);
+	// 19.1.2.5 Object.freeze(O)
+	var isObject = __webpack_require__(12)
+	  , meta     = __webpack_require__(43).onFreeze;
 
-	__webpack_require__(43)('keys', function(){
-	  return function keys(it){
-	    return $keys(toObject(it));
+	__webpack_require__(44)('freeze', function($freeze){
+	  return function freeze(it){
+	    return $freeze && isObject(it) ? $freeze(meta(it)) : it;
 	  };
 	});
 
 /***/ },
 /* 43 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var META     = __webpack_require__(33)('meta')
+	  , isObject = __webpack_require__(12)
+	  , has      = __webpack_require__(22)
+	  , setDesc  = __webpack_require__(10).f
+	  , id       = 0;
+	var isExtensible = Object.isExtensible || function(){
+	  return true;
+	};
+	var FREEZE = !__webpack_require__(15)(function(){
+	  return isExtensible(Object.preventExtensions({}));
+	});
+	var setMeta = function(it){
+	  setDesc(it, META, {value: {
+	    i: 'O' + ++id, // object ID
+	    w: {}          // weak collections IDs
+	  }});
+	};
+	var fastKey = function(it, create){
+	  // return primitive with prefix
+	  if(!isObject(it))return typeof it == 'symbol' ? it : (typeof it == 'string' ? 'S' : 'P') + it;
+	  if(!has(it, META)){
+	    // can't set metadata to uncaught frozen object
+	    if(!isExtensible(it))return 'F';
+	    // not necessary to add metadata
+	    if(!create)return 'E';
+	    // add missing metadata
+	    setMeta(it);
+	  // return object ID
+	  } return it[META].i;
+	};
+	var getWeak = function(it, create){
+	  if(!has(it, META)){
+	    // can't set metadata to uncaught frozen object
+	    if(!isExtensible(it))return true;
+	    // not necessary to add metadata
+	    if(!create)return false;
+	    // add missing metadata
+	    setMeta(it);
+	  // return hash weak collections IDs
+	  } return it[META].w;
+	};
+	// add metadata on freeze-family methods calling
+	var onFreeze = function(it){
+	  if(FREEZE && meta.NEED && isExtensible(it) && !has(it, META))setMeta(it);
+	  return it;
+	};
+	var meta = module.exports = {
+	  KEY:      META,
+	  NEED:     false,
+	  fastKey:  fastKey,
+	  getWeak:  getWeak,
+	  onFreeze: onFreeze
+	};
+
+/***/ },
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// most Object methods by ES6 should accept primitives
@@ -1006,7 +1092,34 @@
 	};
 
 /***/ },
-/* 44 */
+/* 45 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(46), __esModule: true };
+
+/***/ },
+/* 46 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(47);
+	module.exports = __webpack_require__(6).Object.keys;
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// 19.1.2.14 Object.keys(O)
+	var toObject = __webpack_require__(37)
+	  , $keys    = __webpack_require__(20);
+
+	__webpack_require__(44)('keys', function(){
+	  return function keys(it){
+	    return $keys(toObject(it));
+	  };
+	});
+
+/***/ },
+/* 48 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1032,23 +1145,6 @@
 			imageUrlCache[md5] = url;
 			docProps.setProperty(DOCUMENT_PROPERTY, imageUrlCache);
 			return url;
-		};
-	}
-
-/***/ },
-/* 45 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	exports.base64ImageLinkerFactory = base64ImageLinkerFactory;
-	function base64ImageLinkerFactory(Utilities) {
-		return function (image) {
-			var blob = image.getBlob();
-			return "data:" + blob.getContentType() + "," + Utilities.base64EncodeWebSafe(blob.getBytes());
 		};
 	}
 
