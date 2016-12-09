@@ -51,13 +51,7 @@ function mockText( text = MOCK_TEXT ) {
 }
 
 function containerOf( ...elements ) {
-	const container = td.object( {
-		getNumChildren: noop,
-		getChild: noop,
-		getType: noop,
-		getPreviousSibling: noop,
-		getNextSibling: noop
-	} )
+	const container = td.object( ['getNumChildren', 'getChild', 'getType', 'getPreviousSibling', 'getNextSibling', 'getAttributes'] )
 
 	elements.forEach( ( el, i ) => {
 		td.when( container.getChild( i ) ).thenReturn( el )
@@ -155,6 +149,17 @@ describe( 'renderContainer()', function() {
 			const actual = renderContainer( containerOf( paragraph ) )
 
 			expect( actual ).to.equal( `<p>${ MOCK_TEXT }</p>\n` )
+		} )
+
+		it( 'should render a paragraph that is entirely bold', function() {
+			const paragraph = paragraphOf( mockText( 'this should be bold' ) )
+			const attrs = Object.assign( blankAttributes(), { BOLD: true} )
+			td.when( paragraph.getAttributes( 0 ) ).thenReturn( attrs )
+			td.when( paragraph.getAttributes() ).thenReturn( attrs )
+
+			const actual = renderContainer( containerOf( paragraph ) )
+
+			expect( actual ).to.equal( '<p><b>this should be bold</b></p>\n' )
 		} )
 	} )
 

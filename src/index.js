@@ -13,7 +13,6 @@
 import { wpClientFactory } from './wp-client';
 import { docServiceFactory } from './doc-service';
 import { imageUploadLinker } from './image-upload-linker';
-import { base64ImageLinkerFactory } from './base64-image-linker';
 
 const wpClient = wpClientFactory( PropertiesService, OAuth2, UrlFetchApp )
 
@@ -87,7 +86,6 @@ export function postToWordPress() {
 	const doc = DocumentApp.getActiveDocument();
 	const docProps = PropertiesService.getDocumentProperties();
 	const imageUrlMapper = imageUploadLinker( wpClient, docProps, Utilities )
-	// const imageUrlMapper = base64ImageLinkerFactory( Utilities )
 	const renderContainer = docServiceFactory( DocumentApp, imageUrlMapper )
 
 	const body = renderContainer( doc.getBody() );
