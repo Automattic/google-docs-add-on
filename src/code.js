@@ -8,6 +8,7 @@ import {
 	showSidebar,
 	authCallback,
 	postToWordPress,
+	devTest
 } from './index'
 
 global.onOpen = onOpen;
@@ -15,3 +16,4 @@ global.onInstall = onInstall;
 global.showSidebar = showSidebar;
 global.authCallback = authCallback;
 global.postToWordPress = postToWordPress;
+global.devTest = devTest;
