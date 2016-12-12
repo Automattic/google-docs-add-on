@@ -27,7 +27,8 @@ const wpClient = wpClientFactory( PropertiesService, OAuth2, UrlFetchApp )
  */
 export function onOpen() {
 	DocumentApp.getUi().createAddonMenu()
-		.addItem( 'Start', 'showSidebar' )
+		.addItem( 'Open', 'showSidebar' )
+		.addItem( 'Dev Testing', 'devTest' )
 		.addToUi();
 }
 
@@ -52,23 +53,20 @@ export function onInstall( e ) {
  * the mobile add-on version.
  */
 export function showSidebar() {
-	if ( !wpClient.oauthClient.hasAccess() ) {
-		const authorizationUrl = wpClient.oauthClient.getAuthorizationUrl();
-		const template = HtmlService.createTemplate(
-			'<a href="<?= authorizationUrl ?>" target="_blank">Authorize</a>. ' +
-			'Reopen the sidebar when the authorization is complete.'
-		);
-		template.authorizationUrl = authorizationUrl;
-		const page = template.evaluate();
-		DocumentApp.getUi().showSidebar( page );
+	var template;
+	if ( wpClient.oauthClient.hasAccess() ) {
+		template = HtmlService.createTemplateFromFile( 'Sidebar' )
+		template.siteInfo = wpClient.getSiteInfo();
 	} else {
-		const siteInfo = wpClient.getSiteInfo();
-		const ui = HtmlService.createTemplateFromFile( 'Sidebar' )
-		Object.assign( ui, siteInfo );
-		const output = ui.evaluate()
-		output.setTitle( 'WordPress' )
-		DocumentApp.getUi().showSidebar( output )
+		template = HtmlService.createTemplateFromFile( 'needsOauth' );
 	}
+
+	const authorizationUrl = wpClient.oauthClient.getAuthorizationUrl();
+	template.authorizationUrl = authorizationUrl;
+	const page = template.evaluate();
+
+	page.setTitle( 'WordPress' )
+	DocumentApp.getUi().showSidebar( page );
 }
 
 export function authCallback( request ) {
@@ -76,7 +74,8 @@ export function authCallback( request ) {
 
 	if ( isAuthorized ) {
 		// TODO auto-closing tab with JavaScript
-		return HtmlService.createHtmlOutput( 'Success! You can close this tab.' );
+		const template = HtmlService.createTemplateFromFile( 'oauthSuccess' );
+		return template.evaluate();
 	}
 
 	return HtmlService.createHtmlOutput( 'Denied. You can close this tab' );
@@ -94,4 +93,24 @@ export function postToWordPress() {
 	const response = wpClient.postToWordPress( doc.getName(), body, postId );
 	docProps.setProperty( 'postId', response.ID.toString() );
 	return response;
+}
+
+export function devTest() {
+	var body = DocumentApp.getActiveDocument().getBody();
+
+	// Append a new list item to the body.
+	var item1 = body.appendListItem( 'Item 1' );
+
+	// Log the new list item's list ID.
+	Logger.log( item1.getListId() );
+
+	// Append a table after the list item.
+	body.appendTable([
+		[ 'Cell 1', 'Cell 2' ]
+	] );
+
+	// Append a second list item with the same list ID. The two items are treated as the same list,
+	// despite not being consecutive.
+	var item2 = body.appendListItem( 'Item 2' );
+	item2.setListId( item1 );
 }
