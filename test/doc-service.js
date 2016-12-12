@@ -23,6 +23,16 @@ const DocumentApp = {
 		HEADING6: 'HEADING6',
 		TITLE: 'TITLE',
 		SUBTITLE: 'SUBTITLE'
+	},
+	GlyphType: {
+		BULLET: 'BULLET',
+		HOLLOW_BULLET: 'HOLLOW_BULLET',
+		SQUARE_BULLET: 'SQUARE_BULLET',
+		NUMBER: 'NUMBER',
+		LATIN_UPPER: 'LATIN_UPPER',
+		LATIN_LOWER: 'LATIN_LOWER',
+		ROMAN_UPPER: 'ROMAN_UPPER',
+		ROMAN_LOWER: 'ROMAN_LOWER'
 	}
 }
 
@@ -136,13 +146,20 @@ describe( 'renderContainer()', function() {
 	} )
 
 	describe( 'ListItem', function() {
-		it( 'renders a list of items', function() {
-			const list = [ 0, 1, 2 ].map( ( ) => {
+		let listItems;
+
+		beforeEach( function() {
+			listItems = [ 0, 1, 2 ].map( ( ) => {
 				const listItem = containerOf( mockText() )
+				listItem.getGlyphType = td.function( 'getGlyphType' )
 				td.when( listItem.getType() ).thenReturn( DocumentApp.ElementType.LIST_ITEM )
+				td.when( listItem.getGlyphType() ).thenReturn( DocumentApp.GlyphType.BULLET )
 				return listItem
 			} );
-			const body = containerOf( ...list );
+		} )
+
+		it( 'renders a list of items', function() {
+			const body = containerOf( ...listItems );
 
 			const actual = renderContainer( body )
 
@@ -150,6 +167,30 @@ describe( 'renderContainer()', function() {
 			expect( actual.match( /<li>/g ) ).to.have.length( 3 )
 			expect( actual.match( /<\/li>/g ) ).to.have.length( 3 )
 			expect( actual.endsWith( '</ul>\n' ) ).to.equal( true )
+		} )
+
+		it( 'can render an ordered list', function() {
+			listItems.forEach( ( li ) => {
+				td.when( li.getGlyphType() ).thenReturn( DocumentApp.GlyphType.NUMBER )
+			} )
+			const body = containerOf( ...listItems );
+
+			const actual = renderContainer( body );
+
+			expect( actual.startsWith( '<ol>' ) ).to.equal( true )
+			expect( actual.endsWith( '</ol>\n' ) ).to.equal( true )
+		} )
+
+		it( 'can render an ordered list with different glyphs', function() {
+			listItems.forEach( ( li ) => {
+				td.when( li.getGlyphType() ).thenReturn( DocumentApp.GlyphType.ROMAN_UPPER )
+			} )
+			const body = containerOf( ...listItems );
+
+			const actual = renderContainer( body );
+
+			expect( actual.startsWith( '<ol type="I">' ) ).to.equal( true )
+			expect( actual.endsWith( '</ol>\n' ) ).to.equal( true )
 		} )
 	} )
 
