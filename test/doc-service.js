@@ -13,6 +13,16 @@ const DocumentApp = {
 		TABLE: 'TABLE',
 		TABLE_ROW: 'TABLE_ROW',
 		TABLE_CELL: 'TABLE_CELL'
+	},
+	ParagraphHeading: {
+		HEADING1: 'HEADING1',
+		HEADING2: 'HEADING2',
+		HEADING3: 'HEADING3',
+		HEADING4: 'HEADING4',
+		HEADING5: 'HEADING5',
+		HEADING6: 'HEADING6',
+		TITLE: 'TITLE',
+		SUBTITLE: 'SUBTITLE'
 	}
 }
 
@@ -70,6 +80,7 @@ function containerOf( ...elements ) {
 
 function paragraphOf( ...elements ) {
 	const paragraph = containerOf( ...elements )
+	paragraph.getHeading = td.function( 'getHeading' )
 	td.when( paragraph.getType() ).thenReturn( DocumentApp.ElementType.PARAGRAPH )
 	return paragraph
 }
@@ -104,7 +115,7 @@ describe( 'renderContainer()', function() {
 			const linkAttrs = Object.assign( blankAttributes(), {
 				LINK_URL: 'https://en.wikipedia.org/wiki/Test',
 				FOREGROUND_COLOR: '#1155cc',
-				UNDERLINE: true
+				UNDERLINE: true // Gdocs does this automagically for links
 			} )
 			const boldAttrs = Object.assign( blankAttributes(), { BOLD: true} )
 
@@ -160,6 +171,17 @@ describe( 'renderContainer()', function() {
 			const actual = renderContainer( containerOf( paragraph ) )
 
 			expect( actual ).to.equal( '<p><b>this should be bold</b></p>\n' )
+		} )
+
+		it( 'should render headings', function() {
+			const h1 = paragraphOf( mockText( 'theres no earthly way of knowing' ) )
+			const h2 = paragraphOf( mockText( 'which direction we are going' ) )
+			td.when( h1.getHeading() ).thenReturn( DocumentApp.ParagraphHeading.HEADING1 )
+			td.when( h2.getHeading() ).thenReturn( DocumentApp.ParagraphHeading.HEADING2 )
+
+			const actual = renderContainer( containerOf( h1, h2 ) )
+
+			expect( actual ).to.equal( '<h1>theres no earthly way of knowing</h1>\n<h2>which direction we are going</h2>\n' )
 		} )
 	} )
 

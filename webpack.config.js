@@ -1,5 +1,7 @@
+var GasPlugin = require("gas-webpack-plugin");
+
 module.exports = {
-	entry: './src/index.js',
+	entry: './src/code.js',
 	output: {
 		libraryTarget: 'this',
 		filename: 'Code.js',
@@ -14,5 +16,8 @@ module.exports = {
 		resolveLoader: {
 			modulesDirectories: [ "src" ]
 		}
-	}
+	},
+	plugins: [
+		new GasPlugin()
+	]
 }
