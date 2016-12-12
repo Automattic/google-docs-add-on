@@ -969,17 +969,28 @@ function SHARED() {
 			}, '');
 		}
 
+		function tagForList(listItem) {
+			switch (listItem.getGlyphType()) {
+				case DocumentApp.GlyphType.NUMBER:
+					return 'ol';
+				case DocumentApp.GlyphType.BULLET:
+				default:
+					return 'ul';
+			}
+		}
+
 		function renderListItem(element) {
 			var listItem = '';
-			var prevSibling = element.getPreviousSibling(),
+			var tag = tagForList(element),
+			    prevSibling = element.getPreviousSibling(),
 			    nextSibling = element.getNextSibling();
 
 			if (!prevSibling || prevSibling.getType() !== DocumentApp.ElementType.LIST_ITEM) {
-				listItem += '<ul>\n';
+				listItem += '<' + tag + '>\n';
 			}
 			listItem += '<li>' + renderContainer(element) + '</li>\n';
 			if (!nextSibling || nextSibling.getType() !== DocumentApp.ElementType.LIST_ITEM) {
-				listItem += '</ul>\n';
+				listItem += '</' + tag + '>\n';
 			}
 			return listItem;
 		}
