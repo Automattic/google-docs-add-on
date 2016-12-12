@@ -13,41 +13,53 @@ function objectDiff( obj1, obj2 ) {
 	}, {} )
 }
 
-const blankAttributes = Object.freeze( {
+const blankAttributes = {
 	FONT_SIZE: null, // TODO
-	ITALIC: null, // TODO
-	STRIKETHROUGH: null, // TODO
+	ITALIC: null,
+	STRIKETHROUGH: null,
 	FOREGROUND_COLOR: null, // TODO
 	BOLD: null,
 	LINK_URL: null,
-	UNDERLINE: null, // TODO
+	UNDERLINE: null,
 	FONT_FAMILY: null, // TODO
 	BACKGROUND_COLOR: null // TODO
-} )
+}
+
+const simpleTagMap = {
+	ITALIC: 'i',
+	STRIKETHROUGH: 's',
+	BOLD: 'b',
+	UNDERLINE: 'u'
+}
 
 /**
  * Convert an object diff into HTML tags
  *
- * @param {object} diff An object with changed attributes (e.g. `{ BOLD: true }`)
+ * @param {object} diffParam An object with changed attributes (e.g. `{ BOLD: true }`)
  * @returns {string} HTML tags that open or close
  */
-function tagsForAttrDiff( diff ) {
+function tagsForAttrDiff( diffParam ) {
+	const diff = Object.assign( {}, diffParam )
 	let tags = '';
 
 	if ( diff.LINK_URL ) {
 		tags += `<a href="${ diff.LINK_URL }">`
+		delete diff.UNDERLINE;
+		delete diff.FOREGROUND_COLOR;
 	}
 
 	if ( diff.LINK_URL === null ) {
 		tags += '</a>'
+		delete diff.UNDERLINE;
+		delete diff.FOREGROUND_COLOR;
 	}
 
-	if ( diff.BOLD === true ) {
-		tags += '<b>'
-	}
-
-	if ( diff.BOLD === null ) {
-		tags += '</b>'
+	for ( let prop in simpleTagMap ) {
+		if ( diff[ prop ] ) {
+			tags += '<' + simpleTagMap[ prop ] + '>';
+		} else if ( diff[ prop ] === null ) {
+			tags += '</' + simpleTagMap[ prop ] + '>';
+		}
 	}
 
 	return tags
@@ -137,11 +149,32 @@ export function docServiceFactory( DocumentApp, imageLinker ) {
 		return tBody + '</tbody></table>'
 	}
 
+	function tagForParagraph( paragraph ) {
+		switch ( paragraph.getHeading() ) {
+			case DocumentApp.ParagraphHeading.HEADING1:
+				return 'h1';
+			case DocumentApp.ParagraphHeading.HEADING2:
+				return 'h2';
+			case DocumentApp.ParagraphHeading.HEADING3:
+				return 'h3';
+			case DocumentApp.ParagraphHeading.HEADING4:
+				return 'h4';
+			case DocumentApp.ParagraphHeading.HEADING5:
+				return 'h5';
+			case DocumentApp.ParagraphHeading.HEADING6:
+				return 'h6';
+			case DocumentApp.ParagraphHeading.NORMAL:
+			default:
+				return 'p';
+		}
+	}
+
 	function renderParagraph( paragraph ) {
-		const openTags = changedTags( paragraph.getAttributes(), blankAttributes ),
+		const tag = tagForParagraph( paragraph ),
+		      openTags = changedTags( paragraph.getAttributes(), blankAttributes ),
 		      closedTags = changedTags( blankAttributes, paragraph.getAttributes() ),
 			  contents = renderContainer( paragraph );
-		return '<p>' + openTags + contents + closedTags + '</p>\n'
+		return `<${ tag }>` + openTags + contents + closedTags + `</${ tag }>\n`
 	}
 
 	function renderElement( element ) {

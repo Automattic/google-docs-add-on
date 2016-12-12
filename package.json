@@ -23,6 +23,7 @@
     "babel-preset-es2015": "^6.18.0",
     "babel-register": "^6.18.0",
     "chai": "^3.5.0",
+    "gas-webpack-plugin": "^0.1.0",
     "mocha": "^3.1.2",
     "node-google-apps-script": "^1.1.5",
     "testdouble": "^1.9.0",
