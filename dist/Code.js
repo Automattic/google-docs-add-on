@@ -81,6 +81,11 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
+
+	var _stringify = __webpack_require__(2);
+
+	var _stringify2 = _interopRequireDefault(_stringify);
+
 	exports.onOpen = onOpen;
 	exports.onInstall = onInstall;
 	exports.showSidebar = showSidebar;
@@ -88,11 +93,13 @@ function SHARED() {
 	exports.postToWordPress = postToWordPress;
 	exports.devTest = devTest;
 
-	var _wpClient = __webpack_require__(2);
+	var _wpClient = __webpack_require__(5);
 
-	var _docService = __webpack_require__(40);
+	var _docService = __webpack_require__(42);
 
-	var _imageUploadLinker = __webpack_require__(45);
+	var _imageUploadLinker = __webpack_require__(47);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	var wpClient = (0, _wpClient.wpClientFactory)(PropertiesService, OAuth2, UrlFetchApp);
 
@@ -145,7 +152,11 @@ function SHARED() {
 		var template;
 		if (wpClient.oauthClient.hasAccess()) {
 			template = HtmlService.createTemplateFromFile('Sidebar');
-			template.siteInfo = wpClient.getSiteInfo();
+			try {
+				template.siteInfo = wpClient.getSiteInfo();
+			} catch (e) {
+				template = HtmlService.createTemplateFromFile('needsOauth');
+			}
 		} else {
 			template = HtmlService.createTemplateFromFile('needsOauth');
 		}
@@ -162,7 +173,6 @@ function SHARED() {
 		var isAuthorized = wpClient.oauthClient.handleCallback(request);
 
 		if (isAuthorized) {
-			// TODO auto-closing tab with JavaScript
 			var template = HtmlService.createTemplateFromFile('oauthSuccess');
 			return template.evaluate();
 		}
@@ -185,25 +195,36 @@ function SHARED() {
 	}
 
 	function devTest() {
-		var body = DocumentApp.getActiveDocument().getBody();
-
-		// Append a new list item to the body.
-		var item1 = body.appendListItem('Item 1');
-
-		// Log the new list item's list ID.
-		Logger.log(item1.getListId());
-
-		// Append a table after the list item.
-		body.appendTable([['Cell 1', 'Cell 2']]);
-
-		// Append a second list item with the same list ID. The two items are treated as the same list,
-		// despite not being consecutive.
-		var item2 = body.appendListItem('Item 2');
-		item2.setListId(item1);
+		var docProps = PropertiesService.getDocumentProperties();
+		var imageUrlMapper = (0, _imageUploadLinker.imageUploadLinker)(wpClient, docProps, Utilities);
+		Logger.log((0, _stringify2['default'])(imageUrlMapper.cache));
 	}
 
 /***/ },
 /* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(3), __esModule: true };
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var core  = __webpack_require__(4)
+	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
+	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
+	  return $JSON.stringify.apply($JSON, arguments);
+	};
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+	var core = module.exports = {version: '2.4.0'};
+	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
+
+/***/ },
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -212,7 +233,7 @@ function SHARED() {
 		value: true
 	});
 
-	var _assign = __webpack_require__(3);
+	var _assign = __webpack_require__(6);
 
 	var _assign2 = _interopRequireDefault(_assign);
 
@@ -280,8 +301,8 @@ function SHARED() {
 			return request(path, (0, _assign2['default'])({ method: 'post' }, options));
 		}
 
-		function postToWordPress(title, content) {
-			var postId = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'new';
+		function postToWordPress(title, content, postIdParam) {
+			var postId = postIdParam || 'new';
 
 			var _wpService$getToken_ = wpService.getToken_(),
 			    blog_id = _wpService$getToken_.blog_id;
@@ -332,35 +353,35 @@ function SHARED() {
 	}
 
 /***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(4), __esModule: true };
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	__webpack_require__(5);
-	module.exports = __webpack_require__(8).Object.assign;
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// 19.1.3.1 Object.assign(target, source)
-	var $export = __webpack_require__(6);
-
-	$export($export.S + $export.F, 'Object', {assign: __webpack_require__(21)});
-
-/***/ },
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var global    = __webpack_require__(7)
-	  , core      = __webpack_require__(8)
-	  , ctx       = __webpack_require__(9)
-	  , hide      = __webpack_require__(11)
+	module.exports = { "default": __webpack_require__(7), __esModule: true };
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(8);
+	module.exports = __webpack_require__(4).Object.assign;
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// 19.1.3.1 Object.assign(target, source)
+	var $export = __webpack_require__(9);
+
+	$export($export.S + $export.F, 'Object', {assign: __webpack_require__(23)});
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var global    = __webpack_require__(10)
+	  , core      = __webpack_require__(4)
+	  , ctx       = __webpack_require__(11)
+	  , hide      = __webpack_require__(13)
 	  , PROTOTYPE = 'prototype';
 
 	var $export = function(type, name, source){
@@ -420,7 +441,7 @@ function SHARED() {
 	module.exports = $export;
 
 /***/ },
-/* 7 */
+/* 10 */
 /***/ function(module, exports) {
 
 	// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
@@ -429,18 +450,11 @@ function SHARED() {
 	if(typeof __g == 'number')__g = global; // eslint-disable-line no-undef
 
 /***/ },
-/* 8 */
-/***/ function(module, exports) {
-
-	var core = module.exports = {version: '2.4.0'};
-	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
-
-/***/ },
-/* 9 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// optional / simple context binding
-	var aFunction = __webpack_require__(10);
+	var aFunction = __webpack_require__(12);
 	module.exports = function(fn, that, length){
 	  aFunction(fn);
 	  if(that === undefined)return fn;
@@ -461,7 +475,7 @@ function SHARED() {
 	};
 
 /***/ },
-/* 10 */
+/* 12 */
 /***/ function(module, exports) {
 
 	module.exports = function(it){
@@ -470,12 +484,12 @@ function SHARED() {
 	};
 
 /***/ },
-/* 11 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var dP         = __webpack_require__(12)
-	  , createDesc = __webpack_require__(20);
-	module.exports = __webpack_require__(16) ? function(object, key, value){
+	var dP         = __webpack_require__(14)
+	  , createDesc = __webpack_require__(22);
+	module.exports = __webpack_require__(18) ? function(object, key, value){
 	  return dP.f(object, key, createDesc(1, value));
 	} : function(object, key, value){
 	  object[key] = value;
@@ -483,15 +497,15 @@ function SHARED() {
 	};
 
 /***/ },
-/* 12 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var anObject       = __webpack_require__(13)
-	  , IE8_DOM_DEFINE = __webpack_require__(15)
-	  , toPrimitive    = __webpack_require__(19)
+	var anObject       = __webpack_require__(15)
+	  , IE8_DOM_DEFINE = __webpack_require__(17)
+	  , toPrimitive    = __webpack_require__(21)
 	  , dP             = Object.defineProperty;
 
-	exports.f = __webpack_require__(16) ? Object.defineProperty : function defineProperty(O, P, Attributes){
+	exports.f = __webpack_require__(18) ? Object.defineProperty : function defineProperty(O, P, Attributes){
 	  anObject(O);
 	  P = toPrimitive(P, true);
 	  anObject(Attributes);
@@ -504,17 +518,17 @@ function SHARED() {
 	};
 
 /***/ },
-/* 13 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isObject = __webpack_require__(14);
+	var isObject = __webpack_require__(16);
 	module.exports = function(it){
 	  if(!isObject(it))throw TypeError(it + ' is not an object!');
 	  return it;
 	};
 
 /***/ },
-/* 14 */
+/* 16 */
 /***/ function(module, exports) {
 
 	module.exports = function(it){
@@ -522,24 +536,24 @@ function SHARED() {
 	};
 
 /***/ },
-/* 15 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = !__webpack_require__(16) && !__webpack_require__(17)(function(){
-	  return Object.defineProperty(__webpack_require__(18)('div'), 'a', {get: function(){ return 7; }}).a != 7;
+	module.exports = !__webpack_require__(18) && !__webpack_require__(19)(function(){
+	  return Object.defineProperty(__webpack_require__(20)('div'), 'a', {get: function(){ return 7; }}).a != 7;
 	});
 
 /***/ },
-/* 16 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Thank's IE8 for his funny defineProperty
-	module.exports = !__webpack_require__(17)(function(){
+	module.exports = !__webpack_require__(19)(function(){
 	  return Object.defineProperty({}, 'a', {get: function(){ return 7; }}).a != 7;
 	});
 
 /***/ },
-/* 17 */
+/* 19 */
 /***/ function(module, exports) {
 
 	module.exports = function(exec){
@@ -551,11 +565,11 @@ function SHARED() {
 	};
 
 /***/ },
-/* 18 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isObject = __webpack_require__(14)
-	  , document = __webpack_require__(7).document
+	var isObject = __webpack_require__(16)
+	  , document = __webpack_require__(10).document
 	  // in old IE typeof document.createElement is 'object'
 	  , is = isObject(document) && isObject(document.createElement);
 	module.exports = function(it){
@@ -563,11 +577,11 @@ function SHARED() {
 	};
 
 /***/ },
-/* 19 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// 7.1.1 ToPrimitive(input [, PreferredType])
-	var isObject = __webpack_require__(14);
+	var isObject = __webpack_require__(16);
 	// instead of the ES6 spec version, we didn't implement @@toPrimitive case
 	// and the second argument - flag - preferred type is a string
 	module.exports = function(it, S){
@@ -580,7 +594,7 @@ function SHARED() {
 	};
 
 /***/ },
-/* 20 */
+/* 22 */
 /***/ function(module, exports) {
 
 	module.exports = function(bitmap, value){
@@ -593,20 +607,20 @@ function SHARED() {
 	};
 
 /***/ },
-/* 21 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	// 19.1.2.1 Object.assign(target, source, ...)
-	var getKeys  = __webpack_require__(22)
-	  , gOPS     = __webpack_require__(37)
-	  , pIE      = __webpack_require__(38)
-	  , toObject = __webpack_require__(39)
-	  , IObject  = __webpack_require__(26)
+	var getKeys  = __webpack_require__(24)
+	  , gOPS     = __webpack_require__(39)
+	  , pIE      = __webpack_require__(40)
+	  , toObject = __webpack_require__(41)
+	  , IObject  = __webpack_require__(28)
 	  , $assign  = Object.assign;
 
 	// should work with symbols and should have deterministic property order (V8 bug)
-	module.exports = !$assign || __webpack_require__(17)(function(){
+	module.exports = !$assign || __webpack_require__(19)(function(){
 	  var A = {}
 	    , B = {}
 	    , S = Symbol()
@@ -631,25 +645,25 @@ function SHARED() {
 	} : $assign;
 
 /***/ },
-/* 22 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// 19.1.2.14 / 15.2.3.14 Object.keys(O)
-	var $keys       = __webpack_require__(23)
-	  , enumBugKeys = __webpack_require__(36);
+	var $keys       = __webpack_require__(25)
+	  , enumBugKeys = __webpack_require__(38);
 
 	module.exports = Object.keys || function keys(O){
 	  return $keys(O, enumBugKeys);
 	};
 
 /***/ },
-/* 23 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var has          = __webpack_require__(24)
-	  , toIObject    = __webpack_require__(25)
-	  , arrayIndexOf = __webpack_require__(29)(false)
-	  , IE_PROTO     = __webpack_require__(33)('IE_PROTO');
+	var has          = __webpack_require__(26)
+	  , toIObject    = __webpack_require__(27)
+	  , arrayIndexOf = __webpack_require__(31)(false)
+	  , IE_PROTO     = __webpack_require__(35)('IE_PROTO');
 
 	module.exports = function(object, names){
 	  var O      = toIObject(object)
@@ -665,7 +679,7 @@ function SHARED() {
 	};
 
 /***/ },
-/* 24 */
+/* 26 */
 /***/ function(module, exports) {
 
 	var hasOwnProperty = {}.hasOwnProperty;
@@ -674,28 +688,28 @@ function SHARED() {
 	};
 
 /***/ },
-/* 25 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// to indexed object, toObject with fallback for non-array-like ES3 strings
-	var IObject = __webpack_require__(26)
-	  , defined = __webpack_require__(28);
+	var IObject = __webpack_require__(28)
+	  , defined = __webpack_require__(30);
 	module.exports = function(it){
 	  return IObject(defined(it));
 	};
 
 /***/ },
-/* 26 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// fallback for non-array-like ES3 and non-enumerable old V8 strings
-	var cof = __webpack_require__(27);
+	var cof = __webpack_require__(29);
 	module.exports = Object('z').propertyIsEnumerable(0) ? Object : function(it){
 	  return cof(it) == 'String' ? it.split('') : Object(it);
 	};
 
 /***/ },
-/* 27 */
+/* 29 */
 /***/ function(module, exports) {
 
 	var toString = {}.toString;
@@ -705,7 +719,7 @@ function SHARED() {
 	};
 
 /***/ },
-/* 28 */
+/* 30 */
 /***/ function(module, exports) {
 
 	// 7.2.1 RequireObjectCoercible(argument)
@@ -715,14 +729,14 @@ function SHARED() {
 	};
 
 /***/ },
-/* 29 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// false -> Array#indexOf
 	// true  -> Array#includes
-	var toIObject = __webpack_require__(25)
-	  , toLength  = __webpack_require__(30)
-	  , toIndex   = __webpack_require__(32);
+	var toIObject = __webpack_require__(27)
+	  , toLength  = __webpack_require__(32)
+	  , toIndex   = __webpack_require__(34);
 	module.exports = function(IS_INCLUDES){
 	  return function($this, el, fromIndex){
 	    var O      = toIObject($this)
@@ -741,18 +755,18 @@ function SHARED() {
 	};
 
 /***/ },
-/* 30 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// 7.1.15 ToLength
-	var toInteger = __webpack_require__(31)
+	var toInteger = __webpack_require__(33)
 	  , min       = Math.min;
 	module.exports = function(it){
 	  return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
 	};
 
 /***/ },
-/* 31 */
+/* 33 */
 /***/ function(module, exports) {
 
 	// 7.1.4 ToInteger
@@ -763,10 +777,10 @@ function SHARED() {
 	};
 
 /***/ },
-/* 32 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var toInteger = __webpack_require__(31)
+	var toInteger = __webpack_require__(33)
 	  , max       = Math.max
 	  , min       = Math.min;
 	module.exports = function(index, length){
@@ -775,20 +789,20 @@ function SHARED() {
 	};
 
 /***/ },
-/* 33 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var shared = __webpack_require__(34)('keys')
-	  , uid    = __webpack_require__(35);
+	var shared = __webpack_require__(36)('keys')
+	  , uid    = __webpack_require__(37);
 	module.exports = function(key){
 	  return shared[key] || (shared[key] = uid(key));
 	};
 
 /***/ },
-/* 34 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var global = __webpack_require__(7)
+	var global = __webpack_require__(10)
 	  , SHARED = '__core-js_shared__'
 	  , store  = global[SHARED] || (global[SHARED] = {});
 	module.exports = function(key){
@@ -796,7 +810,7 @@ function SHARED() {
 	};
 
 /***/ },
-/* 35 */
+/* 37 */
 /***/ function(module, exports) {
 
 	var id = 0
@@ -806,7 +820,7 @@ function SHARED() {
 	};
 
 /***/ },
-/* 36 */
+/* 38 */
 /***/ function(module, exports) {
 
 	// IE 8- don't enum bug keys
@@ -815,29 +829,29 @@ function SHARED() {
 	).split(',');
 
 /***/ },
-/* 37 */
+/* 39 */
 /***/ function(module, exports) {
 
 	exports.f = Object.getOwnPropertySymbols;
 
 /***/ },
-/* 38 */
+/* 40 */
 /***/ function(module, exports) {
 
 	exports.f = {}.propertyIsEnumerable;
 
 /***/ },
-/* 39 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// 7.1.13 ToObject(argument)
-	var defined = __webpack_require__(28);
+	var defined = __webpack_require__(30);
 	module.exports = function(it){
 	  return Object(defined(it));
 	};
 
 /***/ },
-/* 40 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -846,11 +860,11 @@ function SHARED() {
 		value: true
 	});
 
-	var _assign = __webpack_require__(3);
+	var _assign = __webpack_require__(6);
 
 	var _assign2 = _interopRequireDefault(_assign);
 
-	var _keys = __webpack_require__(41);
+	var _keys = __webpack_require__(43);
 
 	var _keys2 = _interopRequireDefault(_keys);
 
@@ -972,6 +986,10 @@ function SHARED() {
 		function tagForList(listItem) {
 			switch (listItem.getGlyphType()) {
 				case DocumentApp.GlyphType.NUMBER:
+				case DocumentApp.GlyphType.LATIN_UPPER:
+				case DocumentApp.GlyphType.LATIN_LOWER:
+				case DocumentApp.GlyphType.ROMAN_UPPER:
+				case DocumentApp.GlyphType.ROMAN_LOWER:
 					return 'ol';
 				case DocumentApp.GlyphType.BULLET:
 				default:
@@ -979,14 +997,38 @@ function SHARED() {
 			}
 		}
 
+		function typeForList(listItem) {
+			switch (listItem.getGlyphType()) {
+				case DocumentApp.GlyphType.LATIN_UPPER:
+					return 'A';
+				case DocumentApp.GlyphType.LATIN_LOWER:
+					return 'a';
+				case DocumentApp.GlyphType.ROMAN_UPPER:
+					return 'I';
+				case DocumentApp.GlyphType.ROMAN_LOWER:
+					return 'i';
+				case DocumentApp.GlyphType.NUMBER:
+				case DocumentApp.GlyphType.BULLET:
+				default:
+					return null;
+			}
+		}
+
 		function renderListItem(element) {
-			var listItem = '';
+			var listItem = '',
+			    typeAttr = '';
+
 			var tag = tagForList(element),
+			    type = typeForList(element),
 			    prevSibling = element.getPreviousSibling(),
 			    nextSibling = element.getNextSibling();
 
+			if (type) {
+				typeAttr = ' type="' + type + '"';
+			}
+
 			if (!prevSibling || prevSibling.getType() !== DocumentApp.ElementType.LIST_ITEM) {
-				listItem += '<' + tag + '>\n';
+				listItem += '<' + tag + typeAttr + '>\n';
 			}
 			listItem += '<li>' + renderContainer(element) + '</li>\n';
 			if (!nextSibling || nextSibling.getType() !== DocumentApp.ElementType.LIST_ITEM) {
@@ -1081,40 +1123,40 @@ function SHARED() {
 	}
 
 /***/ },
-/* 41 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(42), __esModule: true };
-
-/***/ },
-/* 42 */
-/***/ function(module, exports, __webpack_require__) {
-
-	__webpack_require__(43);
-	module.exports = __webpack_require__(8).Object.keys;
-
-/***/ },
 /* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// 19.1.2.14 Object.keys(O)
-	var toObject = __webpack_require__(39)
-	  , $keys    = __webpack_require__(22);
+	module.exports = { "default": __webpack_require__(44), __esModule: true };
 
-	__webpack_require__(44)('keys', function(){
+/***/ },
+/* 44 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(45);
+	module.exports = __webpack_require__(4).Object.keys;
+
+/***/ },
+/* 45 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// 19.1.2.14 Object.keys(O)
+	var toObject = __webpack_require__(41)
+	  , $keys    = __webpack_require__(24);
+
+	__webpack_require__(46)('keys', function(){
 	  return function keys(it){
 	    return $keys(toObject(it));
 	  };
 	});
 
 /***/ },
-/* 44 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// most Object methods by ES6 should accept primitives
-	var $export = __webpack_require__(6)
-	  , core    = __webpack_require__(8)
-	  , fails   = __webpack_require__(17);
+	var $export = __webpack_require__(9)
+	  , core    = __webpack_require__(4)
+	  , fails   = __webpack_require__(19);
 	module.exports = function(KEY, exec){
 	  var fn  = (core.Object || {})[KEY] || Object[KEY]
 	    , exp = {};
@@ -1123,7 +1165,7 @@ function SHARED() {
 	};
 
 /***/ },
-/* 45 */
+/* 47 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1137,7 +1179,7 @@ function SHARED() {
 	function imageUploadLinker(wpClient, docProps, Utilities) {
 		var imageUrlCache = docProps.getProperty(DOCUMENT_PROPERTY) || {};
 
-		return function (image) {
+		var linker = function linker(image) {
 			var imageBlob = image.getBlob();
 			var md5 = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, imageBlob.getBytes());
 			if (imageUrlCache[md5]) {
@@ -1150,6 +1192,9 @@ function SHARED() {
 			docProps.setProperty(DOCUMENT_PROPERTY, imageUrlCache);
 			return url;
 		};
+
+		linker.cache = imageUrlCache;
+		return linker;
 	}
 
 /***/ }

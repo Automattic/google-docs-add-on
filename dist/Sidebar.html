@@ -253,7 +253,7 @@ button:focus {
 					<a href="<?= siteInfo.URL ?>"><?= siteInfo.name ?>
 					<em><?= siteInfo.URL ?></em></a>
 
-					<br /><textarea style="width: 100%" id="foo"></textarea>
+					<br /><textarea style="display: none; width: 100%" id="foo"></textarea>
 				</div>
 			</li>
 		</ul>
@@ -295,23 +295,6 @@ function postToWordPress() {
 		.withUserObject( this )
 		.postToWordPress();
 }
-
-function testUploadImage() {
-	var self = this;
-	self.disabled = true;
-	google.script.run
-		.withSuccessHandler( function( response, element ) {
-			$( '#foo' ).val( JSON.stringify( response ) );
-			self.disabled = false;
-		} )
-		.withFailureHandler(function( msg, element ) {
-			showError( msg, $( '#bar' ) );
-			self.disabled = false;
-		})
-		.withUserObject( this )
-		.uploadImageTest();
-}
-
 
 /**
  * Inserts a div that contains an error message after a given element.

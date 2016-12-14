@@ -71,7 +71,8 @@ export function wpClientFactory( PropertiesService, OAuth2, UrlFetchApp ) {
 		return request( path, Object.assign( { method: 'post' }, options ) )
 	}
 
-	function postToWordPress( title, content, postId = 'new' ) {
+	function postToWordPress( title, content, postIdParam ) {
+		const postId = postIdParam || 'new';
 		const { blog_id } = wpService.getToken_();
 		const path = `/sites/${ blog_id }/posts/${ postId }`
 

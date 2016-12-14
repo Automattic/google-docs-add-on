@@ -3,7 +3,7 @@ const DOCUMENT_PROPERTY = 'imageUrlCache'
 export function imageUploadLinker( wpClient, docProps, Utilities ) {
 	const imageUrlCache = docProps.getProperty( DOCUMENT_PROPERTY ) || {}
 
-	return ( image ) => {
+	const linker = ( image ) => {
 		const imageBlob = image.getBlob();
 		const md5 = Utilities.computeDigest( Utilities.DigestAlgorithm.MD5, imageBlob.getBytes() )
 		if ( imageUrlCache[ md5 ] ) {
@@ -16,4 +16,7 @@ export function imageUploadLinker( wpClient, docProps, Utilities ) {
 		docProps.setProperty( DOCUMENT_PROPERTY, imageUrlCache )
 		return url
 	}
+
+	linker.cache = imageUrlCache;
+	return linker
 }
