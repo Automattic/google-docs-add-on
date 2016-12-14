@@ -118,7 +118,9 @@ function SHARED() {
 	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
 
 	function onOpen() {
-		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar').addItem('Dev Testing', 'devTest').addToUi();
+		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar')
+		// .addItem( 'Dev Testing', 'devTest' )
+		.addToUi();
 	}
 
 	/**
@@ -1078,7 +1080,6 @@ function SHARED() {
 			    title = element.getAltTitle(),
 			    // TODO ESCAPE THESE
 			alt = element.getAltDescription(); // TODO ESCAPE THESE
-
 			return '<img src="' + url + '" width="' + imgWidth + '" height="' + imgHeight + '" alt="' + alt + '" title="' + title + '">';
 		}
 
@@ -1227,7 +1228,12 @@ function SHARED() {
 	};
 
 	function imageUploadLinker(wpClient, docProps, Utilities) {
-		var imageUrlCache = JSON.parse(docProps.getProperty(DOCUMENT_PROPERTY)) || {};
+		var imageUrlCache = {};
+		try {
+			imageUrlCache = JSON.parse(docProps.getProperty(DOCUMENT_PROPERTY)) || {};
+		} catch (e) {
+			Logger.log(e.toString());
+		}
 
 		function md5(message) {
 			return Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.US_ASCII).map(function (byte) {
