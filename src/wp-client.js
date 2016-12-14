@@ -2,6 +2,27 @@
 
 const API_BASE = 'https://public-api.wordpress.com/rest/v1.1';
 const CRLF = '\r\n';
+const DEFAULT_FILENAME = 'overpass';
+
+const contentTypeToExtension = {
+	'image/png': 'png',
+	'image/jpeg': 'jpeg',
+	'image/bmp': 'bmp',
+	'image/gif': 'gif'
+}
+
+function fileNameForBlob( blob ) {
+	if ( blob.getName() ) {
+		return blob.getName();
+	}
+
+	const contentType = blob.getContentType();
+	if ( contentTypeToExtension[ contentType ] ) {
+		return DEFAULT_FILENAME + '.' + contentTypeToExtension[ contentType ]
+	}
+
+	throw new Error( 'Unsupported content type: ' + contentType )
+}
 
 function makeMultipartBody( payload, boundary ) {
 	var body = Utilities.newBlob( '' ).getBytes()
@@ -11,11 +32,10 @@ function makeMultipartBody( payload, boundary ) {
 
 		if ( v.toString() === 'Blob' ) {
 			// attachment
-			let filename = v.getName() || 'foo.jpg'
 			body = body.concat(
 				Utilities.newBlob(
 					'--' + boundary + CRLF
-					+ 'Content-Disposition: form-data; name="' + k + '"; filename="' + filename + '"' + CRLF
+					+ 'Content-Disposition: form-data; name="' + k + '"; filename="' + fileNameForBlob( v ) + '"' + CRLF
 					+ 'Content-Type: ' + v.getContentType() + CRLF
 					// + 'Content-Transfer-Encoding: base64' + CRLF
 					+ CRLF
@@ -85,11 +105,29 @@ export function wpClientFactory( PropertiesService, OAuth2, UrlFetchApp ) {
 		return response
 	}
 
+	/**
+	 * @param {Blob} image
+	 * @return {object} response
+	 */
 	function uploadImage( image ) {
 		const { blog_id } = wpService.getToken_();
 		const path = `/sites/${ blog_id }/media/new`
 		const imageBlob = image.getBlob()
-		var boundary = '-----CUTHEREelH7faHNSXWNi72OTh08zH29D28Zhr3Rif3oupOaDrj'
+		Logger.log( JSON.stringify( {
+			image: {
+				attributes: image.getAttributes(),
+				altDescription: image.getAltDescription(),
+				altTitle: image.getAltTitle()
+			},
+			imageBlob: {
+				contentType: imageBlob.getContentType(),
+				name: imageBlob.getName()
+			}
+		} ) )
+		if ( ! imageBlob.getName() ) {
+			imageBlob.setName( image.getAltDescription() );
+		}
+		const boundary = '-----CUTHEREelH7faHNSXWNi72OTh08zH29D28Zhr3Rif3oupOaDrj'
 
 		const options = {
 			method: 'post',

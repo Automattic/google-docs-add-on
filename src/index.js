@@ -100,6 +100,5 @@ export function postToWordPress() {
 
 export function devTest() {
 	const docProps = PropertiesService.getDocumentProperties();
-	const imageUrlMapper = imageUploadLinker( wpClient, docProps, Utilities )
-	Logger.log( JSON.stringify( imageUrlMapper.cache ) )
+	docProps.deleteAllProperties();
 }
