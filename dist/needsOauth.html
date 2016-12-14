@@ -243,7 +243,9 @@ button:focus {
 	</div>
 
 	<div class="sites-list">
-		<a href="<?= authorizationUrl ?>" target="_blank">Authorize</a>
+		<ul>
+			<li><button id="reload">Reload</button> <button id="authorize">Authorize</button></li>
+		</ul>
 	</div>
 
 	<div class="footer">
@@ -264,41 +266,23 @@ button:focus {
  * user's origin and destination language preferences if previously set.
  */
 $( function() {
-	$( '#bar' ).click( postToWordPress );
+	$( '#authorize' ).click( function() { window.open( '<?= authorizationUrl ?>', '_blank' ) } );
+	$( '#reload' ).click( function( e ) {
+		var self = this;
+		self.disabled = true;
+		google.script.run
+			.withSuccessHandler( function( html, element ) {
+				$( '#foo' ).val( JSON.stringify( html ) );
+				self.disabled = false;
+			})
+			.withFailureHandler( function( msg, element ) {
+				showError( msg, $( '#bar' ) );
+				self.disabled = false;
+			})
+			.withUserObject( this )
+			.showSidebar();
+	} );
 } );
-
-function postToWordPress() {
-	var self = this;
-	self.disabled = true;
-	google.script.run
-		.withSuccessHandler( function( html, element ) {
-			$( '#foo' ).val( JSON.stringify( html ) );
-			self.disabled = false;
-		})
-		.withFailureHandler( function( msg, element ) {
-			showError( msg, $( '#bar' ) );
-			self.disabled = false;
-		})
-		.withUserObject( this )
-		.postToWordPress();
-}
-
-function testUploadImage() {
-	var self = this;
-	self.disabled = true;
-	google.script.run
-		.withSuccessHandler( function( response, element ) {
-			$( '#foo' ).val( JSON.stringify( response ) );
-			self.disabled = false;
-		} )
-		.withFailureHandler(function( msg, element ) {
-			showError( msg, $( '#bar' ) );
-			self.disabled = false;
-		})
-		.withUserObject( this )
-		.uploadImageTest();
-}
-
 
 /**
  * Inserts a div that contains an error message after a given element.
