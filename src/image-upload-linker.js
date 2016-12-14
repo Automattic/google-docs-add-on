@@ -8,7 +8,12 @@ const contentTypeToExtension = {
 }
 
 export function imageUploadLinker( wpClient, docProps, Utilities ) {
-	const imageUrlCache = JSON.parse( docProps.getProperty( DOCUMENT_PROPERTY ) ) || {}
+	let imageUrlCache = {};
+	try {
+		imageUrlCache = JSON.parse( docProps.getProperty( DOCUMENT_PROPERTY ) ) || {}
+	} catch ( e ) {
+		Logger.log( e.toString() )
+	}
 
 	function md5( message ) {
 		return Utilities.computeDigest( Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.US_ASCII )
