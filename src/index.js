@@ -56,7 +56,11 @@ export function showSidebar() {
 	var template;
 	if ( wpClient.oauthClient.hasAccess() ) {
 		template = HtmlService.createTemplateFromFile( 'Sidebar' )
-		template.siteInfo = wpClient.getSiteInfo();
+		try {
+			template.siteInfo = wpClient.getSiteInfo();
+		} catch ( e ) {
+			template = HtmlService.createTemplateFromFile( 'needsOauth' );
+		}
 	} else {
 		template = HtmlService.createTemplateFromFile( 'needsOauth' );
 	}
@@ -73,7 +77,6 @@ export function authCallback( request ) {
 	var isAuthorized = wpClient.oauthClient.handleCallback( request );
 
 	if ( isAuthorized ) {
-		// TODO auto-closing tab with JavaScript
 		const template = HtmlService.createTemplateFromFile( 'oauthSuccess' );
 		return template.evaluate();
 	}
@@ -96,21 +99,7 @@ export function postToWordPress() {
 }
 
 export function devTest() {
-	var body = DocumentApp.getActiveDocument().getBody();
-
-	// Append a new list item to the body.
-	var item1 = body.appendListItem( 'Item 1' );
-
-	// Log the new list item's list ID.
-	Logger.log( item1.getListId() );
-
-	// Append a table after the list item.
-	body.appendTable([
-		[ 'Cell 1', 'Cell 2' ]
-	] );
-
-	// Append a second list item with the same list ID. The two items are treated as the same list,
-	// despite not being consecutive.
-	var item2 = body.appendListItem( 'Item 2' );
-	item2.setListId( item1 );
+	const docProps = PropertiesService.getDocumentProperties();
+	const imageUrlMapper = imageUploadLinker( wpClient, docProps, Utilities )
+	Logger.log( JSON.stringify( imageUrlMapper.cache ) )
 }
