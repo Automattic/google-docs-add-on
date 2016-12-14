@@ -81,11 +81,6 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
-
-	var _stringify = __webpack_require__(2);
-
-	var _stringify2 = _interopRequireDefault(_stringify);
-
 	exports.onOpen = onOpen;
 	exports.onInstall = onInstall;
 	exports.showSidebar = showSidebar;
@@ -93,13 +88,11 @@ function SHARED() {
 	exports.postToWordPress = postToWordPress;
 	exports.devTest = devTest;
 
-	var _wpClient = __webpack_require__(5);
+	var _wpClient = __webpack_require__(2);
 
 	var _docService = __webpack_require__(42);
 
 	var _imageUploadLinker = __webpack_require__(47);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	var wpClient = (0, _wpClient.wpClientFactory)(PropertiesService, OAuth2, UrlFetchApp);
 
@@ -196,35 +189,11 @@ function SHARED() {
 
 	function devTest() {
 		var docProps = PropertiesService.getDocumentProperties();
-		var imageUrlMapper = (0, _imageUploadLinker.imageUploadLinker)(wpClient, docProps, Utilities);
-		Logger.log((0, _stringify2['default'])(imageUrlMapper.cache));
+		docProps.deleteAllProperties();
 	}
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(3), __esModule: true };
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var core  = __webpack_require__(4)
-	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
-	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
-	  return $JSON.stringify.apply($JSON, arguments);
-	};
-
-/***/ },
-/* 4 */
-/***/ function(module, exports) {
-
-	var core = module.exports = {version: '2.4.0'};
-	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
-
-/***/ },
-/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -232,6 +201,10 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
+
+	var _stringify = __webpack_require__(3);
+
+	var _stringify2 = _interopRequireDefault(_stringify);
 
 	var _assign = __webpack_require__(6);
 
@@ -245,6 +218,27 @@ function SHARED() {
 
 	var API_BASE = 'https://public-api.wordpress.com/rest/v1.1';
 	var CRLF = '\r\n';
+	var DEFAULT_FILENAME = 'overpass';
+
+	var contentTypeToExtension = {
+		'image/png': 'png',
+		'image/jpeg': 'jpeg',
+		'image/bmp': 'bmp',
+		'image/gif': 'gif'
+	};
+
+	function fileNameForBlob(blob) {
+		if (blob.getName()) {
+			return blob.getName();
+		}
+
+		var contentType = blob.getContentType();
+		if (contentTypeToExtension[contentType]) {
+			return DEFAULT_FILENAME + '.' + contentTypeToExtension[contentType];
+		}
+
+		throw new Error('Unsupported content type: ' + contentType);
+	}
 
 	function makeMultipartBody(payload, boundary) {
 		var body = Utilities.newBlob('').getBytes();
@@ -254,8 +248,7 @@ function SHARED() {
 
 			if (v.toString() === 'Blob') {
 				// attachment
-				var filename = v.getName() || 'foo.jpg';
-				body = body.concat(Utilities.newBlob('--' + boundary + CRLF + 'Content-Disposition: form-data; name="' + k + '"; filename="' + filename + '"' + CRLF + 'Content-Type: ' + v.getContentType() + CRLF
+				body = body.concat(Utilities.newBlob('--' + boundary + CRLF + 'Content-Disposition: form-data; name="' + k + '"; filename="' + fileNameForBlob(v) + '"' + CRLF + 'Content-Type: ' + v.getContentType() + CRLF
 				// + 'Content-Transfer-Encoding: base64' + CRLF
 				+ CRLF).getBytes());
 
@@ -318,12 +311,30 @@ function SHARED() {
 			return response;
 		}
 
+		/**
+	  * @param {Blob} image
+	  * @return {object} response
+	  */
 		function uploadImage(image) {
 			var _wpService$getToken_2 = wpService.getToken_(),
 			    blog_id = _wpService$getToken_2.blog_id;
 
 			var path = '/sites/' + blog_id + '/media/new';
 			var imageBlob = image.getBlob();
+			Logger.log((0, _stringify2['default'])({
+				image: {
+					attributes: image.getAttributes(),
+					altDescription: image.getAltDescription(),
+					altTitle: image.getAltTitle()
+				},
+				imageBlob: {
+					contentType: imageBlob.getContentType(),
+					name: imageBlob.getName()
+				}
+			}));
+			if (!imageBlob.getName()) {
+				imageBlob.setName(image.getAltDescription());
+			}
 			var boundary = '-----CUTHEREelH7faHNSXWNi72OTh08zH29D28Zhr3Rif3oupOaDrj';
 
 			var options = {
@@ -353,6 +364,29 @@ function SHARED() {
 	}
 
 /***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(4), __esModule: true };
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var core  = __webpack_require__(5)
+	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
+	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
+	  return $JSON.stringify.apply($JSON, arguments);
+	};
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	var core = module.exports = {version: '2.4.0'};
+	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
+
+/***/ },
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -363,7 +397,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(8);
-	module.exports = __webpack_require__(4).Object.assign;
+	module.exports = __webpack_require__(5).Object.assign;
 
 /***/ },
 /* 8 */
@@ -379,7 +413,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	var global    = __webpack_require__(10)
-	  , core      = __webpack_require__(4)
+	  , core      = __webpack_require__(5)
 	  , ctx       = __webpack_require__(11)
 	  , hide      = __webpack_require__(13)
 	  , PROTOTYPE = 'prototype';
@@ -1044,6 +1078,7 @@ function SHARED() {
 			    title = element.getAltTitle(),
 			    // TODO ESCAPE THESE
 			alt = element.getAltDescription(); // TODO ESCAPE THESE
+
 			return '<img src="' + url + '" width="' + imgWidth + '" height="' + imgHeight + '" alt="' + alt + '" title="' + title + '">';
 		}
 
@@ -1133,7 +1168,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(45);
-	module.exports = __webpack_require__(4).Object.keys;
+	module.exports = __webpack_require__(5).Object.keys;
 
 /***/ },
 /* 45 */
@@ -1155,7 +1190,7 @@ function SHARED() {
 
 	// most Object methods by ES6 should accept primitives
 	var $export = __webpack_require__(9)
-	  , core    = __webpack_require__(4)
+	  , core    = __webpack_require__(5)
 	  , fails   = __webpack_require__(19);
 	module.exports = function(KEY, exec){
 	  var fn  = (core.Object || {})[KEY] || Object[KEY]
@@ -1166,30 +1201,71 @@ function SHARED() {
 
 /***/ },
 /* 47 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
+
+	var _stringify = __webpack_require__(3);
+
+	var _stringify2 = _interopRequireDefault(_stringify);
+
 	exports.imageUploadLinker = imageUploadLinker;
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
 	var DOCUMENT_PROPERTY = 'imageUrlCache';
 
+	var contentTypeToExtension = {
+		'image/png': 'png',
+		'image/jpeg': 'jpeg',
+		'image/jpg': 'jpg',
+		'image/gif': 'gif' // pronounced "GIF"
+	};
+
 	function imageUploadLinker(wpClient, docProps, Utilities) {
-		var imageUrlCache = docProps.getProperty(DOCUMENT_PROPERTY) || {};
+		var imageUrlCache = JSON.parse(docProps.getProperty(DOCUMENT_PROPERTY)) || {};
+
+		function md5(message) {
+			return Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.US_ASCII).map(function (byte) {
+				var char = '';
+				if (byte < 0) {
+					byte += 255;
+				}
+				char = byte.toString(16);
+				if (char.length === 1) {
+					char = '0' + char;
+				}
+				return char;
+			}).join('');
+		}
 
 		var linker = function linker(image) {
 			var imageBlob = image.getBlob();
-			var md5 = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, imageBlob.getBytes());
-			if (imageUrlCache[md5]) {
-				return imageUrlCache[md5];
+			var hash = md5(imageBlob.getBytes());
+			if (imageUrlCache[hash]) {
+				return imageUrlCache[hash];
+			}
+
+			if (!imageBlob.getName()) {
+				var contentType = imageBlob.getContentType();
+				if (contentTypeToExtension[contentType]) {
+					Logger.log('Setting name to ' + hash + '.' + contentTypeToExtension[contentType]);
+					imageBlob.setName(hash + '.' + contentTypeToExtension[contentType]);
+				} else {
+					Logger.log('No content type for ' + contentType);
+				}
+			} else {
+				Logger.log('image has name ' + imageBlob.getBlob());
 			}
 
 			var response = wpClient.uploadImage(image);
 			var url = response.media[0].URL;
-			imageUrlCache[md5] = url;
-			docProps.setProperty(DOCUMENT_PROPERTY, imageUrlCache);
+			imageUrlCache[hash] = url;
+			docProps.setProperty(DOCUMENT_PROPERTY, (0, _stringify2['default'])(imageUrlCache));
 			return url;
 		};
 
