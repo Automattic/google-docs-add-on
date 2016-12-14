@@ -114,19 +114,29 @@ svg {
 }
 
 .sites-list ul li .sites-list__sitename {
-	line-height: 1.4;
+	line-height: 1.2;
+	float: left;
+	width: calc( 100% - 128px );
+	color: #668EAA;
 }
 
 .sites-list ul li .sites-list__sitename a {
 	color: #2E4453;
 	display: block;
+	text-decoration: none;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
+
+.sites-list ul li .sites-list__sitename a:hover {
+	color: #4f748e;
+}
+
 
 .sites-list ul li .sites-list__sitename em {
 	font-size: 11px;
 	font-style: normal;
 	color: #668EAA;
-	display: block;
 }
 
 
@@ -245,7 +255,6 @@ button:focus {
 	<div class="sites-list">
 		<ul>
 			<li>
-				<button id="bar">Save Draft</button>
 				<div class="sites-list__blavatar">
 					<img src="" alt="" />
 				</div>
@@ -255,6 +264,7 @@ button:focus {
 
 					<br /><textarea style="display: none; width: 100%" id="foo"></textarea>
 				</div>
+				<button id="bar">Save Draft</button>
 			</li>
 		</ul>
 	</div>
