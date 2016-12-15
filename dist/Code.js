@@ -81,6 +81,11 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
+
+	var _stringify = __webpack_require__(2);
+
+	var _stringify2 = _interopRequireDefault(_stringify);
+
 	exports.onOpen = onOpen;
 	exports.onInstall = onInstall;
 	exports.showSidebar = showSidebar;
@@ -88,11 +93,13 @@ function SHARED() {
 	exports.postToWordPress = postToWordPress;
 	exports.devTest = devTest;
 
-	var _wpClient = __webpack_require__(2);
+	var _wpClient = __webpack_require__(5);
 
 	var _docService = __webpack_require__(42);
 
 	var _imageUploadLinker = __webpack_require__(47);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	var wpClient = (0, _wpClient.wpClientFactory)(PropertiesService, OAuth2, UrlFetchApp); /**
 	                                                                                        * @OnlyCurrentDoc
@@ -104,16 +111,16 @@ function SHARED() {
 	                                                                                        * presented to users will reflect this limited scope.
 	                                                                                        */
 
-	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger, Environment */
+	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2 */
 
-	var Environment = {
-		name: 'production'
-	};
+	var Environment = {};
 
 	try {
 		Environment = JSON.parse(PropertiesService.getScriptProperties().getProperties().Environment);
 	} catch (e) {
-		Logger.log(e.toString());
+		Environment = {
+			name: 'production'
+		};
 	}
 
 	/**
@@ -204,12 +211,35 @@ function SHARED() {
 		if ('development' !== Environment.name) {
 			return;
 		}
-		var docProps = PropertiesService.getDocumentProperties();
-		docProps.deleteAllProperties();
+		var listItem = DocumentApp.getActiveDocument().getBody().findElement(DocumentApp.ElementType.LIST_ITEM).getElement();
+		Logger.log((0, _stringify2['default'])(listItem.getAttributes()));
 	}
 
 /***/ },
 /* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(3), __esModule: true };
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var core  = __webpack_require__(4)
+	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
+	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
+	  return $JSON.stringify.apply($JSON, arguments);
+	};
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+	var core = module.exports = {version: '2.4.0'};
+	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
+
+/***/ },
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -218,7 +248,7 @@ function SHARED() {
 		value: true
 	});
 
-	var _stringify = __webpack_require__(3);
+	var _stringify = __webpack_require__(2);
 
 	var _stringify2 = _interopRequireDefault(_stringify);
 
@@ -380,29 +410,6 @@ function SHARED() {
 	}
 
 /***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(4), __esModule: true };
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var core  = __webpack_require__(5)
-	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
-	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
-	  return $JSON.stringify.apply($JSON, arguments);
-	};
-
-/***/ },
-/* 5 */
-/***/ function(module, exports) {
-
-	var core = module.exports = {version: '2.4.0'};
-	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
-
-/***/ },
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -413,7 +420,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(8);
-	module.exports = __webpack_require__(5).Object.assign;
+	module.exports = __webpack_require__(4).Object.assign;
 
 /***/ },
 /* 8 */
@@ -429,7 +436,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	var global    = __webpack_require__(10)
-	  , core      = __webpack_require__(5)
+	  , core      = __webpack_require__(4)
 	  , ctx       = __webpack_require__(11)
 	  , hide      = __webpack_require__(13)
 	  , PROTOTYPE = 'prototype';
@@ -1069,6 +1076,8 @@ function SHARED() {
 			    typeAttr = '';
 
 			var tag = tagForList(element),
+			    openTags = changedTags(element.getAttributes(), blankAttributes),
+			    closedTags = changedTags(blankAttributes, element.getAttributes()),
 			    type = typeForList(element),
 			    prevSibling = element.getPreviousSibling(),
 			    nextSibling = element.getNextSibling();
@@ -1080,7 +1089,7 @@ function SHARED() {
 			if (!prevSibling || prevSibling.getType() !== DocumentApp.ElementType.LIST_ITEM) {
 				listItem += '<' + tag + typeAttr + '>\n';
 			}
-			listItem += '<li>' + renderContainer(element) + '</li>\n';
+			listItem += '<li>' + openTags + renderContainer(element) + closedTags + '</li>\n';
 			if (!nextSibling || nextSibling.getType() !== DocumentApp.ElementType.LIST_ITEM) {
 				listItem += '</' + tag + '>\n';
 			}
@@ -1183,7 +1192,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(45);
-	module.exports = __webpack_require__(5).Object.keys;
+	module.exports = __webpack_require__(4).Object.keys;
 
 /***/ },
 /* 45 */
@@ -1205,7 +1214,7 @@ function SHARED() {
 
 	// most Object methods by ES6 should accept primitives
 	var $export = __webpack_require__(9)
-	  , core    = __webpack_require__(5)
+	  , core    = __webpack_require__(4)
 	  , fails   = __webpack_require__(19);
 	module.exports = function(KEY, exec){
 	  var fn  = (core.Object || {})[KEY] || Object[KEY]
@@ -1224,7 +1233,7 @@ function SHARED() {
 		value: true
 	});
 
-	var _stringify = __webpack_require__(3);
+	var _stringify = __webpack_require__(2);
 
 	var _stringify2 = _interopRequireDefault(_stringify);
 

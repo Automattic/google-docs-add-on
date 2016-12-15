@@ -141,6 +141,8 @@ export function docServiceFactory( DocumentApp, imageLinker ) {
 		    typeAttr = '';
 
 		const tag = tagForList( element ),
+		      openTags = changedTags( element.getAttributes(), blankAttributes ),
+		      closedTags = changedTags( blankAttributes, element.getAttributes() ),
 		      type = typeForList( element ),
 		      prevSibling = element.getPreviousSibling(),
 		      nextSibling = element.getNextSibling();
@@ -152,7 +154,7 @@ export function docServiceFactory( DocumentApp, imageLinker ) {
 		if ( ! prevSibling || prevSibling.getType() !== DocumentApp.ElementType.LIST_ITEM ) {
 			listItem += '<' + tag + typeAttr + '>\n'
 		}
-		listItem += `<li>${ renderContainer( element ) }</li>\n`
+		listItem += `<li>${openTags}${ renderContainer( element ) }${closedTags}</li>\n`
 		if ( ! nextSibling || nextSibling.getType() !== DocumentApp.ElementType.LIST_ITEM ) {
 			listItem += '</' + tag + '>\n'
 		}
