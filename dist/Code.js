@@ -118,9 +118,7 @@ function SHARED() {
 	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
 
 	function onOpen() {
-		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar')
-		// .addItem( 'Dev Testing', 'devTest' )
-		.addToUi();
+		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar').addItem('Dev Testing', 'devTest').addToUi();
 	}
 
 	/**
