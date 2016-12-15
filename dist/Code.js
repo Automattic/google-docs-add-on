@@ -94,7 +94,27 @@ function SHARED() {
 
 	var _imageUploadLinker = __webpack_require__(47);
 
-	var wpClient = (0, _wpClient.wpClientFactory)(PropertiesService, OAuth2, UrlFetchApp);
+	var wpClient = (0, _wpClient.wpClientFactory)(PropertiesService, OAuth2, UrlFetchApp); /**
+	                                                                                        * @OnlyCurrentDoc
+	                                                                                        *
+	                                                                                        * The above comment directs Apps Script to limit the scope of file
+	                                                                                        * access for this add-on. It specifies that this add-on will only
+	                                                                                        * attempt to read or modify the files in which the add-on is used,
+	                                                                                        * and not all of the user's files. The authorization request message
+	                                                                                        * presented to users will reflect this limited scope.
+	                                                                                        */
+
+	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger, Environment */
+
+	var Environment = {
+		name: 'production'
+	};
+
+	try {
+		Environment = JSON.parse(PropertiesService.getScriptProperties().getProperties().Environment);
+	} catch (e) {
+		Logger.log(e.toString());
+	}
 
 	/**
 	 * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -105,20 +125,13 @@ function SHARED() {
 	 *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
 	 *     running in, inspect e.authMode.
 	 */
-	/**
-	 * @OnlyCurrentDoc
-	 *
-	 * The above comment directs Apps Script to limit the scope of file
-	 * access for this add-on. It specifies that this add-on will only
-	 * attempt to read or modify the files in which the add-on is used,
-	 * and not all of the user's files. The authorization request message
-	 * presented to users will reflect this limited scope.
-	 */
-
-	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
-
 	function onOpen() {
-		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar').addItem('Dev Testing', 'devTest').addToUi();
+		var menu = DocumentApp.getUi().createAddonMenu();
+		menu.addItem('Open', 'showSidebar');
+		if ('development' === Environment.name) {
+			menu.addItem('Dev Testing', 'devTest');
+		}
+		menu.addToUi();
 	}
 
 	/**
@@ -188,6 +201,9 @@ function SHARED() {
 	}
 
 	function devTest() {
+		if ('development' !== Environment.name) {
+			return;
+		}
 		var docProps = PropertiesService.getDocumentProperties();
 		docProps.deleteAllProperties();
 	}
