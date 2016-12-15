@@ -8,13 +8,22 @@
  * presented to users will reflect this limited scope.
  */
 
-/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
+/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger, Environment */
 
 import { wpClientFactory } from './wp-client';
 import { docServiceFactory } from './doc-service';
 import { imageUploadLinker } from './image-upload-linker';
 
 const wpClient = wpClientFactory( PropertiesService, OAuth2, UrlFetchApp )
+let Environment = {};
+
+try {
+	Environment = JSON.parse( PropertiesService.getScriptProperties().getProperties().Environment )
+} catch ( e ) {
+	Environment = {
+		name: 'production'
+	}
+}
 
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -26,10 +35,13 @@ const wpClient = wpClientFactory( PropertiesService, OAuth2, UrlFetchApp )
  *     running in, inspect e.authMode.
  */
 export function onOpen() {
-	DocumentApp.getUi().createAddonMenu()
-		.addItem( 'Open', 'showSidebar' )
-		.addItem( 'Dev Testing', 'devTest' )
-		.addToUi();
+	const menu = DocumentApp.getUi().createAddonMenu();
+	menu.addItem( 'Open', 'showSidebar' );
+	if ( 'development' === Environment.name ) {
+		menu.addItem( 'Dev Testing', 'devTest' )
+	}
+	menu.addToUi()
+
 }
 
 /**
@@ -99,6 +111,9 @@ export function postToWordPress() {
 }
 
 export function devTest() {
+	if ( 'development' !== Environment.name ) {
+		return;
+	}
 	const docProps = PropertiesService.getDocumentProperties();
 	docProps.deleteAllProperties();
 }
