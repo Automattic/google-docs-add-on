@@ -192,6 +192,19 @@ describe( 'renderContainer()', function() {
 			expect( actual.startsWith( '<ol type="I">' ) ).to.equal( true )
 			expect( actual.endsWith( '</ol>\n' ) ).to.equal( true )
 		} )
+
+		it( 'renders links inside lists', function() {
+			const listItem = containerOf( mockText( 'Example' ) )
+			listItem.getGlyphType = td.function( 'getGlyphType' )
+			td.when( listItem.getType() ).thenReturn( DocumentApp.ElementType.LIST_ITEM )
+			td.when( listItem.getGlyphType() ).thenReturn( DocumentApp.GlyphType.BULLET )
+			const attributes = Object.assign( blankAttributes(), { LINK_URL: 'http://www.example.com/' } )
+			td.when( listItem.getAttributes() ).thenReturn( attributes )
+
+			const actual = renderContainer( containerOf( listItem ) )
+
+			expect( actual ).to.equal( '<ul>\n<li><a href="http://www.example.com/">Example</a></li>\n</ul>\n' )
+		} )
 	} )
 
 	describe( 'Paragraph', function() {
