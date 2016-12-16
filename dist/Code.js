@@ -81,11 +81,6 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
-
-	var _stringify = __webpack_require__(2);
-
-	var _stringify2 = _interopRequireDefault(_stringify);
-
 	exports.onOpen = onOpen;
 	exports.onInstall = onInstall;
 	exports.showSidebar = showSidebar;
@@ -93,35 +88,13 @@ function SHARED() {
 	exports.postToWordPress = postToWordPress;
 	exports.devTest = devTest;
 
-	var _wpClient = __webpack_require__(5);
+	var _wpClient = __webpack_require__(2);
 
 	var _docService = __webpack_require__(42);
 
 	var _imageUploadLinker = __webpack_require__(47);
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	var wpClient = (0, _wpClient.wpClientFactory)(PropertiesService, OAuth2, UrlFetchApp); /**
-	                                                                                        * @OnlyCurrentDoc
-	                                                                                        *
-	                                                                                        * The above comment directs Apps Script to limit the scope of file
-	                                                                                        * access for this add-on. It specifies that this add-on will only
-	                                                                                        * attempt to read or modify the files in which the add-on is used,
-	                                                                                        * and not all of the user's files. The authorization request message
-	                                                                                        * presented to users will reflect this limited scope.
-	                                                                                        */
-
-	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2 */
-
-	var Environment = {};
-
-	try {
-		Environment = JSON.parse(PropertiesService.getScriptProperties().getProperties().Environment);
-	} catch (e) {
-		Environment = {
-			name: 'production'
-		};
-	}
+	var wpClient = (0, _wpClient.wpClientFactory)(PropertiesService, OAuth2, UrlFetchApp);
 
 	/**
 	 * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -132,13 +105,20 @@ function SHARED() {
 	 *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
 	 *     running in, inspect e.authMode.
 	 */
+	/**
+	 * @OnlyCurrentDoc
+	 *
+	 * The above comment directs Apps Script to limit the scope of file
+	 * access for this add-on. It specifies that this add-on will only
+	 * attempt to read or modify the files in which the add-on is used,
+	 * and not all of the user's files. The authorization request message
+	 * presented to users will reflect this limited scope.
+	 */
+
+	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
+
 	function onOpen() {
-		var menu = DocumentApp.getUi().createAddonMenu();
-		menu.addItem('Open', 'showSidebar');
-		if ('development' === Environment.name) {
-			menu.addItem('Dev Testing', 'devTest');
-		}
-		menu.addToUi();
+		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar').addItem('Dev Testing', 'devTest').addToUi();
 	}
 
 	/**
@@ -163,7 +143,8 @@ function SHARED() {
 	 */
 	function showSidebar() {
 		var template;
-		if (wpClient.oauthClient.hasAccess()) {
+
+		if (wpClient.getOauthClient().hasAccess()) {
 			template = HtmlService.createTemplateFromFile('Sidebar');
 			try {
 				template.siteInfo = wpClient.getSiteInfo();
@@ -174,7 +155,7 @@ function SHARED() {
 			template = HtmlService.createTemplateFromFile('needsOauth');
 		}
 
-		var authorizationUrl = wpClient.oauthClient.getAuthorizationUrl();
+		var authorizationUrl = wpClient.getOauthClient().getAuthorizationUrl();
 		template.authorizationUrl = authorizationUrl;
 		var page = template.evaluate();
 
@@ -183,7 +164,7 @@ function SHARED() {
 	}
 
 	function authCallback(request) {
-		var isAuthorized = wpClient.oauthClient.handleCallback(request);
+		var isAuthorized = wpClient.getOauthClient().handleCallback(request);
 
 		if (isAuthorized) {
 			var template = HtmlService.createTemplateFromFile('oauthSuccess');
@@ -211,35 +192,12 @@ function SHARED() {
 		if ('development' !== Environment.name) {
 			return;
 		}
-		var listItem = DocumentApp.getActiveDocument().getBody().findElement(DocumentApp.ElementType.LIST_ITEM).getElement();
-		Logger.log((0, _stringify2['default'])(listItem.getAttributes()));
+		var docProps = PropertiesService.getDocumentProperties();
+		docProps.deleteAllProperties();
 	}
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(3), __esModule: true };
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var core  = __webpack_require__(4)
-	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
-	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
-	  return $JSON.stringify.apply($JSON, arguments);
-	};
-
-/***/ },
-/* 4 */
-/***/ function(module, exports) {
-
-	var core = module.exports = {version: '2.4.0'};
-	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
-
-/***/ },
-/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -248,7 +206,7 @@ function SHARED() {
 		value: true
 	});
 
-	var _stringify = __webpack_require__(2);
+	var _stringify = __webpack_require__(3);
 
 	var _stringify2 = _interopRequireDefault(_stringify);
 
@@ -311,13 +269,25 @@ function SHARED() {
 	}
 
 	function wpClientFactory(PropertiesService, OAuth2, UrlFetchApp) {
-		var _PropertiesService$ge = PropertiesService.getScriptProperties().getProperties(),
-		    OauthClientId = _PropertiesService$ge.OauthClientId,
-		    OauthClientSecret = _PropertiesService$ge.OauthClientSecret;
+		var client = undefined;
 
-		var wpService = OAuth2.createService('wordpress').setAuthorizationBaseUrl('https://public-api.wordpress.com/oauth2/authorize').setTokenUrl('https://public-api.wordpress.com/oauth2/token').setClientId(OauthClientId).setClientSecret(OauthClientSecret).setCallbackFunction('authCallback').setPropertyStore(PropertiesService.getUserProperties());
+		// Needs to be lazy-instantiated because we don't have permissions to access
+		// properties until the script is actually open
+		function getClient() {
+			if (client) {
+				return client;
+			}
+
+			var _PropertiesService$ge = PropertiesService.getScriptProperties().getProperties(),
+			    OauthClientId = _PropertiesService$ge.OauthClientId,
+			    OauthClientSecret = _PropertiesService$ge.OauthClientSecret;
+
+			client = OAuth2.createService('wordpress').setAuthorizationBaseUrl('https://public-api.wordpress.com/oauth2/authorize').setTokenUrl('https://public-api.wordpress.com/oauth2/token').setClientId(OauthClientId).setClientSecret(OauthClientSecret).setCallbackFunction('authCallback').setPropertyStore(PropertiesService.getUserProperties());
+			return client;
+		}
 
 		function request(path, options) {
+			var wpService = getClient();
 			var defaultOptions = {
 				headers: {
 					Authorization: 'Bearer ' + wpService.getAccessToken()
@@ -341,6 +311,7 @@ function SHARED() {
 		}
 
 		function postToWordPress(title, content, postIdParam) {
+			var wpService = getClient();
 			var postId = postIdParam || 'new';
 
 			var _wpService$getToken_ = wpService.getToken_(),
@@ -362,6 +333,8 @@ function SHARED() {
 	  * @return {object} response
 	  */
 		function uploadImage(image) {
+			var wpService = getClient();
+
 			var _wpService$getToken_2 = wpService.getToken_(),
 			    blog_id = _wpService$getToken_2.blog_id;
 
@@ -395,6 +368,8 @@ function SHARED() {
 		}
 
 		function getSiteInfo() {
+			var wpService = getClient();
+
 			var _wpService$getToken_3 = wpService.getToken_(),
 			    blog_id = _wpService$getToken_3.blog_id;
 
@@ -402,12 +377,35 @@ function SHARED() {
 		}
 
 		return {
-			oauthClient: wpService,
+			getOauthClient: getClient,
 			postToWordPress: postToWordPress,
 			getSiteInfo: getSiteInfo,
 			uploadImage: uploadImage
 		};
 	}
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(4), __esModule: true };
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var core  = __webpack_require__(5)
+	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
+	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
+	  return $JSON.stringify.apply($JSON, arguments);
+	};
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	var core = module.exports = {version: '2.4.0'};
+	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
 
 /***/ },
 /* 6 */
@@ -420,7 +418,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(8);
-	module.exports = __webpack_require__(4).Object.assign;
+	module.exports = __webpack_require__(5).Object.assign;
 
 /***/ },
 /* 8 */
@@ -436,7 +434,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	var global    = __webpack_require__(10)
-	  , core      = __webpack_require__(4)
+	  , core      = __webpack_require__(5)
 	  , ctx       = __webpack_require__(11)
 	  , hide      = __webpack_require__(13)
 	  , PROTOTYPE = 'prototype';
@@ -1192,7 +1190,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(45);
-	module.exports = __webpack_require__(4).Object.keys;
+	module.exports = __webpack_require__(5).Object.keys;
 
 /***/ },
 /* 45 */
@@ -1214,7 +1212,7 @@ function SHARED() {
 
 	// most Object methods by ES6 should accept primitives
 	var $export = __webpack_require__(9)
-	  , core    = __webpack_require__(4)
+	  , core    = __webpack_require__(5)
 	  , fails   = __webpack_require__(19);
 	module.exports = function(KEY, exec){
 	  var fn  = (core.Object || {})[KEY] || Object[KEY]
@@ -1233,7 +1231,7 @@ function SHARED() {
 		value: true
 	});
 
-	var _stringify = __webpack_require__(2);
+	var _stringify = __webpack_require__(3);
 
 	var _stringify2 = _interopRequireDefault(_stringify);
 

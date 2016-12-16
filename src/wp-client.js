@@ -62,17 +62,28 @@ function makeMultipartBody( payload, boundary ) {
 }
 
 export function wpClientFactory( PropertiesService, OAuth2, UrlFetchApp ) {
-	const { OauthClientId, OauthClientSecret } = PropertiesService.getScriptProperties().getProperties();
+	let client = undefined;
 
-	const wpService = OAuth2.createService( 'wordpress' )
-		.setAuthorizationBaseUrl( 'https://public-api.wordpress.com/oauth2/authorize' )
-		.setTokenUrl( 'https://public-api.wordpress.com/oauth2/token' )
-		.setClientId( OauthClientId )
-		.setClientSecret( OauthClientSecret )
-		.setCallbackFunction( 'authCallback' )
-		.setPropertyStore( PropertiesService.getUserProperties() )
+	// Needs to be lazy-instantiated because we don't have permissions to access
+	// properties until the script is actually open
+	function getClient() {
+		if ( client ) {
+			return client;
+		}
+		const { OauthClientId, OauthClientSecret } = PropertiesService.getScriptProperties().getProperties();
+
+		client = OAuth2.createService( 'wordpress' )
+			.setAuthorizationBaseUrl( 'https://public-api.wordpress.com/oauth2/authorize' )
+			.setTokenUrl( 'https://public-api.wordpress.com/oauth2/token' )
+			.setClientId( OauthClientId )
+			.setClientSecret( OauthClientSecret )
+			.setCallbackFunction( 'authCallback' )
+			.setPropertyStore( PropertiesService.getUserProperties() )
+		return client;
+	}
 
 	function request( path, options ) {
+		const wpService = getClient();
 		const defaultOptions = {
 			headers: {
 				Authorization: `Bearer ${ wpService.getAccessToken() }`
@@ -92,6 +103,7 @@ export function wpClientFactory( PropertiesService, OAuth2, UrlFetchApp ) {
 	}
 
 	function postToWordPress( title, content, postIdParam ) {
+		const wpService = getClient();
 		const postId = postIdParam || 'new';
 		const { blog_id } = wpService.getToken_();
 		const path = `/sites/${ blog_id }/posts/${ postId }`
@@ -110,6 +122,7 @@ export function wpClientFactory( PropertiesService, OAuth2, UrlFetchApp ) {
 	 * @return {object} response
 	 */
 	function uploadImage( image ) {
+		const wpService = getClient();
 		const { blog_id } = wpService.getToken_();
 		const path = `/sites/${ blog_id }/media/new`
 		const imageBlob = image.getBlob()
@@ -141,12 +154,13 @@ export function wpClientFactory( PropertiesService, OAuth2, UrlFetchApp ) {
 	}
 
 	function getSiteInfo() {
+		const wpService = getClient();
 		const { blog_id } = wpService.getToken_();
 		return get( `/sites/${ blog_id }` )
 	}
 
 	return {
-		oauthClient: wpService,
+		getOauthClient: getClient,
 		postToWordPress,
 		getSiteInfo,
 		uploadImage
