@@ -8,22 +8,13 @@
  * presented to users will reflect this limited scope.
  */
 
-/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger, Environment */
+/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
 
 import { wpClientFactory } from './wp-client';
 import { docServiceFactory } from './doc-service';
 import { imageUploadLinker } from './image-upload-linker';
 
 const wpClient = wpClientFactory( PropertiesService, OAuth2, UrlFetchApp )
-let Environment = {};
-
-try {
-	Environment = JSON.parse( PropertiesService.getScriptProperties().getProperties().Environment )
-} catch ( e ) {
-	Environment = {
-		name: 'production'
-	}
-}
 
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -35,13 +26,10 @@ try {
  *     running in, inspect e.authMode.
  */
 export function onOpen() {
-	const menu = DocumentApp.getUi().createAddonMenu();
-	menu.addItem( 'Open', 'showSidebar' );
-	if ( 'development' === Environment.name ) {
-		menu.addItem( 'Dev Testing', 'devTest' )
-	}
-	menu.addToUi()
-
+	DocumentApp.getUi().createAddonMenu()
+		.addItem( 'Open', 'showSidebar' )
+		.addItem( 'Dev Testing', 'devTest' )
+		.addToUi();
 }
 
 /**
@@ -66,7 +54,8 @@ export function onInstall( e ) {
  */
 export function showSidebar() {
 	var template;
-	if ( wpClient.oauthClient.hasAccess() ) {
+
+	if ( wpClient.getOauthClient().hasAccess() ) {
 		template = HtmlService.createTemplateFromFile( 'Sidebar' )
 		try {
 			template.siteInfo = wpClient.getSiteInfo();
@@ -77,7 +66,7 @@ export function showSidebar() {
 		template = HtmlService.createTemplateFromFile( 'needsOauth' );
 	}
 
-	const authorizationUrl = wpClient.oauthClient.getAuthorizationUrl();
+	const authorizationUrl = wpClient.getOauthClient().getAuthorizationUrl();
 	template.authorizationUrl = authorizationUrl;
 	const page = template.evaluate();
 
@@ -86,7 +75,7 @@ export function showSidebar() {
 }
 
 export function authCallback( request ) {
-	var isAuthorized = wpClient.oauthClient.handleCallback( request );
+	var isAuthorized = wpClient.getOauthClient().handleCallback( request );
 
 	if ( isAuthorized ) {
 		const template = HtmlService.createTemplateFromFile( 'oauthSuccess' );
