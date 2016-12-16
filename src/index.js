@@ -100,9 +100,5 @@ export function postToWordPress() {
 }
 
 export function devTest() {
-	if ( 'development' !== Environment.name ) {
-		return;
-	}
-	const docProps = PropertiesService.getDocumentProperties();
-	docProps.deleteAllProperties();
+
 }

@@ -193,8 +193,10 @@ export function docServiceFactory( DocumentApp, imageLinker ) {
 	function tagForParagraph( paragraph ) {
 		switch ( paragraph.getHeading() ) {
 			case DocumentApp.ParagraphHeading.HEADING1:
+			case DocumentApp.ParagraphHeading.TITLE:
 				return 'h1';
 			case DocumentApp.ParagraphHeading.HEADING2:
+			case DocumentApp.ParagraphHeading.SUBTITLE:
 				return 'h2';
 			case DocumentApp.ParagraphHeading.HEADING3:
 				return 'h3';

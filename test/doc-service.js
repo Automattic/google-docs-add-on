@@ -230,12 +230,16 @@ describe( 'renderContainer()', function() {
 		it( 'should render headings', function() {
 			const h1 = paragraphOf( mockText( 'theres no earthly way of knowing' ) )
 			const h2 = paragraphOf( mockText( 'which direction we are going' ) )
+			const title = paragraphOf( mockText( 'is it raining' ) )
+			const subtitle = paragraphOf( mockText( 'is it snowing' ) )
 			td.when( h1.getHeading() ).thenReturn( DocumentApp.ParagraphHeading.HEADING1 )
 			td.when( h2.getHeading() ).thenReturn( DocumentApp.ParagraphHeading.HEADING2 )
+			td.when( title.getHeading() ).thenReturn( DocumentApp.ParagraphHeading.TITLE )
+			td.when( subtitle.getHeading() ).thenReturn( DocumentApp.ParagraphHeading.SUBTITLE )
 
-			const actual = renderContainer( containerOf( h1, h2 ) )
+			const actual = renderContainer( containerOf( h1, h2, title, subtitle ) )
 
-			expect( actual ).to.equal( '<h1>theres no earthly way of knowing</h1>\n<h2>which direction we are going</h2>\n' )
+			expect( actual ).to.equal( '<h1>theres no earthly way of knowing</h1>\n<h2>which direction we are going</h2>\n<h1>is it raining</h1>\n<h2>is it snowing</h2>\n' )
 		} )
 	} )
 
