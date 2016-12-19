@@ -92,7 +92,7 @@ function SHARED() {
 
 	var _docService = __webpack_require__(42);
 
-	var _imageUploadLinker = __webpack_require__(47);
+	var _imageUploadLinker = __webpack_require__(54);
 
 	var wpClient = (0, _wpClient.wpClientFactory)(PropertiesService, OAuth2, UrlFetchApp);
 
@@ -188,13 +188,7 @@ function SHARED() {
 		return response;
 	}
 
-	function devTest() {
-		if ('development' !== Environment.name) {
-			return;
-		}
-		var docProps = PropertiesService.getDocumentProperties();
-		docProps.deleteAllProperties();
-	}
+	function devTest() {}
 
 /***/ },
 /* 2 */
@@ -914,21 +908,179 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
+	exports.docServiceFactory = docServiceFactory;
+
+	var _paragraph = __webpack_require__(43);
+
+	var _paragraph2 = _interopRequireDefault(_paragraph);
+
+	var _table = __webpack_require__(50);
+
+	var _table2 = _interopRequireDefault(_table);
+
+	var _inlineImage = __webpack_require__(51);
+
+	var _inlineImage2 = _interopRequireDefault(_inlineImage);
+
+	var _listItem = __webpack_require__(52);
+
+	var _listItem2 = _interopRequireDefault(_listItem);
+
+	var _text = __webpack_require__(53);
+
+	var _text2 = _interopRequireDefault(_text);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	// http://stackoverflow.com/a/10050831
+	var range = function range(n) {
+		if (!n) {
+			return [];
+		}
+
+		return Array.apply(null, Array(n)).map(function (_, i) {
+			return i;
+		});
+	};
+
+	function docServiceFactory(DocumentApp, imageLinker) {
+		var renderParagraph = (0, _paragraph2['default'])(DocumentApp, renderContainer);
+		var renderTable = (0, _table2['default'])(renderContainer);
+		var renderInlineImage = (0, _inlineImage2['default'])(imageLinker);
+		var renderListItem = (0, _listItem2['default'])(DocumentApp, renderContainer);
+
+		function renderElement(element) {
+			switch (element.getType()) {
+				case DocumentApp.ElementType.PARAGRAPH:
+					return renderParagraph(element);
+				case DocumentApp.ElementType.TEXT:
+					return (0, _text2['default'])(element);
+				case DocumentApp.ElementType.INLINE_IMAGE:
+					return renderInlineImage(element);
+				case DocumentApp.ElementType.LIST_ITEM:
+					return renderListItem(element);
+				case DocumentApp.ElementType.TABLE:
+					return renderTable(element);
+				default:
+					return element.getType() + ': ' + element.toString();
+			}
+		}
+
+		function renderContainer(element) {
+			var numOfChildren = element.getNumChildren();
+			var contents = range(numOfChildren).map(function (i) {
+				return element.getChild(i);
+			}).map(renderElement).join('');
+
+			return contents;
+		}
+
+		return renderContainer;
+	}
+
+/***/ },
+/* 43 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+
+	var _attributes = __webpack_require__(44);
+
+	var _tags = __webpack_require__(45);
+
+	exports['default'] = function (DocumentApp, renderContainer) {
+		function tagForParagraph(paragraph) {
+			switch (paragraph.getHeading()) {
+				case DocumentApp.ParagraphHeading.HEADING1:
+				case DocumentApp.ParagraphHeading.TITLE:
+					return 'h1';
+				case DocumentApp.ParagraphHeading.HEADING2:
+				case DocumentApp.ParagraphHeading.SUBTITLE:
+					return 'h2';
+				case DocumentApp.ParagraphHeading.HEADING3:
+					return 'h3';
+				case DocumentApp.ParagraphHeading.HEADING4:
+					return 'h4';
+				case DocumentApp.ParagraphHeading.HEADING5:
+					return 'h5';
+				case DocumentApp.ParagraphHeading.HEADING6:
+					return 'h6';
+				case DocumentApp.ParagraphHeading.NORMAL:
+				default:
+					return 'p';
+			}
+		}
+
+		function renderParagraph(paragraph) {
+			var tag = tagForParagraph(paragraph),
+			    openTags = (0, _tags.changedTags)(paragraph.getAttributes(), _attributes.blankAttributes),
+			    closedTags = (0, _tags.changedTags)(_attributes.blankAttributes, paragraph.getAttributes()),
+			    contents = renderContainer(paragraph);
+			return '<' + tag + '>' + openTags + contents + closedTags + ('</' + tag + '>\n');
+		}
+
+		return renderParagraph;
+	};
+
+/***/ },
+/* 44 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	var blankAttributes = exports.blankAttributes = {
+		FONT_SIZE: null, // TODO
+		ITALIC: null,
+		STRIKETHROUGH: null,
+		FOREGROUND_COLOR: null, // TODO
+		BOLD: null,
+		LINK_URL: null,
+		UNDERLINE: null,
+		FONT_FAMILY: null, // TODO
+		BACKGROUND_COLOR: null // TODO
+	};
+
+/***/ },
+/* 45 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	exports.changedTags = undefined;
 
 	var _assign = __webpack_require__(6);
 
 	var _assign2 = _interopRequireDefault(_assign);
 
-	var _keys = __webpack_require__(43);
+	var _keys = __webpack_require__(46);
 
 	var _keys2 = _interopRequireDefault(_keys);
 
-	exports.docServiceFactory = docServiceFactory;
-
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	var simpleTagMap = {
+		ITALIC: 'i',
+		STRIKETHROUGH: 's',
+		BOLD: 'b',
+		UNDERLINE: 'u'
+	};
 
 	/**
 	 * Return an object with the unique values from the second object
+	 *
+	 * @param {object} obj1 Any old object
+	 * @param {object} obj2 An object similar to obj1
+	 * @returns {object} unique values from obj2
 	 */
 	function objectDiff(obj1, obj2) {
 		if (!obj1 || !obj2) {
@@ -941,25 +1093,6 @@ function SHARED() {
 			return acc;
 		}, {});
 	}
-
-	var blankAttributes = {
-		FONT_SIZE: null, // TODO
-		ITALIC: null,
-		STRIKETHROUGH: null,
-		FOREGROUND_COLOR: null, // TODO
-		BOLD: null,
-		LINK_URL: null,
-		UNDERLINE: null,
-		FONT_FAMILY: null, // TODO
-		BACKGROUND_COLOR: null // TODO
-	};
-
-	var simpleTagMap = {
-		ITALIC: 'i',
-		STRIKETHROUGH: 's',
-		BOLD: 'b',
-		UNDERLINE: 'u'
-	};
 
 	/**
 	 * Convert an object diff into HTML tags
@@ -994,50 +1127,119 @@ function SHARED() {
 		return tags;
 	}
 
-	function chunkTextByAttribute(text) {
-		var asString = text.getText();
-		var attributeIndices = text.getTextAttributeIndices();
-		return attributeIndices.reduce(function (chunks, attrIdx, i) {
-			var nextIdx = attributeIndices[i + 1] || undefined;
-			chunks.push(asString.substring(attrIdx, nextIdx));
-			return chunks;
-		}, []);
-	}
-
-	// http://stackoverflow.com/a/10050831
-	var range = function range(n) {
-		if (!n) {
-			return [];
-		}
-
-		return Array.apply(null, Array(n)).map(function (_, i) {
-			return i;
-		});
-	};
-
-	var changedTags = function changedTags(elAttributes, prevAttributes) {
+	var changedTags = exports.changedTags = function changedTags(elAttributes, prevAttributes) {
 		return tagsForAttrDiff(objectDiff(prevAttributes, elAttributes));
 	};
 
-	function docServiceFactory(DocumentApp, imageLinker) {
-		function renderText(text) {
-			if ('string' === typeof text) {
-				return text;
+/***/ },
+/* 46 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(47), __esModule: true };
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(48);
+	module.exports = __webpack_require__(5).Object.keys;
+
+/***/ },
+/* 48 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// 19.1.2.14 Object.keys(O)
+	var toObject = __webpack_require__(41)
+	  , $keys    = __webpack_require__(24);
+
+	__webpack_require__(49)('keys', function(){
+	  return function keys(it){
+	    return $keys(toObject(it));
+	  };
+	});
+
+/***/ },
+/* 49 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// most Object methods by ES6 should accept primitives
+	var $export = __webpack_require__(9)
+	  , core    = __webpack_require__(5)
+	  , fails   = __webpack_require__(19);
+	module.exports = function(KEY, exec){
+	  var fn  = (core.Object || {})[KEY] || Object[KEY]
+	    , exp = {};
+	  exp[KEY] = exec(fn);
+	  $export($export.S + $export.F * fails(function(){ fn(1); }), 'Object', exp);
+	};
+
+/***/ },
+/* 50 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+
+	exports['default'] = function (renderContainer) {
+		function renderTableRow(row) {
+			var tRow = '<tr>';
+			var numCells = row.getNumCells();
+			for (var i = 0; i < numCells; i++) {
+				tRow += '<td>' + renderContainer(row.getCell(i)) + '</td>';
 			}
-
-			var attributeIndices = text.getTextAttributeIndices();
-			var chunks = chunkTextByAttribute(text);
-
-			var lastAttributes = text.getAttributes();
-
-			return attributeIndices.reduce(function (markup, attrIdx, chunkIdx) {
-				var attrs = text.getAttributes(attrIdx);
-				var newTags = changedTags(attrs, lastAttributes);
-				lastAttributes = attrs;
-				return markup + newTags + chunks[chunkIdx];
-			}, '');
+			return tRow + '</tr>';
 		}
 
+		return function renderTable(table) {
+			var numRows = table.getNumRows();
+			var tBody = '<table><tbody>';
+			for (var i = 0; i < numRows; i++) {
+				tBody += renderTableRow(table.getRow(i));
+			}
+			return tBody + '</tbody></table>';
+		};
+	};
+
+/***/ },
+/* 51 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+
+	exports["default"] = function (imageLinker) {
+		return function renderInlineImage(element) {
+			var url = imageLinker(element),
+			    imgWidth = element.getWidth(),
+			    imgHeight = element.getHeight(),
+			    title = element.getAltTitle(),
+			    // TODO ESCAPE THESE
+			alt = element.getAltDescription(); // TODO ESCAPE THESE
+			return "<img src=\"" + url + "\" width=\"" + imgWidth + "\" height=\"" + imgHeight + "\" alt=\"" + alt + "\" title=\"" + title + "\">";
+		};
+	};
+
+/***/ },
+/* 52 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+
+	var _attributes = __webpack_require__(44);
+
+	var _tags = __webpack_require__(45);
+
+	exports['default'] = function (DocumentApp, renderContainer) {
 		function tagForList(listItem) {
 			switch (listItem.getGlyphType()) {
 				case DocumentApp.GlyphType.NUMBER:
@@ -1069,13 +1271,13 @@ function SHARED() {
 			}
 		}
 
-		function renderListItem(element) {
+		return function renderListItem(element) {
 			var listItem = '',
 			    typeAttr = '';
 
 			var tag = tagForList(element),
-			    openTags = changedTags(element.getAttributes(), blankAttributes),
-			    closedTags = changedTags(blankAttributes, element.getAttributes()),
+			    openTags = (0, _tags.changedTags)(element.getAttributes(), _attributes.blankAttributes),
+			    closedTags = (0, _tags.changedTags)(_attributes.blankAttributes, element.getAttributes()),
 			    type = typeForList(element),
 			    prevSibling = element.getPreviousSibling(),
 			    nextSibling = element.getNextSibling();
@@ -1092,137 +1294,52 @@ function SHARED() {
 				listItem += '</' + tag + '>\n';
 			}
 			return listItem;
-		}
-
-		function renderInlineImage(element) {
-			var url = imageLinker(element),
-			    imgWidth = element.getWidth(),
-			    imgHeight = element.getHeight(),
-			    title = element.getAltTitle(),
-			    // TODO ESCAPE THESE
-			alt = element.getAltDescription(); // TODO ESCAPE THESE
-			return '<img src="' + url + '" width="' + imgWidth + '" height="' + imgHeight + '" alt="' + alt + '" title="' + title + '">';
-		}
-
-		function renderTableRow(row) {
-			var tRow = '<tr>';
-			var numCells = row.getNumCells();
-			for (var i = 0; i < numCells; i++) {
-				tRow += '<td>' + renderContainer(row.getCell(i)) + '</td>';
-			}
-			return tRow + '</tr>';
-		}
-
-		function renderTable(table) {
-			var numRows = table.getNumRows();
-			var tBody = '<table><tbody>';
-			for (var i = 0; i < numRows; i++) {
-				tBody += renderTableRow(table.getRow(i));
-			}
-			return tBody + '</tbody></table>';
-		}
-
-		function tagForParagraph(paragraph) {
-			switch (paragraph.getHeading()) {
-				case DocumentApp.ParagraphHeading.HEADING1:
-					return 'h1';
-				case DocumentApp.ParagraphHeading.HEADING2:
-					return 'h2';
-				case DocumentApp.ParagraphHeading.HEADING3:
-					return 'h3';
-				case DocumentApp.ParagraphHeading.HEADING4:
-					return 'h4';
-				case DocumentApp.ParagraphHeading.HEADING5:
-					return 'h5';
-				case DocumentApp.ParagraphHeading.HEADING6:
-					return 'h6';
-				case DocumentApp.ParagraphHeading.NORMAL:
-				default:
-					return 'p';
-			}
-		}
-
-		function renderParagraph(paragraph) {
-			var tag = tagForParagraph(paragraph),
-			    openTags = changedTags(paragraph.getAttributes(), blankAttributes),
-			    closedTags = changedTags(blankAttributes, paragraph.getAttributes()),
-			    contents = renderContainer(paragraph);
-			return '<' + tag + '>' + openTags + contents + closedTags + ('</' + tag + '>\n');
-		}
-
-		function renderElement(element) {
-			switch (element.getType()) {
-				case DocumentApp.ElementType.PARAGRAPH:
-					return renderParagraph(element);
-				case DocumentApp.ElementType.TEXT:
-					return renderText(element);
-				case DocumentApp.ElementType.INLINE_IMAGE:
-					return renderInlineImage(element);
-				case DocumentApp.ElementType.LIST_ITEM:
-					return renderListItem(element);
-				case DocumentApp.ElementType.TABLE:
-					return renderTable(element);
-				default:
-					return element.getType() + ': ' + element.toString();
-			}
-		}
-
-		function renderContainer(element) {
-			var numOfChildren = element.getNumChildren();
-			var contents = range(numOfChildren).map(function (i) {
-				return element.getChild(i);
-			}).map(renderElement).join('');
-
-			return contents;
-		}
-
-		return renderContainer;
-	}
-
-/***/ },
-/* 43 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(44), __esModule: true };
-
-/***/ },
-/* 44 */
-/***/ function(module, exports, __webpack_require__) {
-
-	__webpack_require__(45);
-	module.exports = __webpack_require__(5).Object.keys;
-
-/***/ },
-/* 45 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// 19.1.2.14 Object.keys(O)
-	var toObject = __webpack_require__(41)
-	  , $keys    = __webpack_require__(24);
-
-	__webpack_require__(46)('keys', function(){
-	  return function keys(it){
-	    return $keys(toObject(it));
-	  };
-	});
-
-/***/ },
-/* 46 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// most Object methods by ES6 should accept primitives
-	var $export = __webpack_require__(9)
-	  , core    = __webpack_require__(5)
-	  , fails   = __webpack_require__(19);
-	module.exports = function(KEY, exec){
-	  var fn  = (core.Object || {})[KEY] || Object[KEY]
-	    , exp = {};
-	  exp[KEY] = exec(fn);
-	  $export($export.S + $export.F * fails(function(){ fn(1); }), 'Object', exp);
+		};
 	};
 
 /***/ },
-/* 47 */
+/* 53 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	exports['default'] = renderText;
+
+	var _tags = __webpack_require__(45);
+
+	function chunkTextByAttribute(text) {
+		var asString = text.getText();
+		var attributeIndices = text.getTextAttributeIndices();
+		return attributeIndices.reduce(function (chunks, attrIdx, i) {
+			var nextIdx = attributeIndices[i + 1] || undefined;
+			chunks.push(asString.substring(attrIdx, nextIdx));
+			return chunks;
+		}, []);
+	}
+
+	function renderText(text) {
+		if ('string' === typeof text) {
+			return text;
+		}
+
+		var attributeIndices = text.getTextAttributeIndices();
+		var chunks = chunkTextByAttribute(text);
+
+		var lastAttributes = text.getAttributes();
+
+		return attributeIndices.reduce(function (markup, attrIdx, chunkIdx) {
+			var attrs = text.getAttributes(attrIdx);
+			var newTags = (0, _tags.changedTags)(attrs, lastAttributes);
+			lastAttributes = attrs;
+			return markup + newTags + chunks[chunkIdx];
+		}, '');
+	}
+
+/***/ },
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
