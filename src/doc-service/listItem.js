@@ -33,28 +33,57 @@ export default ( DocumentApp, renderContainer ) => {
 		}
 	}
 
-	return function renderListItem( element ) {
-		let listItem = '',
-		    typeAttr = '';
+	const nestedListTags = [];
 
-		const tag = tagForList( element ),
-		      openTags = changedTags( element.getAttributes(), blankAttributes ),
-		      closedTags = changedTags( blankAttributes, element.getAttributes() ),
-		      type = typeForList( element ),
-		      prevSibling = element.getPreviousSibling(),
-		      nextSibling = element.getNextSibling();
+	return function renderListItem( listItem ) {
+		let rendered = '';
 
-		if ( type ) {
-			typeAttr = ` type="${ type }"`
+		const type = typeForList( listItem ),
+			typeAttr = ( type ) ? ` type="${ type }"` : '';
+
+		const prevSibling = listItem.getPreviousSibling();
+		const previousIsListItem = ( prevSibling && prevSibling.getType() === DocumentApp.ElementType.LIST_ITEM );
+		const previousIsLessNested = ( previousIsListItem && prevSibling.getNestingLevel() < listItem.getNestingLevel() );
+		const previousIsMoreNested = ( previousIsListItem && prevSibling.getNestingLevel() > listItem.getNestingLevel() );
+
+		// Open list tags
+		if ( ! previousIsListItem ) {
+			rendered += '<' + tagForList( listItem ) + typeAttr + '>\n'
+		} else if ( previousIsLessNested ) {
+			const tag = tagForList( listItem );
+			rendered += '<' + tag + typeAttr + '>\n'
+			nestedListTags.push( tag );
 		}
 
-		if ( ! prevSibling || prevSibling.getType() !== DocumentApp.ElementType.LIST_ITEM ) {
-			listItem += '<' + tag + typeAttr + '>\n'
+		if ( previousIsMoreNested ) {
+			let nestingLevel = prevSibling.getNestingLevel();
+			const targetLevel = listItem.getNestingLevel();
+			while ( nestingLevel > targetLevel ) {
+				const tag = nestedListTags.pop();
+				rendered += `</${ tag }>\n</li>\n`
+				nestingLevel--;
+			}
 		}
-		listItem += `<li>${openTags}${ renderContainer( element ) }${closedTags}</li>\n`
-		if ( ! nextSibling || nextSibling.getType() !== DocumentApp.ElementType.LIST_ITEM ) {
-			listItem += '</' + tag + '>\n'
+
+		const openTags = changedTags( listItem.getAttributes(), blankAttributes ),
+			closedTags = changedTags( blankAttributes, listItem.getAttributes() );
+
+		rendered += `<li>${openTags}${ renderContainer( listItem ) }${closedTags}`
+
+		const nextSibling = listItem.getNextSibling();
+		const nextIsListItem = ( nextSibling && nextSibling.getType() === DocumentApp.ElementType.LIST_ITEM )
+		const nextListItemIsNested = ( nextIsListItem && nextSibling.getNestingLevel() > listItem.getNestingLevel() );
+
+		if ( ! nextIsListItem ) {
+			let tag = tagForList( listItem );
+			while ( tag ) {
+				rendered += `</li>\n</${ tag }>\n`
+				tag = nestedListTags.pop();
+			}
+		} else if ( ! nextListItemIsNested ) {
+			rendered += '</li>\n'
 		}
-		return listItem;
+
+		return rendered;
 	}
 }

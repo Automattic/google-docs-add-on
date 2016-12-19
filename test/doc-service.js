@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import td from 'testdouble';
-import { docServiceFactory } from '../src/doc-service'
+import { DocService } from '../src/doc-service'
 
 const noop = () => {};
 
@@ -75,14 +75,8 @@ function containerOf( ...elements ) {
 
 	elements.forEach( ( el, i ) => {
 		td.when( container.getChild( i ) ).thenReturn( el )
-
-		if ( i > 0 ) {
-			td.when( el.getPreviousSibling() ).thenReturn( elements[i - 1] )
-		}
-
-		if ( i < ( elements.length - 2 ) ) {
-			td.when( el.getNextSibling() ).thenReturn( elements[i + 1] )
-		}
+		td.when( el.getPreviousSibling() ).thenReturn( elements[i - 1] )
+		td.when( el.getNextSibling() ).thenReturn( elements[i + 1] )
 	} )
 	td.when( container.getNumChildren() ).thenReturn( elements.length )
 	return container
@@ -100,7 +94,7 @@ describe( 'renderContainer()', function() {
 
 	beforeEach( function() {
 		imageLinker = td.function( 'imageLinker' )
-		renderContainer = docServiceFactory( DocumentApp, imageLinker )
+		renderContainer = DocService( DocumentApp, imageLinker )
 	} )
 
 	it( 'renders each child of a container', function() {
@@ -149,11 +143,13 @@ describe( 'renderContainer()', function() {
 		let listItems;
 
 		beforeEach( function() {
-			listItems = [ 0, 1, 2 ].map( ( ) => {
-				const listItem = containerOf( mockText() )
+			listItems = [ 0, 1, 2, 3 ].map( ( i ) => {
+				const listItem = containerOf( mockText( 'Example ' + i ) )
 				listItem.getGlyphType = td.function( 'getGlyphType' )
+				listItem.getNestingLevel = td.function( 'getNestingLevel' )
 				td.when( listItem.getType() ).thenReturn( DocumentApp.ElementType.LIST_ITEM )
 				td.when( listItem.getGlyphType() ).thenReturn( DocumentApp.GlyphType.BULLET )
+				td.when( listItem.getNestingLevel() ).thenReturn( 0 )
 				return listItem
 			} );
 		} )
@@ -164,8 +160,8 @@ describe( 'renderContainer()', function() {
 			const actual = renderContainer( body )
 
 			expect( actual.startsWith( '<ul>' ) ).to.equal( true )
-			expect( actual.match( /<li>/g ) ).to.have.length( 3 )
-			expect( actual.match( /<\/li>/g ) ).to.have.length( 3 )
+			expect( actual.match( /<li>/g ) ).to.have.length( 4 )
+			expect( actual.match( /<\/li>/g ) ).to.have.length( 4 )
 			expect( actual.endsWith( '</ul>\n' ) ).to.equal( true )
 		} )
 
@@ -194,16 +190,33 @@ describe( 'renderContainer()', function() {
 		} )
 
 		it( 'renders links inside lists', function() {
-			const listItem = containerOf( mockText( 'Example' ) )
-			listItem.getGlyphType = td.function( 'getGlyphType' )
-			td.when( listItem.getType() ).thenReturn( DocumentApp.ElementType.LIST_ITEM )
-			td.when( listItem.getGlyphType() ).thenReturn( DocumentApp.GlyphType.BULLET )
+			const listItem = listItems[0];
 			const attributes = Object.assign( blankAttributes(), { LINK_URL: 'http://www.example.com/' } )
 			td.when( listItem.getAttributes() ).thenReturn( attributes )
 
 			const actual = renderContainer( containerOf( listItem ) )
 
-			expect( actual ).to.equal( '<ul>\n<li><a href="http://www.example.com/">Example</a></li>\n</ul>\n' )
+			expect( actual ).to.equal( '<ul>\n<li><a href="http://www.example.com/">Example 0</a></li>\n</ul>\n' )
+		} )
+
+		it( 'renders nested lists', function() {
+			td.when( listItems[1].getNestingLevel() ).thenReturn( 1 )
+			td.when( listItems[2].getNestingLevel() ).thenReturn( 1 )
+			td.when( listItems[1].getGlyphType() ).thenReturn( DocumentApp.GlyphType.NUMBER )
+			td.when( listItems[2].getGlyphType() ).thenReturn( DocumentApp.GlyphType.NUMBER )
+
+			const actual = renderContainer( containerOf( ...listItems ) )
+			const expected =
+`<ul>
+<li>Example 0<ol>
+<li>Example 1</li>
+<li>Example 2</li>
+</ol>
+</li>
+<li>Example 3</li>
+</ul>
+`
+			expect( actual ).to.equal( expected )
 		} )
 	} )
 

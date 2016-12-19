@@ -61,7 +61,7 @@ function makeMultipartBody( payload, boundary ) {
 	return body
 }
 
-export function wpClientFactory( PropertiesService, OAuth2, UrlFetchApp ) {
+export function WPClient( PropertiesService, OAuth2, UrlFetchApp ) {
 	let client = undefined;
 
 	// Needs to be lazy-instantiated because we don't have permissions to access
@@ -118,7 +118,7 @@ export function wpClientFactory( PropertiesService, OAuth2, UrlFetchApp ) {
 	}
 
 	/**
-	 * @param {Blob} image
+	 * @param {Blob} image a Google InlineImage
 	 * @return {object} response
 	 */
 	function uploadImage( image ) {
