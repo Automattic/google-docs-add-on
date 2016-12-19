@@ -10,11 +10,11 @@
 
 /* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
 
-import { wpClientFactory } from './wp-client';
-import { docServiceFactory } from './doc-service';
+import { WPClient } from './wp-client';
+import { DocService } from './doc-service';
 import { imageUploadLinker } from './image-upload-linker';
 
-const wpClient = wpClientFactory( PropertiesService, OAuth2, UrlFetchApp )
+const wpClient = WPClient( PropertiesService, OAuth2, UrlFetchApp )
 
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -89,7 +89,7 @@ export function postToWordPress() {
 	const doc = DocumentApp.getActiveDocument();
 	const docProps = PropertiesService.getDocumentProperties();
 	const imageUrlMapper = imageUploadLinker( wpClient, docProps, Utilities )
-	const renderContainer = docServiceFactory( DocumentApp, imageUrlMapper )
+	const renderContainer = DocService( DocumentApp, imageUrlMapper )
 
 	const body = renderContainer( doc.getBody() );
 	const postId = docProps.getProperty( 'postId' );

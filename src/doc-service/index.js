@@ -13,7 +13,11 @@ const range = ( n ) => {
 	return Array.apply( null, Array( n ) ).map( ( _, i ) => i )
 }
 
-export function docServiceFactory( DocumentApp, imageLinker ) {
+export function DocService( DocumentApp, imageLinker ) {
+	const childrenOf = ( element ) => range( element.getNumChildren() ).map( i => element.getChild( i ) )
+
+	const renderContainer = ( element ) => childrenOf( element ).map( renderElement ).join( '' )
+
 	const renderParagraph = Paragraph( DocumentApp, renderContainer );
 	const renderTable = Table( renderContainer );
 	const renderInlineImage = InlineImage( imageLinker );
@@ -34,16 +38,6 @@ export function docServiceFactory( DocumentApp, imageLinker ) {
 			default:
 				return element.getType() + ': ' + element.toString()
 		}
-	}
-
-	function renderContainer( element ) {
-		const numOfChildren = element.getNumChildren();
-		const contents = range( numOfChildren )
-			.map( i => element.getChild( i ) )
-			.map( renderElement )
-			.join( '' );
-
-		return contents;
 	}
 
 	return renderContainer
