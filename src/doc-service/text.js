@@ -10,7 +10,7 @@ function chunkTextByAttribute( text ) {
 	}, [] )
 }
 
-export default function renderText( text ) {
+export function renderText( text ) {
 	if ( 'string' === typeof text ) {
 		return text;
 	}

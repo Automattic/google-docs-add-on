@@ -1,7 +1,7 @@
 import { blankAttributes } from './attributes';
 import { changedTags } from './tags';
 
-export default ( DocumentApp, renderContainer ) => {
+export function ListItem( DocumentApp, renderContainer ) {
 	function tagForList( listItem ) {
 		switch ( listItem.getGlyphType() ) {
 			case DocumentApp.GlyphType.NUMBER:

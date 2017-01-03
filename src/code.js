@@ -8,7 +8,8 @@ import {
 	showSidebar,
 	authCallback,
 	postToWordPress,
-	devTest
+	devTest,
+	listSites
 } from './index'
 
 global.onOpen = onOpen;
@@ -17,3 +18,4 @@ global.showSidebar = showSidebar;
 global.authCallback = authCallback;
 global.postToWordPress = postToWordPress;
 global.devTest = devTest;
+global.listSites = listSites;
