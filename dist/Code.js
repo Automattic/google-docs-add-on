@@ -10,6 +10,8 @@ function postToWordPress() {
 }
 function devTest() {
 }
+function listSites() {
+}
 function SHARED() {
 }(function(e, a) { for(var i in a) e[i] = a[i]; }(this, /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -70,6 +72,7 @@ function SHARED() {
 	global.authCallback = _index.authCallback;
 	global.postToWordPress = _index.postToWordPress;
 	global.devTest = _index.devTest;
+	global.listSites = _index.listSites;
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
@@ -81,20 +84,44 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
+
+	var _stringify = __webpack_require__(2);
+
+	var _stringify2 = _interopRequireDefault(_stringify);
+
 	exports.onOpen = onOpen;
 	exports.onInstall = onInstall;
 	exports.showSidebar = showSidebar;
 	exports.authCallback = authCallback;
 	exports.postToWordPress = postToWordPress;
+	exports.listSites = listSites;
 	exports.devTest = devTest;
 
-	var _wpClient = __webpack_require__(2);
+	var _wpClient = __webpack_require__(5);
 
 	var _docService = __webpack_require__(42);
 
 	var _imageUploadLinker = __webpack_require__(54);
 
-	var wpClient = (0, _wpClient.wpClientFactory)(PropertiesService, OAuth2, UrlFetchApp);
+	var _imageCache = __webpack_require__(55);
+
+	var _sites = __webpack_require__(56);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	var wpClient = (0, _wpClient.WPClient)(PropertiesService, UrlFetchApp); /**
+	                                                                         * @OnlyCurrentDoc
+	                                                                         *
+	                                                                         * The above comment directs Apps Script to limit the scope of file
+	                                                                         * access for this add-on. It specifies that this add-on will only
+	                                                                         * attempt to read or modify the files in which the add-on is used,
+	                                                                         * and not all of the user's files. The authorization request message
+	                                                                         * presented to users will reflect this limited scope.
+	                                                                         */
+
+	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
+
+	var sites = (0, _sites.Sites)(PropertiesService);
 
 	/**
 	 * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -105,18 +132,6 @@ function SHARED() {
 	 *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
 	 *     running in, inspect e.authMode.
 	 */
-	/**
-	 * @OnlyCurrentDoc
-	 *
-	 * The above comment directs Apps Script to limit the scope of file
-	 * access for this add-on. It specifies that this add-on will only
-	 * attempt to read or modify the files in which the add-on is used,
-	 * and not all of the user's files. The authorization request message
-	 * presented to users will reflect this limited scope.
-	 */
-
-	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
-
 	function onOpen() {
 		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar').addItem('Dev Testing', 'devTest').addToUi();
 	}
@@ -143,19 +158,16 @@ function SHARED() {
 	 */
 	function showSidebar() {
 		var template;
+		var siteList = sites.list();
 
-		if (wpClient.getOauthClient().hasAccess()) {
+		if (siteList.length !== 0) {
 			template = HtmlService.createTemplateFromFile('Sidebar');
-			try {
-				template.siteInfo = wpClient.getSiteInfo();
-			} catch (e) {
-				template = HtmlService.createTemplateFromFile('needsOauth');
-			}
+			template.siteList = siteList;
 		} else {
 			template = HtmlService.createTemplateFromFile('needsOauth');
 		}
 
-		var authorizationUrl = wpClient.getOauthClient().getAuthorizationUrl();
+		var authorizationUrl = oauthClient().getAuthorizationUrl();
 		template.authorizationUrl = authorizationUrl;
 		var page = template.evaluate();
 
@@ -164,34 +176,112 @@ function SHARED() {
 	}
 
 	function authCallback(request) {
-		var isAuthorized = wpClient.getOauthClient().handleCallback(request);
+		try {
+			var isAuthorized = oauthClient().handleCallback(request);
+		} catch (e) {
+			Logger.log(e);
+			return HtmlService.createHtmlOutput('Denied 3. You can close this tab' + (0, _stringify2['default'])(request));
+		}
 
 		if (isAuthorized) {
+			var site = oauthClient().getToken_();
+			try {
+				site.info = wpClient.getSiteInfo(site);
+			} catch (e) {
+				Logger.log(e);
+				return HtmlService.createHtmlOutput('Denied 1. You can close this tab' + (0, _stringify2['default'])(site));
+			}
+			sites.add(site);
 			var template = HtmlService.createTemplateFromFile('oauthSuccess');
+			showSidebar(); // reload
 			return template.evaluate();
 		}
 
-		return HtmlService.createHtmlOutput('Denied. You can close this tab');
+		return HtmlService.createHtmlOutput('Denied 2. You can close this tab');
 	}
 
-	function postToWordPress() {
+	function postToWordPress(site_id) {
 		var doc = DocumentApp.getActiveDocument();
 		var docProps = PropertiesService.getDocumentProperties();
-		var imageUrlMapper = (0, _imageUploadLinker.imageUploadLinker)(wpClient, docProps, Utilities);
-		var renderContainer = (0, _docService.docServiceFactory)(DocumentApp, imageUrlMapper);
-
+		var site = sites.find(site_id);
+		var upload = function upload(image) {
+			return wpClient.uploadImage(site, image);
+		};
+		var imageCache = (0, _imageCache.ImageCache)(site, docProps, md5);
+		var imageUrlMapper = (0, _imageUploadLinker.imageUploadLinker)(upload, imageCache);
+		var renderContainer = (0, _docService.DocService)(DocumentApp, imageUrlMapper);
 		var body = renderContainer(doc.getBody());
-		var postId = docProps.getProperty('postId');
+
+		// how to cache on per-site/document basis?
+		var postId = docProps.getProperty(site_id + ':postId');
 
 		var response = wpClient.postToWordPress(doc.getName(), body, postId);
+
 		docProps.setProperty('postId', response.ID.toString());
 		return response;
 	}
 
+	function listSites() {
+		return sites.list();
+	}
+
 	function devTest() {}
+
+	var oauthService = undefined;
+	// Needs to be lazy-instantiated because we don't have permissions to access
+	// properties until the app is actually open
+	function oauthClient() {
+		if (oauthService) {
+			return oauthService;
+		}
+
+		var _PropertiesService$ge = PropertiesService.getScriptProperties().getProperties(),
+		    OauthClientId = _PropertiesService$ge.OauthClientId,
+		    OauthClientSecret = _PropertiesService$ge.OauthClientSecret;
+
+		oauthService = OAuth2.createService('overpass').setAuthorizationBaseUrl('https://public-api.wordpress.com/oauth2/authorize').setTokenUrl('https://public-api.wordpress.com/oauth2/token').setClientId(OauthClientId).setClientSecret(OauthClientSecret).setCallbackFunction('authCallback').setPropertyStore(PropertiesService.getUserProperties());
+		return oauthService;
+	}
+
+	function md5(message) {
+		return Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.US_ASCII).map(function (byte) {
+			var char = '';
+			if (byte < 0) {
+				byte += 255;
+			}
+			char = byte.toString(16);
+			if (char.length === 1) {
+				char = '0' + char;
+			}
+			return char;
+		}).join('');
+	}
 
 /***/ },
 /* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(3), __esModule: true };
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var core  = __webpack_require__(4)
+	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
+	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
+	  return $JSON.stringify.apply($JSON, arguments);
+	};
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+	var core = module.exports = {version: '2.4.0'};
+	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
+
+/***/ },
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -200,7 +290,7 @@ function SHARED() {
 		value: true
 	});
 
-	var _stringify = __webpack_require__(3);
+	var _stringify = __webpack_require__(2);
 
 	var _stringify2 = _interopRequireDefault(_stringify);
 
@@ -208,7 +298,7 @@ function SHARED() {
 
 	var _assign2 = _interopRequireDefault(_assign);
 
-	exports.wpClientFactory = wpClientFactory;
+	exports.WPClient = WPClient;
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -262,29 +352,11 @@ function SHARED() {
 		return body;
 	}
 
-	function wpClientFactory(PropertiesService, OAuth2, UrlFetchApp) {
-		var client = undefined;
-
-		// Needs to be lazy-instantiated because we don't have permissions to access
-		// properties until the script is actually open
-		function getClient() {
-			if (client) {
-				return client;
-			}
-
-			var _PropertiesService$ge = PropertiesService.getScriptProperties().getProperties(),
-			    OauthClientId = _PropertiesService$ge.OauthClientId,
-			    OauthClientSecret = _PropertiesService$ge.OauthClientSecret;
-
-			client = OAuth2.createService('wordpress').setAuthorizationBaseUrl('https://public-api.wordpress.com/oauth2/authorize').setTokenUrl('https://public-api.wordpress.com/oauth2/token').setClientId(OauthClientId).setClientSecret(OauthClientSecret).setCallbackFunction('authCallback').setPropertyStore(PropertiesService.getUserProperties());
-			return client;
-		}
-
-		function request(path, options) {
-			var wpService = getClient();
+	function WPClient(PropertiesService, UrlFetchApp) {
+		function request(access_token, path, options) {
 			var defaultOptions = {
 				headers: {
-					Authorization: 'Bearer ' + wpService.getAccessToken()
+					Authorization: 'Bearer ' + access_token
 				}
 			};
 			var url = API_BASE + path;
@@ -292,28 +364,26 @@ function SHARED() {
 			return JSON.parse(UrlFetchApp.fetch(url, (0, _assign2['default'])(defaultOptions, options)));
 		}
 
-		function get(path) {
-			var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+		function get(access_token, path) {
+			var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-			return request(path, (0, _assign2['default'])({ method: 'get' }, options));
+			return request(access_token, path, (0, _assign2['default'])({ method: 'get' }, options));
 		}
 
-		function post(path) {
-			var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+		function post(access_token, path) {
+			var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-			return request(path, (0, _assign2['default'])({ method: 'post' }, options));
+			return request(access_token, path, (0, _assign2['default'])({ method: 'post' }, options));
 		}
 
-		function postToWordPress(title, content, postIdParam) {
-			var wpService = getClient();
+		function postToWordPress(site, title, content, postIdParam) {
 			var postId = postIdParam || 'new';
-
-			var _wpService$getToken_ = wpService.getToken_(),
-			    blog_id = _wpService$getToken_.blog_id;
+			var blog_id = site.blog_id,
+			    access_token = site.access_token;
 
 			var path = '/sites/' + blog_id + '/posts/' + postId;
 
-			var response = post(path, { payload: {
+			var response = post(access_token, path, { payload: {
 					status: 'draft',
 					title: title,
 					content: content
@@ -323,14 +393,12 @@ function SHARED() {
 		}
 
 		/**
-	  * @param {Blob} image
+	  * @param {Blob} image a Google InlineImage
 	  * @return {object} response
 	  */
-		function uploadImage(image) {
-			var wpService = getClient();
-
-			var _wpService$getToken_2 = wpService.getToken_(),
-			    blog_id = _wpService$getToken_2.blog_id;
+		function uploadImage(site, image) {
+			var blog_id = site.blog_id,
+			    access_token = site.access_token;
 
 			var path = '/sites/' + blog_id + '/media/new';
 			var imageBlob = image.getBlob();
@@ -356,50 +424,24 @@ function SHARED() {
 				payload: makeMultipartBody({ 'media[]': imageBlob }, boundary)
 			};
 
-			var response = post(path, options);
+			var response = post(access_token, path, options);
 
 			return response;
 		}
 
-		function getSiteInfo() {
-			var wpService = getClient();
+		function getSiteInfo(site) {
+			var blog_id = site.blog_id,
+			    access_token = site.access_token;
 
-			var _wpService$getToken_3 = wpService.getToken_(),
-			    blog_id = _wpService$getToken_3.blog_id;
-
-			return get('/sites/' + blog_id);
+			return get(access_token, '/sites/' + blog_id);
 		}
 
 		return {
-			getOauthClient: getClient,
 			postToWordPress: postToWordPress,
 			getSiteInfo: getSiteInfo,
 			uploadImage: uploadImage
 		};
 	}
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(4), __esModule: true };
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var core  = __webpack_require__(5)
-	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
-	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
-	  return $JSON.stringify.apply($JSON, arguments);
-	};
-
-/***/ },
-/* 5 */
-/***/ function(module, exports) {
-
-	var core = module.exports = {version: '2.4.0'};
-	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
 
 /***/ },
 /* 6 */
@@ -412,7 +454,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(8);
-	module.exports = __webpack_require__(5).Object.assign;
+	module.exports = __webpack_require__(4).Object.assign;
 
 /***/ },
 /* 8 */
@@ -428,7 +470,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	var global    = __webpack_require__(10)
-	  , core      = __webpack_require__(5)
+	  , core      = __webpack_require__(4)
 	  , ctx       = __webpack_require__(11)
 	  , hide      = __webpack_require__(13)
 	  , PROTOTYPE = 'prototype';
@@ -908,29 +950,17 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
-	exports.docServiceFactory = docServiceFactory;
+	exports.DocService = DocService;
 
 	var _paragraph = __webpack_require__(43);
 
-	var _paragraph2 = _interopRequireDefault(_paragraph);
-
 	var _table = __webpack_require__(50);
-
-	var _table2 = _interopRequireDefault(_table);
 
 	var _inlineImage = __webpack_require__(51);
 
-	var _inlineImage2 = _interopRequireDefault(_inlineImage);
-
 	var _listItem = __webpack_require__(52);
 
-	var _listItem2 = _interopRequireDefault(_listItem);
-
 	var _text = __webpack_require__(53);
-
-	var _text2 = _interopRequireDefault(_text);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	// http://stackoverflow.com/a/10050831
 	var range = function range(n) {
@@ -943,18 +973,28 @@ function SHARED() {
 		});
 	};
 
-	function docServiceFactory(DocumentApp, imageLinker) {
-		var renderParagraph = (0, _paragraph2['default'])(DocumentApp, renderContainer);
-		var renderTable = (0, _table2['default'])(renderContainer);
-		var renderInlineImage = (0, _inlineImage2['default'])(imageLinker);
-		var renderListItem = (0, _listItem2['default'])(DocumentApp, renderContainer);
+	function DocService(DocumentApp, imageLinker) {
+		var childrenOf = function childrenOf(element) {
+			return range(element.getNumChildren()).map(function (i) {
+				return element.getChild(i);
+			});
+		};
+
+		var renderContainer = function renderContainer(element) {
+			return childrenOf(element).map(renderElement).join('');
+		};
+
+		var renderParagraph = (0, _paragraph.Paragraph)(DocumentApp, renderContainer);
+		var renderTable = (0, _table.Table)(renderContainer);
+		var renderInlineImage = (0, _inlineImage.InlineImage)(imageLinker);
+		var renderListItem = (0, _listItem.ListItem)(DocumentApp, renderContainer);
 
 		function renderElement(element) {
 			switch (element.getType()) {
 				case DocumentApp.ElementType.PARAGRAPH:
 					return renderParagraph(element);
 				case DocumentApp.ElementType.TEXT:
-					return (0, _text2['default'])(element);
+					return (0, _text.renderText)(element);
 				case DocumentApp.ElementType.INLINE_IMAGE:
 					return renderInlineImage(element);
 				case DocumentApp.ElementType.LIST_ITEM:
@@ -964,15 +1004,6 @@ function SHARED() {
 				default:
 					return element.getType() + ': ' + element.toString();
 			}
-		}
-
-		function renderContainer(element) {
-			var numOfChildren = element.getNumChildren();
-			var contents = range(numOfChildren).map(function (i) {
-				return element.getChild(i);
-			}).map(renderElement).join('');
-
-			return contents;
 		}
 
 		return renderContainer;
@@ -987,12 +1018,13 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
+	exports.Paragraph = Paragraph;
 
 	var _attributes = __webpack_require__(44);
 
 	var _tags = __webpack_require__(45);
 
-	exports['default'] = function (DocumentApp, renderContainer) {
+	function Paragraph(DocumentApp, renderContainer) {
 		function tagForParagraph(paragraph) {
 			switch (paragraph.getHeading()) {
 				case DocumentApp.ParagraphHeading.HEADING1:
@@ -1024,7 +1056,7 @@ function SHARED() {
 		}
 
 		return renderParagraph;
-	};
+	}
 
 /***/ },
 /* 44 */
@@ -1142,7 +1174,7 @@ function SHARED() {
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(48);
-	module.exports = __webpack_require__(5).Object.keys;
+	module.exports = __webpack_require__(4).Object.keys;
 
 /***/ },
 /* 48 */
@@ -1164,7 +1196,7 @@ function SHARED() {
 
 	// most Object methods by ES6 should accept primitives
 	var $export = __webpack_require__(9)
-	  , core    = __webpack_require__(5)
+	  , core    = __webpack_require__(4)
 	  , fails   = __webpack_require__(19);
 	module.exports = function(KEY, exec){
 	  var fn  = (core.Object || {})[KEY] || Object[KEY]
@@ -1182,8 +1214,8 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
-
-	exports['default'] = function (renderContainer) {
+	exports.Table = Table;
+	function Table(renderContainer) {
 		function renderTableRow(row) {
 			var tRow = '<tr>';
 			var numCells = row.getNumCells();
@@ -1201,7 +1233,7 @@ function SHARED() {
 			}
 			return tBody + '</tbody></table>';
 		};
-	};
+	}
 
 /***/ },
 /* 51 */
@@ -1212,8 +1244,8 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
-
-	exports["default"] = function (imageLinker) {
+	exports.InlineImage = InlineImage;
+	function InlineImage(imageLinker) {
 		return function renderInlineImage(element) {
 			var url = imageLinker(element),
 			    imgWidth = element.getWidth(),
@@ -1223,7 +1255,7 @@ function SHARED() {
 			alt = element.getAltDescription(); // TODO ESCAPE THESE
 			return "<img src=\"" + url + "\" width=\"" + imgWidth + "\" height=\"" + imgHeight + "\" alt=\"" + alt + "\" title=\"" + title + "\">";
 		};
-	};
+	}
 
 /***/ },
 /* 52 */
@@ -1234,12 +1266,13 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
+	exports.ListItem = ListItem;
 
 	var _attributes = __webpack_require__(44);
 
 	var _tags = __webpack_require__(45);
 
-	exports['default'] = function (DocumentApp, renderContainer) {
+	function ListItem(DocumentApp, renderContainer) {
 		function tagForList(listItem) {
 			switch (listItem.getGlyphType()) {
 				case DocumentApp.GlyphType.NUMBER:
@@ -1271,31 +1304,60 @@ function SHARED() {
 			}
 		}
 
-		return function renderListItem(element) {
-			var listItem = '',
-			    typeAttr = '';
+		var nestedListTags = [];
 
-			var tag = tagForList(element),
-			    openTags = (0, _tags.changedTags)(element.getAttributes(), _attributes.blankAttributes),
-			    closedTags = (0, _tags.changedTags)(_attributes.blankAttributes, element.getAttributes()),
-			    type = typeForList(element),
-			    prevSibling = element.getPreviousSibling(),
-			    nextSibling = element.getNextSibling();
+		return function renderListItem(listItem) {
+			var rendered = '';
 
-			if (type) {
-				typeAttr = ' type="' + type + '"';
+			var type = typeForList(listItem),
+			    typeAttr = type ? ' type="' + type + '"' : '';
+
+			var prevSibling = listItem.getPreviousSibling();
+			var previousIsListItem = prevSibling && prevSibling.getType() === DocumentApp.ElementType.LIST_ITEM;
+			var previousIsLessNested = previousIsListItem && prevSibling.getNestingLevel() < listItem.getNestingLevel();
+			var previousIsMoreNested = previousIsListItem && prevSibling.getNestingLevel() > listItem.getNestingLevel();
+
+			// Open list tags
+			if (!previousIsListItem) {
+				rendered += '<' + tagForList(listItem) + typeAttr + '>\n';
+			} else if (previousIsLessNested) {
+				var tag = tagForList(listItem);
+				rendered += '<' + tag + typeAttr + '>\n';
+				nestedListTags.push(tag);
 			}
 
-			if (!prevSibling || prevSibling.getType() !== DocumentApp.ElementType.LIST_ITEM) {
-				listItem += '<' + tag + typeAttr + '>\n';
+			if (previousIsMoreNested) {
+				var nestingLevel = prevSibling.getNestingLevel();
+				var targetLevel = listItem.getNestingLevel();
+				while (nestingLevel > targetLevel) {
+					var _tag = nestedListTags.pop();
+					rendered += '</' + _tag + '>\n</li>\n';
+					nestingLevel--;
+				}
 			}
-			listItem += '<li>' + openTags + renderContainer(element) + closedTags + '</li>\n';
-			if (!nextSibling || nextSibling.getType() !== DocumentApp.ElementType.LIST_ITEM) {
-				listItem += '</' + tag + '>\n';
+
+			var openTags = (0, _tags.changedTags)(listItem.getAttributes(), _attributes.blankAttributes),
+			    closedTags = (0, _tags.changedTags)(_attributes.blankAttributes, listItem.getAttributes());
+
+			rendered += '<li>' + openTags + renderContainer(listItem) + closedTags;
+
+			var nextSibling = listItem.getNextSibling();
+			var nextIsListItem = nextSibling && nextSibling.getType() === DocumentApp.ElementType.LIST_ITEM;
+			var nextListItemIsNested = nextIsListItem && nextSibling.getNestingLevel() > listItem.getNestingLevel();
+
+			if (!nextIsListItem) {
+				var _tag2 = tagForList(listItem);
+				while (_tag2) {
+					rendered += '</li>\n</' + _tag2 + '>\n';
+					_tag2 = nestedListTags.pop();
+				}
+			} else if (!nextListItemIsNested) {
+				rendered += '</li>\n';
 			}
-			return listItem;
+
+			return rendered;
 		};
-	};
+	}
 
 /***/ },
 /* 53 */
@@ -1306,7 +1368,7 @@ function SHARED() {
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
-	exports['default'] = renderText;
+	exports.renderText = renderText;
 
 	var _tags = __webpack_require__(45);
 
@@ -1340,6 +1402,75 @@ function SHARED() {
 
 /***/ },
 /* 54 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	exports.imageUploadLinker = imageUploadLinker;
+	var contentTypeToExtension = {
+		'image/png': 'png',
+		'image/jpeg': 'jpeg',
+		'image/jpg': 'jpg',
+		'image/gif': 'gif' // pronounced "GIF"
+	};
+
+	/* globals Logger */
+
+	function imageUploadLinker(uploadImage, imageCache) {
+		return function (image) {
+			var cachedUrl = imageCache.get(image);
+			if (cachedUrl) {
+				return cachedUrl;
+			}
+
+			var imageBlob = image.getBlob();
+			if (!imageBlob.getName()) {
+				var contentType = imageBlob.getContentType();
+				if (contentTypeToExtension[contentType]) {
+					Logger.log('Setting name to overpass.' + contentTypeToExtension[contentType]);
+					imageBlob.setName('overpass.' + contentTypeToExtension[contentType]);
+				} else {
+					Logger.log('No content type for ' + contentType);
+				}
+			} else {
+				Logger.log('image has name ' + imageBlob.getBlob());
+			}
+
+			var response = uploadImage(image);
+			var url = response.media[0].URL;
+			imageCache.set(image, url);
+			return url;
+		};
+	}
+
+/***/ },
+/* 55 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	exports.ImageCache = ImageCache;
+	function ImageCache(site, docProps, hasher) {
+
+		function get(image) {
+			var blog_id = site.blog_id;
+
+			var imageHash = hasher(image.getBlob().getBytes());
+
+			return docProps.getProperty('image:' + blog_id + ':' + imageHash);
+		}
+
+		return { get: get };
+	}
+
+/***/ },
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1348,73 +1479,48 @@ function SHARED() {
 		value: true
 	});
 
-	var _stringify = __webpack_require__(3);
+	var _stringify = __webpack_require__(2);
 
 	var _stringify2 = _interopRequireDefault(_stringify);
 
-	exports.imageUploadLinker = imageUploadLinker;
+	exports.Sites = Sites;
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var DOCUMENT_PROPERTY = 'imageUrlCache';
+	var PERSISTANCE_KEY = 'SITES';
 
-	var contentTypeToExtension = {
-		'image/png': 'png',
-		'image/jpeg': 'jpeg',
-		'image/jpg': 'jpg',
-		'image/gif': 'gif' // pronounced "GIF"
-	};
-
-	function imageUploadLinker(wpClient, docProps, Utilities) {
-		var imageUrlCache = {};
-		try {
-			imageUrlCache = JSON.parse(docProps.getProperty(DOCUMENT_PROPERTY)) || {};
-		} catch (e) {
-			Logger.log(e.toString());
-		}
-
-		function md5(message) {
-			return Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.US_ASCII).map(function (byte) {
-				var char = '';
-				if (byte < 0) {
-					byte += 255;
-				}
-				char = byte.toString(16);
-				if (char.length === 1) {
-					char = '0' + char;
-				}
-				return char;
-			}).join('');
-		}
-
-		var linker = function linker(image) {
-			var imageBlob = image.getBlob();
-			var hash = md5(imageBlob.getBytes());
-			if (imageUrlCache[hash]) {
-				return imageUrlCache[hash];
-			}
-
-			if (!imageBlob.getName()) {
-				var contentType = imageBlob.getContentType();
-				if (contentTypeToExtension[contentType]) {
-					Logger.log('Setting name to ' + hash + '.' + contentTypeToExtension[contentType]);
-					imageBlob.setName(hash + '.' + contentTypeToExtension[contentType]);
-				} else {
-					Logger.log('No content type for ' + contentType);
-				}
-			} else {
-				Logger.log('image has name ' + imageBlob.getBlob());
-			}
-
-			var response = wpClient.uploadImage(image);
-			var url = response.media[0].URL;
-			imageUrlCache[hash] = url;
-			docProps.setProperty(DOCUMENT_PROPERTY, (0, _stringify2['default'])(imageUrlCache));
-			return url;
+	function Sites(propertieService) {
+		var props = function props() {
+			return propertieService.getUserProperties();
 		};
 
-		linker.cache = imageUrlCache;
-		return linker;
+		function add(site) {
+			var sites = list();
+			props().setProperty(PERSISTANCE_KEY, (0, _stringify2['default'])(sites.concat(site)));
+		}
+
+		function list() {
+			var sites = void 0;
+			var jsonSites = props().getProperty(PERSISTANCE_KEY);
+			try {
+				sites = JSON.parse(jsonSites);
+			} catch (e) {
+				sites = [];
+			}
+			return sites || [];
+		}
+
+		var find = function find(site_id) {
+			return list.find(function (site) {
+				return site.site_id === site_id;
+			});
+		};
+
+		return {
+			add: add,
+			list: list,
+			find: find
+		};
 	}
 
 /***/ }

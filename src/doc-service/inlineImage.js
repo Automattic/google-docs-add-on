@@ -1,4 +1,4 @@
-export default ( imageLinker ) => {
+export function InlineImage( imageLinker ) {
 	return function renderInlineImage( element ) {
 		const url = imageLinker( element ),
 		      imgWidth = element.getWidth(),

@@ -1,5 +1,3 @@
-const DOCUMENT_PROPERTY = 'imageUrlCache'
-
 const contentTypeToExtension = {
 	'image/png': 'png',
 	'image/jpeg': 'jpeg',
@@ -7,42 +5,21 @@ const contentTypeToExtension = {
 	'image/gif': 'gif' // pronounced "GIF"
 }
 
-export function imageUploadLinker( wpClient, docProps, Utilities ) {
-	let imageUrlCache = {};
-	try {
-		imageUrlCache = JSON.parse( docProps.getProperty( DOCUMENT_PROPERTY ) ) || {}
-	} catch ( e ) {
-		Logger.log( e.toString() )
-	}
+/* globals Logger */
 
-	function md5( message ) {
-		return Utilities.computeDigest( Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.US_ASCII )
-		.map( ( byte ) => {
-			let char = '';
-			if ( byte < 0 ) {
-				byte += 255;
-			}
-			char = byte.toString( 16 );
-			if ( char.length === 1 ) {
-				char = '0' + char;
-			}
-			return char;
-		} )
-		.join( '' )
-	}
-
-	const linker = ( image ) => {
-		const imageBlob = image.getBlob();
-		const hash = md5( imageBlob.getBytes() )
-		if ( imageUrlCache[ hash ] ) {
-			return imageUrlCache[ hash ]
+export function imageUploadLinker( uploadImage, imageCache ) {
+	return ( image ) => {
+		const cachedUrl = imageCache.get( image )
+		if ( cachedUrl ) {
+			return cachedUrl
 		}
 
+		const imageBlob = image.getBlob()
 		if ( ! imageBlob.getName() ) {
 			const contentType = imageBlob.getContentType()
 			if ( contentTypeToExtension[ contentType ] ) {
-				Logger.log( 'Setting name to ' + hash + '.' + contentTypeToExtension[ contentType ] )
-				imageBlob.setName( hash + '.' + contentTypeToExtension[ contentType ] );
+				Logger.log( 'Setting name to overpass.' + contentTypeToExtension[ contentType ] )
+				imageBlob.setName( 'overpass.' + contentTypeToExtension[ contentType ] );
 			} else {
 				Logger.log( 'No content type for ' + contentType );
 			}
@@ -50,13 +27,9 @@ export function imageUploadLinker( wpClient, docProps, Utilities ) {
 			Logger.log( 'image has name ' + imageBlob.getBlob() )
 		}
 
-		const response = wpClient.uploadImage( image );
+		const response = uploadImage( image );
 		const url = response.media[ 0 ].URL;
-		imageUrlCache[ hash ] = url;
-		docProps.setProperty( DOCUMENT_PROPERTY, JSON.stringify( imageUrlCache ) )
+		imageCache.set( image, url );
 		return url
 	}
-
-	linker.cache = imageUrlCache;
-	return linker
 }

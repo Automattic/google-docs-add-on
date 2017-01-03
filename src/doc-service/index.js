@@ -1,8 +1,8 @@
-import Paragraph from './paragraph';
-import Table from './table';
-import InlineImage from './inlineImage';
-import ListItem from './listItem'
-import renderText from './text';
+import { Paragraph } from './paragraph';
+import { Table } from './table';
+import { InlineImage } from './inlineImage';
+import { ListItem } from './listItem'
+import { renderText } from './text';
 
 // http://stackoverflow.com/a/10050831
 const range = ( n ) => {

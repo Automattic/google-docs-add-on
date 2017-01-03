@@ -61,32 +61,11 @@ function makeMultipartBody( payload, boundary ) {
 	return body
 }
 
-export function WPClient( PropertiesService, OAuth2, UrlFetchApp ) {
-	let client = undefined;
-
-	// Needs to be lazy-instantiated because we don't have permissions to access
-	// properties until the script is actually open
-	function getClient() {
-		if ( client ) {
-			return client;
-		}
-		const { OauthClientId, OauthClientSecret } = PropertiesService.getScriptProperties().getProperties();
-
-		client = OAuth2.createService( 'wordpress' )
-			.setAuthorizationBaseUrl( 'https://public-api.wordpress.com/oauth2/authorize' )
-			.setTokenUrl( 'https://public-api.wordpress.com/oauth2/token' )
-			.setClientId( OauthClientId )
-			.setClientSecret( OauthClientSecret )
-			.setCallbackFunction( 'authCallback' )
-			.setPropertyStore( PropertiesService.getUserProperties() )
-		return client;
-	}
-
-	function request( path, options ) {
-		const wpService = getClient();
+export function WPClient( PropertiesService, UrlFetchApp ) {
+	function request( access_token, path, options ) {
 		const defaultOptions = {
 			headers: {
-				Authorization: `Bearer ${ wpService.getAccessToken() }`
+				Authorization: `Bearer ${ access_token }`
 			}
 		};
 		const url = API_BASE + path;
@@ -94,21 +73,20 @@ export function WPClient( PropertiesService, OAuth2, UrlFetchApp ) {
 		return JSON.parse( UrlFetchApp.fetch( url, Object.assign( defaultOptions, options ) ) )
 	}
 
-	function get( path, options = {} ) {
-		return request( path, Object.assign( { method: 'get' }, options ) )
+	function get( access_token, path, options = {} ) {
+		return request( access_token, path, Object.assign( { method: 'get' }, options ) )
 	}
 
-	function post( path, options = {} ) {
-		return request( path, Object.assign( { method: 'post' }, options ) )
+	function post( access_token, path, options = {} ) {
+		return request( access_token, path, Object.assign( { method: 'post' }, options ) )
 	}
 
-	function postToWordPress( title, content, postIdParam ) {
-		const wpService = getClient();
+	function postToWordPress( site, title, content, postIdParam ) {
 		const postId = postIdParam || 'new';
-		const { blog_id } = wpService.getToken_();
+		const { blog_id, access_token } = site;
 		const path = `/sites/${ blog_id }/posts/${ postId }`
 
-		const response = post( path, { payload: {
+		const response = post( access_token, path, { payload: {
 			status: 'draft',
 			title,
 			content
@@ -121,9 +99,8 @@ export function WPClient( PropertiesService, OAuth2, UrlFetchApp ) {
 	 * @param {Blob} image a Google InlineImage
 	 * @return {object} response
 	 */
-	function uploadImage( image ) {
-		const wpService = getClient();
-		const { blog_id } = wpService.getToken_();
+	function uploadImage( site, image ) {
+		const { blog_id, access_token } = site;
 		const path = `/sites/${ blog_id }/media/new`
 		const imageBlob = image.getBlob()
 		Logger.log( JSON.stringify( {
@@ -148,21 +125,19 @@ export function WPClient( PropertiesService, OAuth2, UrlFetchApp ) {
 			payload: makeMultipartBody( { 'media[]': imageBlob }, boundary )
 		}
 
-		const response = post( path, options )
+		const response = post( access_token, path, options )
 
 		return response
 	}
 
-	function getSiteInfo() {
-		const wpService = getClient();
-		const { blog_id } = wpService.getToken_();
-		return get( `/sites/${ blog_id }` )
+	function getSiteInfo( site ) {
+		const { blog_id, access_token } = site;
+		return get( access_token, `/sites/${ blog_id }` )
 	}
 
 	return {
-		getOauthClient: getClient,
 		postToWordPress,
 		getSiteInfo,
-		uploadImage
+		uploadImage,
 	}
 }
