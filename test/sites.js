@@ -9,7 +9,9 @@ describe( 'Sites', function() {
 		access_token: 'abcdef',
 		blog_id: 12345,
 		blog_url: 'http://example.com/',
-		token_type: 'bearer'
+		info: {
+			name: "George's awesome blog"
+		}
 	}
 
 	beforeEach( function() {
@@ -32,14 +34,23 @@ describe( 'Sites', function() {
 
 	describe( 'add', function() {
 		it( 'stores the site in the properties', function() {
-
 			sites.add( site )
 
 			td.verify( props.setProperty( 'SITES', JSON.stringify( [site] ) ) )
 		} )
+
+		it( "does't add duplicate sites", function() {
+			td.when( props.getProperty( 'SITES' ) ).thenReturn( JSON.stringify( [ site ] ) )
+			sites.add( site )
+
+			td.verify( props.setProperty( 'SITES' ), { times: 0, ignoreExtraArgs: true } )
+		} )
+
+		it( 'only stores the properties we need', function() {
+			const extendedSite = Object.assign( {}, site, { foo: 'bar', baz: 'bing' } )
+			sites.add( extendedSite )
+
+			td.verify( props.setProperty( 'SITES', JSON.stringify( [site] ) ) )
+		} )
 	} )
-
-
-
-
 } )

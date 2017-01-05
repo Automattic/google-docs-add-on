@@ -110,10 +110,9 @@ export function postToWordPress( site_id ) {
 	const renderContainer = DocService( DocumentApp, imageUrlMapper )
 	const body = renderContainer( doc.getBody() );
 
-	// how to cache on per-site/document basis?
 	const postId = docProps.getProperty( site_id + ':postId' );
 
-	const response = wpClient.postToWordPress( doc.getName(), body, postId );
+	const response = wpClient.postToWordPress( site, doc.getName(), body, postId );
 
 	docProps.setProperty( 'postId', response.ID.toString() );
 	return response;
@@ -124,7 +123,7 @@ export function listSites() {
 }
 
 export function devTest() {
-
+	PropertiesService.getUserProperties().setProperty( 'SITES', undefined )
 }
 
 let oauthService = undefined;

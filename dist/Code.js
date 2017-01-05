@@ -204,6 +204,7 @@ function SHARED() {
 		var doc = DocumentApp.getActiveDocument();
 		var docProps = PropertiesService.getDocumentProperties();
 		var site = sites.find(site_id);
+		Logger.log((0, _stringify2['default'])(site));
 		var upload = function upload(image) {
 			return wpClient.uploadImage(site, image);
 		};
@@ -212,10 +213,10 @@ function SHARED() {
 		var renderContainer = (0, _docService.DocService)(DocumentApp, imageUrlMapper);
 		var body = renderContainer(doc.getBody());
 
-		// how to cache on per-site/document basis?
 		var postId = docProps.getProperty(site_id + ':postId');
 
-		var response = wpClient.postToWordPress(doc.getName(), body, postId);
+		var response = wpClient.postToWordPress(site, doc.getName(), body, postId);
+		Logger.log((0, _stringify2['default'])(response));
 
 		docProps.setProperty('postId', response.ID.toString());
 		return response;
@@ -225,7 +226,9 @@ function SHARED() {
 		return sites.list();
 	}
 
-	function devTest() {}
+	function devTest() {
+		PropertiesService.getUserProperties().setProperty('SITES', undefined);
+	}
 
 	var oauthService = undefined;
 	// Needs to be lazy-instantiated because we don't have permissions to access
@@ -1458,15 +1461,22 @@ function SHARED() {
 	exports.ImageCache = ImageCache;
 	function ImageCache(site, docProps, hasher) {
 
-		function get(image) {
+		function pathForImage(image) {
 			var blog_id = site.blog_id;
 
 			var imageHash = hasher(image.getBlob().getBytes());
-
-			return docProps.getProperty('image:' + blog_id + ':' + imageHash);
+			return 'image:' + blog_id + ':' + imageHash;
 		}
 
-		return { get: get };
+		var get = function get(image) {
+			return docProps.getProperty(pathForImage(image));
+		};
+
+		var set = function set(image, url) {
+			return docProps.setProperty(pathForImage(image), url);
+		};
+
+		return { get: get, set: set };
 	}
 
 /***/ },
@@ -1493,28 +1503,48 @@ function SHARED() {
 		var props = function props() {
 			return propertieService.getUserProperties();
 		};
-
-		function add(site) {
-			var sites = list();
-			props().setProperty(PERSISTANCE_KEY, (0, _stringify2['default'])(sites.concat(site)));
-		}
+		var sitesCache = void 0;
 
 		function list() {
-			var sites = void 0;
+			if (sitesCache) {
+				return sitesCache;
+			}
+
 			var jsonSites = props().getProperty(PERSISTANCE_KEY);
 			try {
-				sites = JSON.parse(jsonSites);
+				sitesCache = JSON.parse(jsonSites);
 			} catch (e) {
-				sites = [];
+				sitesCache = [];
 			}
-			return sites || [];
+			return sitesCache || [];
 		}
 
 		var find = function find(site_id) {
-			return list.find(function (site) {
-				return site.site_id === site_id;
-			});
+			var sites = list();
+			for (var i = 0; i < sites.length; i++) {
+				if (sites[i].blog_id === site_id) {
+					return sites[i];
+				}
+			}
 		};
+
+		function add(site) {
+			if (find(site.blog_id)) {
+				return;
+			}
+			var sites = list();
+			sitesCache = sites.concat(siteIdentity(site));
+			props().setProperty(PERSISTANCE_KEY, (0, _stringify2['default'])(sitesCache));
+		}
+
+		function siteIdentity(site) {
+			var access_token = site.access_token,
+			    blog_id = site.blog_id,
+			    blog_url = site.blog_url,
+			    name = site.info.name;
+
+			return { access_token: access_token, blog_id: blog_id, blog_url: blog_url, info: { name: name } };
+		}
 
 		return {
 			add: add,
