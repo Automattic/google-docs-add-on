@@ -12,6 +12,8 @@ function devTest() {
 }
 function listSites() {
 }
+function deleteSite() {
+}
 function SHARED() {
 }(function(e, a) { for(var i in a) e[i] = a[i]; }(this, /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -73,6 +75,7 @@ function SHARED() {
 	global.postToWordPress = _index.postToWordPress;
 	global.devTest = _index.devTest;
 	global.listSites = _index.listSites;
+	global.deleteSite = _index.deleteSite;
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
@@ -95,6 +98,7 @@ function SHARED() {
 	exports.authCallback = authCallback;
 	exports.postToWordPress = postToWordPress;
 	exports.listSites = listSites;
+	exports.deleteSite = deleteSite;
 	exports.devTest = devTest;
 
 	var _wpClient = __webpack_require__(5);
@@ -105,7 +109,7 @@ function SHARED() {
 
 	var _imageCache = __webpack_require__(55);
 
-	var _sites = __webpack_require__(56);
+	var _persistance = __webpack_require__(56);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -121,7 +125,7 @@ function SHARED() {
 
 	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
 
-	var sites = (0, _sites.Sites)(PropertiesService);
+	var store = (0, _persistance.Persistance)(PropertiesService);
 
 	/**
 	 * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -158,7 +162,7 @@ function SHARED() {
 	 */
 	function showSidebar() {
 		var template;
-		var siteList = sites.list();
+		var siteList = store.listSites();
 
 		if (siteList.length !== 0) {
 			template = HtmlService.createTemplateFromFile('Sidebar');
@@ -176,8 +180,9 @@ function SHARED() {
 	}
 
 	function authCallback(request) {
+		var isAuthorized = void 0;
 		try {
-			var isAuthorized = oauthClient().handleCallback(request);
+			isAuthorized = oauthClient().handleCallback(request);
 		} catch (e) {
 			Logger.log(e);
 			return HtmlService.createHtmlOutput('Denied 3. You can close this tab' + (0, _stringify2['default'])(request));
@@ -191,7 +196,7 @@ function SHARED() {
 				Logger.log(e);
 				return HtmlService.createHtmlOutput('Denied 1. You can close this tab' + (0, _stringify2['default'])(site));
 			}
-			sites.add(site);
+			store.addSite(site);
 			var template = HtmlService.createTemplateFromFile('oauthSuccess');
 			showSidebar(); // reload
 			return template.evaluate();
@@ -203,8 +208,7 @@ function SHARED() {
 	function postToWordPress(site_id) {
 		var doc = DocumentApp.getActiveDocument();
 		var docProps = PropertiesService.getDocumentProperties();
-		var site = sites.find(site_id);
-		Logger.log((0, _stringify2['default'])(site));
+		var site = store.findSite(site_id);
 		var upload = function upload(image) {
 			return wpClient.uploadImage(site, image);
 		};
@@ -212,22 +216,33 @@ function SHARED() {
 		var imageUrlMapper = (0, _imageUploadLinker.imageUploadLinker)(upload, imageCache);
 		var renderContainer = (0, _docService.DocService)(DocumentApp, imageUrlMapper);
 		var body = renderContainer(doc.getBody());
-
-		var postId = docProps.getProperty(site_id + ':postId');
+		var postInfoFromServer = store.getPostStatus();
+		var postId = void 0;
+		if (postInfoFromServer[site_id]) {
+			postId = postInfoFromServer[site_id].ID;
+		}
 
 		var response = wpClient.postToWordPress(site, doc.getName(), body, postId);
-		Logger.log((0, _stringify2['default'])(response));
 
-		docProps.setProperty('postId', response.ID.toString());
+		store.savePostToSite(response, site);
 		return response;
 	}
 
 	function listSites() {
-		return sites.list();
+		var sites = store.listSites();
+		var posts = store.getPostStatus();
+		sites.forEach(function (site) {
+			return site.post = posts[site.blog_id];
+		});
+		return sites;
+	}
+
+	function deleteSite(site_id) {
+		return store.deleteSite(site_id);
 	}
 
 	function devTest() {
-		PropertiesService.getUserProperties().setProperty('SITES', undefined);
+		return PropertiesService.getDocumentProperties().getProperty('postInfo');
 	}
 
 	var oauthService = undefined;
@@ -1493,24 +1508,28 @@ function SHARED() {
 
 	var _stringify2 = _interopRequireDefault(_stringify);
 
-	exports.Sites = Sites;
+	exports.Persistance = Persistance;
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var PERSISTANCE_KEY = 'SITES';
+	var SITE_PERSISTANCE_KEY = 'SITES';
+	var POST_PERSISTANCE_KEY = 'POST_DATA';
 
-	function Sites(propertieService) {
-		var props = function props() {
+	function Persistance(propertieService) {
+		var userProps = function userProps() {
 			return propertieService.getUserProperties();
+		};
+		var docProps = function docProps() {
+			return propertieService.getDocumentProperties();
 		};
 		var sitesCache = void 0;
 
-		function list() {
+		function listSites() {
 			if (sitesCache) {
 				return sitesCache;
 			}
 
-			var jsonSites = props().getProperty(PERSISTANCE_KEY);
+			var jsonSites = userProps().getProperty(SITE_PERSISTANCE_KEY);
 			try {
 				sitesCache = JSON.parse(jsonSites);
 			} catch (e) {
@@ -1519,8 +1538,8 @@ function SHARED() {
 			return sitesCache || [];
 		}
 
-		var find = function find(site_id) {
-			var sites = list();
+		var findSite = function findSite(site_id) {
+			var sites = listSites();
 			for (var i = 0; i < sites.length; i++) {
 				if (sites[i].blog_id === site_id) {
 					return sites[i];
@@ -1528,13 +1547,12 @@ function SHARED() {
 			}
 		};
 
-		function add(site) {
-			if (find(site.blog_id)) {
+		function addSite(site) {
+			if (findSite(site.blog_id)) {
 				return;
 			}
-			var sites = list();
-			sitesCache = sites.concat(siteIdentity(site));
-			props().setProperty(PERSISTANCE_KEY, (0, _stringify2['default'])(sitesCache));
+
+			persisitSites(listSites().concat(siteIdentity(site)));
 		}
 
 		function siteIdentity(site) {
@@ -1546,10 +1564,56 @@ function SHARED() {
 			return { access_token: access_token, blog_id: blog_id, blog_url: blog_url, info: { name: name } };
 		}
 
+		function deleteSite(site_id) {
+			persisitSites(listSites().filter(function (site) {
+				return site.blog_id !== site_id;
+			}));
+		}
+
+		function persisitSites(sites) {
+			sitesCache = sites;
+			userProps().setProperty(SITE_PERSISTANCE_KEY, (0, _stringify2['default'])(sites));
+		}
+
+		function savePostToSite(post, site) {
+			var blog_id = site.blog_id;
+
+			var postData = getPostStatus();
+			postData[blog_id] = postIdentity(post);
+			docProps().setProperty(POST_PERSISTANCE_KEY, (0, _stringify2['default'])(postData));
+		}
+
+		function postIdentity(post) {
+			var date = post.date,
+			    URL = post.URL,
+			    ID = post.ID;
+
+			return { date: date, URL: URL, ID: ID };
+		}
+
+		function getPostStatus() {
+			var postStatus = docProps().getProperty(POST_PERSISTANCE_KEY);
+
+			if (!postStatus) {
+				return {};
+			}
+
+			try {
+				postStatus = JSON.parse(postStatus);
+			} catch (e) {
+				postStatus = {};
+			}
+
+			return postStatus;
+		}
+
 		return {
-			add: add,
-			list: list,
-			find: find
+			addSite: addSite,
+			listSites: listSites,
+			findSite: findSite,
+			deleteSite: deleteSite,
+			savePostToSite: savePostToSite,
+			getPostStatus: getPostStatus
 		};
 	}
 

@@ -9,7 +9,8 @@ import {
 	authCallback,
 	postToWordPress,
 	devTest,
-	listSites
+	listSites,
+	deleteSite
 } from './index'
 
 global.onOpen = onOpen;
@@ -19,3 +20,4 @@ global.authCallback = authCallback;
 global.postToWordPress = postToWordPress;
 global.devTest = devTest;
 global.listSites = listSites;
+global.deleteSite = deleteSite;

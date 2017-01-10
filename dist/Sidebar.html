@@ -255,8 +255,8 @@ button:focus {
 	<div class="sites-list">
 		<ul></ul>
 	</div>
-	<textarea style="width: 100%; height: 50%" id="foo"></textarea>
-	<button id="baz">Debug</button>
+	<textarea style="display: none; width: 100%; height: 50%" id="foo"></textarea>
+	<button id="baz" style="display: none">Debug</button>
 
 	<div class="footer">
 		<div class="footer__add-site">
@@ -283,12 +283,11 @@ $( function() {
 function postToWordPress() {
 	var self = this;
 	var site_id = $( self ).attr( 'data-blogid' )
-	console.log( site_id )
 	self.disabled = true;
 	google.script.run
 		.withSuccessHandler( function( html, element ) {
 			$( '#foo' ).val( JSON.stringify( html ) );
-			self.disabled = false;
+			loadSites();
 		})
 		.withFailureHandler( function( msg, element ) {
 			showError( msg, $( '#sites-list' ) );
@@ -307,40 +306,64 @@ function loadSites() {
 			var $siteList = $( '.sites-list ul' )
 			$siteList.html( siteElements )
 			$siteList.find( '.sites-list__save-draft' ).click( postToWordPress )
+			$siteList.find( '.sites-list__delete-site' ).click( deleteSite )
 		} )
 		.withFailureHandler( function( msg, element ) {
 			showError( msg, $( '#sites-list' ) );
-			self.disabled = false;
 		})
 		.withUserObject( this )
 		.listSites();
 }
 
+function deleteSite() {
+	var self = this;
+	var site_id = $( self ).attr( 'data-blogid' )
+	self.disabled = true;
+	google.script.run
+		.withSuccessHandler( function( html, element ) {
+			loadSites();
+			self.disabled = false;
+		})
+		.withFailureHandler( function( msg, element ) {
+			showError( msg, $( '#sites-list' ) );
+			self.disabled = false;
+		})
+		.withUserObject( this )
+		.deleteSite( site_id );
+}
+
 function siteListItem( site ) {
-	return '<li>' +
+	let template = '<li>' +
 		'<div class="sites-list__blavatar">' +
 			'<img src="" alt="" />' +
 		'</div>' +
 		'<div class="sites-list__sitename">' +
 			'<a href="' + site.blog_url + '">' + site.info.name +
-			'<em>' + site.blog_url + '</em></a>' +
+			'<br><em>' + site.blog_url + '</em></a>' +
 		'</div>' +
 		'<button class="sites-list__save-draft" data-blogid="' + site.blog_id + '">Save Draft</button>' +
-	'</li>';
+		'<button class="sites-list__delete-site" data-blogid="' + site.blog_id + '">Delete Site</button>';
+
+	if ( site.post ) {
+		template += '<a href="' + site.post.URL + '" class="sites-list__post-link">' + site.post.URL + '</a>'
+	}
+
+	template += '</li>';
+	return template;
 }
 
 function showDebugOutput() {
 	var self = this;
 	google.script.run
-		.withSuccessHandler( function( sites ) {
-			$( '#foo' ).val( JSON.stringify( sites) )
+		.withSuccessHandler( function( value ) {
+			$( '#foo' ).val( value )
 		} )
 		.withFailureHandler( function( msg, element ) {
 			showError( msg, $( '#bar' ) );
 			self.disabled = false;
 		})
 		.withUserObject( this )
-		.listSites();
+		.devTest();
 }
 
 /**
