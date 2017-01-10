@@ -1,7 +1,7 @@
 import { blankAttributes } from './attributes';
 import { changedTags } from './tags';
 
-export default ( DocumentApp, renderContainer ) => {
+export function Paragraph( DocumentApp, renderContainer ) {
 	function tagForParagraph( paragraph ) {
 		switch ( paragraph.getHeading() ) {
 			case DocumentApp.ParagraphHeading.HEADING1:
