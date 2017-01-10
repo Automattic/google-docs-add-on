@@ -1,4 +1,4 @@
-export default ( renderContainer ) => {
+export function Table( renderContainer ) {
 	function renderTableRow( row ) {
 		let tRow = '<tr>';
 		const numCells = row.getNumCells();
