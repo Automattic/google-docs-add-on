@@ -116,7 +116,7 @@ svg {
 .sites-list ul li .sites-list__sitename {
 	line-height: 1.2;
 	float: left;
-	width: calc( 100% - 128px );
+	width: calc( 100% - 135px );
 	color: #668EAA;
 }
 
@@ -137,6 +137,16 @@ svg {
 	font-size: 11px;
 	font-style: normal;
 	color: #668EAA;
+}
+
+.sites-list__delete-site {
+	display: none;
+}
+
+.sites-list ul li:hover .sites-list__delete-site {
+	display: block;
+	float: left;
+	padding-right: 3px;
 }
 
 
@@ -318,7 +328,6 @@ function loadSites() {
 function deleteSite() {
 	var self = this;
 	var site_id = $( self ).attr( 'data-blogid' )
-	self.disabled = true;
 	google.script.run
 		.withSuccessHandler( function( html, element ) {
 			loadSites();
@@ -334,6 +343,7 @@ function deleteSite() {
 
 function siteListItem( site ) {
 	let template = '<li>' +
+		'<a title="Remove Site" class="sites-list__delete-site" data-blogid="' + site.blog_id + '">X</a>' +
 		'<div class="sites-list__blavatar">' +
 			'<img src="" alt="" />' +
 		'</div>' +
@@ -341,8 +351,7 @@ function siteListItem( site ) {
 			'<a href="' + site.blog_url + '">' + site.info.name +
 			'<br><em>' + site.blog_url + '</em></a>' +
 		'</div>' +
-		'<button class="sites-list__save-draft" data-blogid="' + site.blog_id + '">Save Draft</button>' +
-		'<button class="sites-list__delete-site" data-blogid="' + site.blog_id + '">Delete Site</button>';
+		'<button class="sites-list__save-draft" data-blogid="' + site.blog_id + '">Save Draft</button>';
 
 	if ( site.post ) {
 		template += '<a href="' + site.post.URL + '" class="sites-list__post-link">' + site.post.URL + '</a>'
