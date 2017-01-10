@@ -14,10 +14,10 @@ import { WPClient } from './wp-client';
 import { DocService } from './doc-service';
 import { imageUploadLinker } from './image-upload-linker';
 import { ImageCache } from './image-cache';
-import { Sites } from './sites';
+import { Persistance } from './persistance';
 
 const wpClient = WPClient( PropertiesService, UrlFetchApp )
-const sites = Sites( PropertiesService )
+const store = Persistance( PropertiesService )
 
 /**
  * Creates a menu entry in the Google Docs UI when the document is opened.
@@ -57,7 +57,7 @@ export function onInstall( e ) {
  */
 export function showSidebar() {
 	var template;
-	const siteList = sites.list();
+	const siteList = store.listSites();
 
 	if ( siteList.length !== 0 ) {
 		template = HtmlService.createTemplateFromFile( 'Sidebar' )
@@ -75,13 +75,13 @@ export function showSidebar() {
 }
 
 export function authCallback( request ) {
+	let isAuthorized;
 	try {
-		var isAuthorized = oauthClient().handleCallback( request );
+		isAuthorized = oauthClient().handleCallback( request );
 	} catch ( e ) {
 		Logger.log( e )
 		return HtmlService.createHtmlOutput( 'Denied 3. You can close this tab' + JSON.stringify( request ) );
 	}
-
 
 	if ( isAuthorized ) {
 		const site = oauthClient().getToken_()
@@ -91,7 +91,7 @@ export function authCallback( request ) {
 			Logger.log( e )
 			return HtmlService.createHtmlOutput( 'Denied 1. You can close this tab' + JSON.stringify( site ) );
 		}
-		sites.add( site )
+		store.addSite( site )
 		const template = HtmlService.createTemplateFromFile( 'oauthSuccess' );
 		showSidebar(); // reload
 		return template.evaluate();
@@ -103,27 +103,37 @@ export function authCallback( request ) {
 export function postToWordPress( site_id ) {
 	const doc = DocumentApp.getActiveDocument();
 	const docProps = PropertiesService.getDocumentProperties();
-	const site = sites.find( site_id );
+	const site = store.findSite( site_id );
 	const upload = image => wpClient.uploadImage( site, image );
 	const imageCache = ImageCache( site, docProps, md5 )
 	const imageUrlMapper = imageUploadLinker( upload, imageCache )
 	const renderContainer = DocService( DocumentApp, imageUrlMapper )
 	const body = renderContainer( doc.getBody() );
-
-	const postId = docProps.getProperty( site_id + ':postId' );
+	const postInfoFromServer = store.getPostStatus();
+	let postId;
+	if ( postInfoFromServer[site_id] ) {
+		postId = postInfoFromServer[site_id].ID;
+	}
 
 	const response = wpClient.postToWordPress( site, doc.getName(), body, postId );
 
-	docProps.setProperty( 'postId', response.ID.toString() );
+	store.savePostToSite( response, site );
 	return response;
 }
 
 export function listSites() {
-	return sites.list();
+	const sites = store.listSites();
+	const posts = store.getPostStatus();
+	sites.forEach( site => site.post = posts[ site.blog_id ] )
+	return sites;
+}
+
+export function deleteSite( site_id ) {
+	return store.deleteSite( site_id )
 }
 
 export function devTest() {
-	PropertiesService.getUserProperties().setProperty( 'SITES', undefined )
+	return PropertiesService.getDocumentProperties().getProperty( 'postInfo' )
 }
 
 let oauthService = undefined;
