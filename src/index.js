@@ -32,7 +32,7 @@ const store = Persistance( PropertiesService )
 export function onOpen() {
 	DocumentApp.getUi().createAddonMenu()
 		.addItem( 'Open', 'showSidebar' )
-		.addItem( 'Dev Testing', 'devTest' )
+		// .addItem( 'Dev Testing', 'devTest' )
 		.addToUi();
 }
 

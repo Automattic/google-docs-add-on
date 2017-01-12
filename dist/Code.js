@@ -140,7 +140,9 @@ function SHARED() {
 	 *     running in, inspect e.authMode.
 	 */
 	function onOpen() {
-		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar').addItem('Dev Testing', 'devTest').addToUi();
+		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar')
+		// .addItem( 'Dev Testing', 'devTest' )
+		.addToUi();
 	}
 
 	/**
