@@ -394,9 +394,13 @@ function deleteSite() {
 }
 
 function siteListItem( site ) {
+	var blavatar = 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
+	if ( site.info.icon && site.info.icon.img ) {
+		var blavatar = site.info.icon.img;
+	}
 	let template = '<li>' +
 		'<div class="sites-list__blavatar">' +
-			'<img src="" alt="" />' +
+			'<img src="' + blavatar + '" alt="" />' +
 		'</div>' +
 		'<div class="sites-list__sitename">' +
 			'<a class="sites-list__title" href="' + site.blog_url + '">' + site.info.name +

@@ -126,6 +126,7 @@ function SHARED() {
 	 */
 
 	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
+
 	var wpClient = (0, _wpClient.WPClient)(PropertiesService, UrlFetchApp);
 	var store = (0, _persistance.Persistance)(PropertiesService);
 
@@ -207,8 +208,6 @@ function SHARED() {
 		return HtmlService.createHtmlOutput('Denied 2. You can close this tab');
 	}
 
-	var debugStuff = {};
-
 	function postToWordPress(site_id, overwriteServer) {
 		var doc = DocumentApp.getActiveDocument();
 		var docProps = PropertiesService.getDocumentProperties();
@@ -235,17 +234,6 @@ function SHARED() {
 		var response = wpClient.postToWordPress(site, doc.getName(), body, postId);
 
 		store.savePostToSite(response, site);
-		// const serverPost = wpClient.getPostStatus( site, cachedPost.ID );
-		// const localDate = getDateFromIso( cachedPost.modified );
-		// const serverDate = getDateFromIso( serverPost.modified );
-
-		// return {
-		// 	cachedPost,
-		// 	serverPost,
-		// 	localDate: localDate.toString(),
-		// 	serverDate: serverDate.toString(),
-		// 	compared: ( localDate < serverDate )
-		// }
 		return response;
 	}
 
@@ -277,9 +265,7 @@ function SHARED() {
 		return store.deleteSite(site_id);
 	}
 
-	function devTest() {
-		return PropertiesService.getDocumentProperties().deleteProperty('POST_DATA');
-	}
+	function devTest() {}
 
 	var oauthService = undefined;
 	// Needs to be lazy-instantiated because we don't have permissions to access
@@ -1604,12 +1590,18 @@ function SHARED() {
 		}
 
 		function siteIdentity(site) {
+			// let img;
 			var access_token = site.access_token,
 			    blog_id = site.blog_id,
 			    blog_url = site.blog_url,
-			    name = site.info.name;
+			    _site$info = site.info,
+			    name = _site$info.name,
+			    img = _site$info.icon.img;
+			// if ( site.icon && site.icon.img ) {
+			// 	img = site.icon.img;
+			// }
 
-			return { access_token: access_token, blog_id: blog_id, blog_url: blog_url, info: { name: name } };
+			return { access_token: access_token, blog_id: blog_id, blog_url: blog_url, info: { name: name, icon: { img: img } } };
 		}
 
 		function deleteSite(site_id) {

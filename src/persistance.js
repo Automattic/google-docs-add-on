@@ -38,8 +38,8 @@ export function Persistance( propertieService ) {
 	}
 
 	function siteIdentity( site ) {
-		const { access_token, blog_id, blog_url, info: { name } } = site;
-		return { access_token, blog_id, blog_url, info: { name } };
+		const { access_token, blog_id, blog_url, info: { name, icon: { img } } } = site;
+		return { access_token, blog_id, blog_url, info: { name, icon: { img } } };
 	}
 
 	function deleteSite( site_id ) {
