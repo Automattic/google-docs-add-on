@@ -381,16 +381,18 @@ function loadSites() {
 }
 
 function deleteSite() {
-	var site_id = $( this ).attr( 'data-blogid' )
-	google.script.run
-		.withSuccessHandler( function( html, element ) {
-			loadSites();
-		})
-		.withFailureHandler( function( msg, element ) {
-			showError( msg, $( '#sites-list' ) );
-		})
-		.withUserObject( this )
-		.deleteSite( site_id );
+	if ( window.confirm( 'Are you sure you want to remove this site?' ) ) {
+		var site_id = $( this ).attr( 'data-blogid' )
+		google.script.run
+			.withSuccessHandler( function( html, element ) {
+				loadSites();
+			})
+			.withFailureHandler( function( msg, element ) {
+				showError( msg, $( '#sites-list' ) );
+			})
+			.withUserObject( this )
+			.deleteSite( site_id );
+	}
 }
 
 function siteListItem( site ) {
