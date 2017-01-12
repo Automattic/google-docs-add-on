@@ -38,7 +38,11 @@ export function Persistance( propertieService ) {
 	}
 
 	function siteIdentity( site ) {
-		const { access_token, blog_id, blog_url, info: { name, icon: { img } } } = site;
+		let img;
+		const { access_token, blog_id, blog_url, info: { name } } = site;
+		if ( site.info.icon && site.info.icon.img ) {
+			img = site.info.icon.img;
+		}
 		return { access_token, blog_id, blog_url, info: { name, icon: { img } } };
 	}
 

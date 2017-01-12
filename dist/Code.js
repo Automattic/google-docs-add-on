@@ -1590,17 +1590,15 @@ function SHARED() {
 		}
 
 		function siteIdentity(site) {
-			// let img;
+			var img = void 0;
 			var access_token = site.access_token,
 			    blog_id = site.blog_id,
 			    blog_url = site.blog_url,
-			    _site$info = site.info,
-			    name = _site$info.name,
-			    img = _site$info.icon.img;
-			// if ( site.icon && site.icon.img ) {
-			// 	img = site.icon.img;
-			// }
+			    name = site.info.name;
 
+			if (site.info.icon && site.info.icon.img) {
+				img = site.info.icon.img;
+			}
 			return { access_token: access_token, blog_id: blog_id, blog_url: blog_url, info: { name: name, icon: { img: img } } };
 		}
 
