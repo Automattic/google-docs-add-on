@@ -111,20 +111,22 @@ function SHARED() {
 
 	var _persistance = __webpack_require__(56);
 
+	var _dateUtils = __webpack_require__(57);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var wpClient = (0, _wpClient.WPClient)(PropertiesService, UrlFetchApp); /**
-	                                                                         * @OnlyCurrentDoc
-	                                                                         *
-	                                                                         * The above comment directs Apps Script to limit the scope of file
-	                                                                         * access for this add-on. It specifies that this add-on will only
-	                                                                         * attempt to read or modify the files in which the add-on is used,
-	                                                                         * and not all of the user's files. The authorization request message
-	                                                                         * presented to users will reflect this limited scope.
-	                                                                         */
+	/**
+	 * @OnlyCurrentDoc
+	 *
+	 * The above comment directs Apps Script to limit the scope of file
+	 * access for this add-on. It specifies that this add-on will only
+	 * attempt to read or modify the files in which the add-on is used,
+	 * and not all of the user's files. The authorization request message
+	 * presented to users will reflect this limited scope.
+	 */
 
 	/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
-
+	var wpClient = (0, _wpClient.WPClient)(PropertiesService, UrlFetchApp);
 	var store = (0, _persistance.Persistance)(PropertiesService);
 
 	/**
@@ -205,7 +207,9 @@ function SHARED() {
 		return HtmlService.createHtmlOutput('Denied 2. You can close this tab');
 	}
 
-	function postToWordPress(site_id) {
+	var debugStuff = {};
+
+	function postToWordPress(site_id, overwriteServer) {
 		var doc = DocumentApp.getActiveDocument();
 		var docProps = PropertiesService.getDocumentProperties();
 		var site = store.findSite(site_id);
@@ -216,16 +220,48 @@ function SHARED() {
 		var imageUrlMapper = (0, _imageUploadLinker.imageUploadLinker)(upload, imageCache);
 		var renderContainer = (0, _docService.DocService)(DocumentApp, imageUrlMapper);
 		var body = renderContainer(doc.getBody());
-		var postInfoFromServer = store.getPostStatus();
-		var postId = void 0;
-		if (postInfoFromServer[site_id]) {
-			postId = postInfoFromServer[site_id].ID;
+		var cachedPostData = store.getPostStatus();
+		var postId = void 0,
+		    cachedPost = void 0;
+		if (cachedPostData[site_id]) {
+			cachedPost = cachedPostData[site_id];
+			postId = cachedPost.ID;
+		}
+
+		if (cachedPost && !overwriteServer && postOnServerIsNewer(site, cachedPost)) {
+			throw 'PostOnServerIsNewer';
 		}
 
 		var response = wpClient.postToWordPress(site, doc.getName(), body, postId);
 
 		store.savePostToSite(response, site);
+		// const serverPost = wpClient.getPostStatus( site, cachedPost.ID );
+		// const localDate = getDateFromIso( cachedPost.modified );
+		// const serverDate = getDateFromIso( serverPost.modified );
+
+		// return {
+		// 	cachedPost,
+		// 	serverPost,
+		// 	localDate: localDate.toString(),
+		// 	serverDate: serverDate.toString(),
+		// 	compared: ( localDate < serverDate )
+		// }
 		return response;
+	}
+
+	function postOnServerIsNewer(site, cachedPost) {
+		var serverPost = void 0;
+		try {
+			serverPost = wpClient.getPostStatus(site, cachedPost.ID);
+		} catch (e) {
+			Logger.log('Cannot get post status:' + e);
+			return false;
+		}
+
+		var localDate = (0, _dateUtils.getDateFromIso)(cachedPost.modified);
+		var serverDate = (0, _dateUtils.getDateFromIso)(serverPost.modified);
+
+		return localDate < serverDate;
 	}
 
 	function listSites() {
@@ -242,7 +278,7 @@ function SHARED() {
 	}
 
 	function devTest() {
-		return PropertiesService.getDocumentProperties().getProperty('postInfo');
+		return PropertiesService.getDocumentProperties().deleteProperty('POST_DATA');
 	}
 
 	var oauthService = undefined;
@@ -410,6 +446,17 @@ function SHARED() {
 			return response;
 		}
 
+		function getPostStatus(site, postId) {
+			var blog_id = site.blog_id,
+			    access_token = site.access_token;
+
+			var path = '/sites/' + blog_id + '/posts/' + postId;
+
+			var response = get(access_token, path);
+
+			return response;
+		}
+
 		/**
 	  * @param {Blob} image a Google InlineImage
 	  * @return {object} response
@@ -457,7 +504,8 @@ function SHARED() {
 		return {
 			postToWordPress: postToWordPress,
 			getSiteInfo: getSiteInfo,
-			uploadImage: uploadImage
+			uploadImage: uploadImage,
+			getPostStatus: getPostStatus
 		};
 	}
 
@@ -1586,9 +1634,10 @@ function SHARED() {
 		function postIdentity(post) {
 			var date = post.date,
 			    URL = post.URL,
-			    ID = post.ID;
+			    ID = post.ID,
+			    modified = post.modified;
 
-			return { date: date, URL: URL, ID: ID };
+			return { date: date, URL: URL, ID: ID, modified: modified };
 		}
 
 		function getPostStatus() {
@@ -1615,6 +1664,57 @@ function SHARED() {
 			savePostToSite: savePostToSite,
 			getPostStatus: getPostStatus
 		};
+	}
+
+/***/ },
+/* 57 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	exports.getDateFromIso = getDateFromIso;
+	// http://stackoverflow.com/a/11820304
+	function getDateFromIso(string) {
+		try {
+			var aDate = new Date();
+			var regexp = '([0-9]{4})(-([0-9]{2})(-([0-9]{2})' + '(T([0-9]{2}):([0-9]{2})(:([0-9]{2})(\.([0-9]+))?)?' + '(Z|(([-+])([0-9]{2}):([0-9]{2})))?)?)?)?';
+			var d = string.match(new RegExp(regexp));
+
+			var offset = 0;
+			var date = new Date(d[1], 0, 1);
+
+			if (d[3]) {
+				date.setMonth(d[3] - 1);
+			}
+			if (d[5]) {
+				date.setDate(d[5]);
+			}
+			if (d[7]) {
+				date.setHours(d[7]);
+			}
+			if (d[8]) {
+				date.setMinutes(d[8]);
+			}
+			if (d[10]) {
+				date.setSeconds(d[10]);
+			}
+			if (d[12]) {
+				date.setMilliseconds(Number('0.' + d[12]) * 1000);
+			}
+			if (d[14]) {
+				offset = Number(d[16]) * 60 + Number(d[17]);
+				offset *= d[15] === '-' ? 1 : -1;
+			}
+
+			offset -= date.getTimezoneOffset();
+			var time = Number(date) + offset * 60 * 1000;
+			return aDate.setTime(Number(time));
+		} catch (e) {
+			return;
+		}
 	}
 
 /***/ }

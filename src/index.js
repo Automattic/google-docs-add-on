@@ -15,6 +15,7 @@ import { DocService } from './doc-service';
 import { imageUploadLinker } from './image-upload-linker';
 import { ImageCache } from './image-cache';
 import { Persistance } from './persistance';
+import { getDateFromIso } from './date-utils';
 
 const wpClient = WPClient( PropertiesService, UrlFetchApp )
 const store = Persistance( PropertiesService )
@@ -100,7 +101,7 @@ export function authCallback( request ) {
 	return HtmlService.createHtmlOutput( 'Denied 2. You can close this tab' );
 }
 
-export function postToWordPress( site_id ) {
+export function postToWordPress( site_id, overwriteServer ) {
 	const doc = DocumentApp.getActiveDocument();
 	const docProps = PropertiesService.getDocumentProperties();
 	const site = store.findSite( site_id );
@@ -109,16 +110,36 @@ export function postToWordPress( site_id ) {
 	const imageUrlMapper = imageUploadLinker( upload, imageCache )
 	const renderContainer = DocService( DocumentApp, imageUrlMapper )
 	const body = renderContainer( doc.getBody() );
-	const postInfoFromServer = store.getPostStatus();
-	let postId;
-	if ( postInfoFromServer[site_id] ) {
-		postId = postInfoFromServer[site_id].ID;
+	const cachedPostData = store.getPostStatus();
+	let postId, cachedPost;
+	if ( cachedPostData[site_id] ) {
+		cachedPost = cachedPostData[site_id]
+		postId = cachedPost.ID;
+	}
+
+	if ( cachedPost && ! overwriteServer && postOnServerIsNewer( site, cachedPost ) ) {
+		throw 'PostOnServerIsNewer';
 	}
 
 	const response = wpClient.postToWordPress( site, doc.getName(), body, postId );
 
 	store.savePostToSite( response, site );
 	return response;
+}
+
+function postOnServerIsNewer( site, cachedPost ) {
+	let serverPost;
+	try {
+		serverPost = wpClient.getPostStatus( site, cachedPost.ID );
+	} catch ( e ) {
+		Logger.log( 'Cannot get post status:' + e )
+		return false;
+	}
+
+	const localDate = getDateFromIso( cachedPost.modified );
+	const serverDate = getDateFromIso( serverPost.modified );
+
+	return ( localDate < serverDate );
 }
 
 export function listSites() {
@@ -132,9 +153,7 @@ export function deleteSite( site_id ) {
 	return store.deleteSite( site_id )
 }
 
-export function devTest() {
-	return PropertiesService.getDocumentProperties().getProperty( 'postInfo' )
-}
+export function devTest() { }
 
 let oauthService = undefined;
 // Needs to be lazy-instantiated because we don't have permissions to access

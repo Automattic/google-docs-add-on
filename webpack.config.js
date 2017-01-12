@@ -1,4 +1,4 @@
-var GasPlugin = require("gas-webpack-plugin");
+var GasPlugin = require( 'gas-webpack-plugin' );
 
 module.exports = {
 	entry: './src/code.js',
@@ -8,7 +8,7 @@ module.exports = {
 		path: './dist'
 	},
 	module: {
-		loaders: [{
+		loaders: [ {
 			test: /\.js$/,
 			exclude: /node_modules/,
 			loader: 'babel-loader'

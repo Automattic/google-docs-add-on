@@ -59,8 +59,8 @@ export function Persistance( propertieService ) {
 	}
 
 	function postIdentity( post ) {
-		const { date, URL, ID } = post;
-		return { date, URL, ID };
+		const { date, URL, ID, modified } = post;
+		return { date, URL, ID, modified };
 	}
 
 	function getPostStatus() {

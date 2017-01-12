@@ -1,6 +1,6 @@
 {
-  "name": "overpasswget",
-  "version": "0.0.1",
+  "name": "overpass",
+  "version": "0.2.0",
   "description": "",
   "main": "index.js",
   "private": true,

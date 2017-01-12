@@ -341,25 +341,29 @@ $( function() {
 	loadSites();
 } );
 
-function postToWordPress() {
-	var self = this;
-	var site_id = $( self ).attr( 'data-blogid' )
-	self.disabled = true;
+function postToWordPress( el, forceOverwrite ) {
+	var site_id = $( this ).attr( 'data-blogid' )
+	this.disabled = true;
 	google.script.run
 		.withSuccessHandler( function( html, element ) {
 			$( '#foo' ).val( JSON.stringify( html ) );
 			loadSites();
-		})
+		} )
 		.withFailureHandler( function( msg, element ) {
-			showError( msg, $( '#sites-list' ) );
-			self.disabled = false;
-		})
+			if ( msg.message === 'PostOnServerIsNewer' ) {
+				if ( window.confirm( 'The post has been updated on the site. Do you want to overwrite your changes?' ) ) {
+					return postToWordPress.call( element, element, true );
+				}
+			} else {
+				showError( msg, $( '#sites-list' ) );
+			}
+			element.disabled = false;
+		} )
 		.withUserObject( this )
-		.postToWordPress( site_id );
+		.postToWordPress( site_id, forceOverwrite );
 }
 
 function loadSites() {
-	var self = this;
 	google.script.run
 		.withSuccessHandler( function( sites ) {
 			$( '#foo' ).val( JSON.stringify( sites) )
@@ -377,16 +381,13 @@ function loadSites() {
 }
 
 function deleteSite() {
-	var self = this;
-	var site_id = $( self ).attr( 'data-blogid' )
+	var site_id = $( this ).attr( 'data-blogid' )
 	google.script.run
 		.withSuccessHandler( function( html, element ) {
 			loadSites();
-			self.disabled = false;
 		})
 		.withFailureHandler( function( msg, element ) {
 			showError( msg, $( '#sites-list' ) );
-			self.disabled = false;
 		})
 		.withUserObject( this )
 		.deleteSite( site_id );
@@ -418,14 +419,12 @@ function siteListItem( site ) {
 }
 
 function showDebugOutput() {
-	var self = this;
 	google.script.run
 		.withSuccessHandler( function( value ) {
 			$( '#foo' ).val( value )
 		} )
 		.withFailureHandler( function( msg, element ) {
 			showError( msg, $( '#bar' ) );
-			self.disabled = false;
 		})
 		.withUserObject( this )
 		.devTest();

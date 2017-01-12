@@ -95,6 +95,15 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		return response
 	}
 
+	function getPostStatus( site, postId ) {
+		const { blog_id, access_token } = site;
+		const path = `/sites/${ blog_id }/posts/${ postId }`
+
+		const response = get( access_token, path );
+
+		return response;
+	}
+
 	/**
 	 * @param {Blob} image a Google InlineImage
 	 * @return {object} response
@@ -139,5 +148,6 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		postToWordPress,
 		getSiteInfo,
 		uploadImage,
+		getPostStatus,
 	}
 }
