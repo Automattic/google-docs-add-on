@@ -10,7 +10,10 @@ describe( 'Sites', function() {
 		blog_id: 12345,
 		blog_url: 'http://example.com/',
 		info: {
-			name: "George's awesome blog"
+			name: "George's awesome blog",
+			icon: {
+				img: 'http://placekitten.com/90/90'
+			}
 		}
 	}
 
