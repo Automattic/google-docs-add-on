@@ -101,7 +101,7 @@ export function authCallback( request ) {
 	return HtmlService.createHtmlOutput( 'Denied 2. You can close this tab' );
 }
 
-export function postToWordPress( site_id, overwriteServer ) {
+export function postToWordPress( site_id ) {
 	const doc = DocumentApp.getActiveDocument();
 	const docProps = PropertiesService.getDocumentProperties();
 	const site = store.findSite( site_id );
@@ -117,8 +117,17 @@ export function postToWordPress( site_id, overwriteServer ) {
 		postId = cachedPost.ID;
 	}
 
-	if ( cachedPost && ! overwriteServer && postOnServerIsNewer( site, cachedPost ) ) {
-		throw 'PostOnServerIsNewer';
+	if ( cachedPost && postOnServerIsNewer( site, cachedPost ) ) {
+		const ui = DocumentApp.getUi();
+		const promptResponse = ui.alert(
+			'The post has been modified on the site',
+			'If you continue, any changes you made to the post on the site will be overwritten with this document.\n\nDo you want to overwrite the changes on the site?',
+			ui.ButtonSet.YES_NO
+		);
+
+		if ( promptResponse !== ui.Button.YES ) {
+			return {};
+		}
 	}
 
 	const response = wpClient.postToWordPress( site, doc.getName(), body, postId );
@@ -150,10 +159,44 @@ export function listSites() {
 }
 
 export function deleteSite( site_id ) {
-	return store.deleteSite( site_id )
+	const site = store.findSite( site_id );
+	if ( ! site ) {
+		return;
+	}
+
+	const ui = DocumentApp.getUi();
+	const promptResponse = ui.alert(
+		'Are you sure you want to remove ' + site.info.name + '?',
+		ui.ButtonSet.YES_NO
+	);
+
+	if ( promptResponse === ui.Button.YES ) {
+		store.deleteSite( site_id );
+	}
+
+	return;
 }
 
-export function devTest() { }
+export function devTest() {
+	const doc = DocumentApp.getActiveDocument();
+	const body = doc.getBody();
+	const images = [];
+	let imageRange = body.findElement( DocumentApp.ElementType.INLINE_IMAGE );
+	while ( imageRange ) {
+		const image = imageRange.getElement();
+		const blob = image.getBlob();
+		images.push( {
+			attributes: image.getAttributes(),
+			altTitle: image.getAltTitle(),
+			altDescription: image.getAltDescription(),
+			blob: {
+				name: blob.getName(),
+			}
+		} )
+		imageRange = body.findElement( DocumentApp.ElementType.INLINE_IMAGE, imageRange );
+	}
+	DocumentApp.getUi().alert( JSON.stringify( images ) )
+}
 
 let oauthService = undefined;
 // Needs to be lazy-instantiated because we don't have permissions to access

@@ -350,13 +350,7 @@ function postToWordPress( el, forceOverwrite ) {
 			loadSites();
 		} )
 		.withFailureHandler( function( msg, element ) {
-			if ( msg.message === 'PostOnServerIsNewer' ) {
-				if ( window.confirm( 'The post has been updated on the site. Do you want to overwrite your changes?' ) ) {
-					return postToWordPress.call( element, element, true );
-				}
-			} else {
-				showError( msg, $( '#sites-list' ) );
-			}
+			showError( msg, $( '#sites-list' ) );
 			element.disabled = false;
 		} )
 		.withUserObject( this )
@@ -381,18 +375,16 @@ function loadSites() {
 }
 
 function deleteSite() {
-	if ( window.confirm( 'Are you sure you want to remove this site?' ) ) {
-		var site_id = $( this ).attr( 'data-blogid' )
-		google.script.run
-			.withSuccessHandler( function( html, element ) {
-				loadSites();
-			})
-			.withFailureHandler( function( msg, element ) {
-				showError( msg, $( '#sites-list' ) );
-			})
-			.withUserObject( this )
-			.deleteSite( site_id );
-	}
+	var site_id = $( this ).attr( 'data-blogid' )
+	google.script.run
+		.withSuccessHandler( function( html, element ) {
+			loadSites();
+		})
+		.withFailureHandler( function( msg, element ) {
+			showError( msg, $( '#sites-list' ) );
+		})
+		.withUserObject( this )
+		.deleteSite( site_id );
 }
 
 function siteListItem( site ) {

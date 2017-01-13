@@ -140,9 +140,7 @@ function SHARED() {
 	 *     running in, inspect e.authMode.
 	 */
 	function onOpen() {
-		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar')
-		// .addItem( 'Dev Testing', 'devTest' )
-		.addToUi();
+		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar').addItem('Dev Testing', 'devTest').addToUi();
 	}
 
 	/**
@@ -210,7 +208,7 @@ function SHARED() {
 		return HtmlService.createHtmlOutput('Denied 2. You can close this tab');
 	}
 
-	function postToWordPress(site_id, overwriteServer) {
+	function postToWordPress(site_id) {
 		var doc = DocumentApp.getActiveDocument();
 		var docProps = PropertiesService.getDocumentProperties();
 		var site = store.findSite(site_id);
@@ -229,8 +227,13 @@ function SHARED() {
 			postId = cachedPost.ID;
 		}
 
-		if (cachedPost && !overwriteServer && postOnServerIsNewer(site, cachedPost)) {
-			throw 'PostOnServerIsNewer';
+		if (cachedPost && postOnServerIsNewer(site, cachedPost)) {
+			var ui = DocumentApp.getUi();
+			var promptResponse = ui.alert('The post has been modified on the site', 'If you continue, any changes you made to the post on the site will be overwritten with this document.\n\nDo you want to overwrite the changes on the site?', ui.ButtonSet.YES_NO);
+
+			if (promptResponse !== ui.Button.YES) {
+				return {};
+			}
 		}
 
 		var response = wpClient.postToWordPress(site, doc.getName(), body, postId);
@@ -264,10 +267,41 @@ function SHARED() {
 	}
 
 	function deleteSite(site_id) {
-		return store.deleteSite(site_id);
+		var site = store.findSite(site_id);
+		if (!site) {
+			return;
+		}
+
+		var ui = DocumentApp.getUi();
+		var promptResponse = ui.alert('Are you sure you want to remove ' + site.info.name + '?', ui.ButtonSet.YES_NO);
+
+		if (promptResponse === ui.Button.YES) {
+			store.deleteSite(site_id);
+		}
+
+		return;
 	}
 
-	function devTest() {}
+	function devTest() {
+		var doc = DocumentApp.getActiveDocument();
+		var body = doc.getBody();
+		var images = [];
+		var imageRange = body.findElement(DocumentApp.ElementType.INLINE_IMAGE);
+		while (imageRange) {
+			var image = imageRange.getElement();
+			var blob = image.getBlob();
+			images.push({
+				attributes: image.getAttributes(),
+				altTitle: image.getAltTitle(),
+				altDescription: image.getAltDescription(),
+				blob: {
+					name: blob.getName()
+				}
+			});
+			imageRange = body.findElement(DocumentApp.ElementType.INLINE_IMAGE, imageRange);
+		}
+		DocumentApp.getUi().alert((0, _stringify2['default'])(images));
+	}
 
 	var oauthService = undefined;
 	// Needs to be lazy-instantiated because we don't have permissions to access
@@ -348,7 +382,7 @@ function SHARED() {
 
 	var API_BASE = 'https://public-api.wordpress.com/rest/v1.1';
 	var CRLF = '\r\n';
-	var DEFAULT_FILENAME = 'overpass';
+	var DEFAULT_FILENAME = 'image';
 
 	var contentTypeToExtension = {
 		'image/png': 'png',
