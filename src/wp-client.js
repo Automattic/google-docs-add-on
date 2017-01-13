@@ -2,7 +2,7 @@
 
 const API_BASE = 'https://public-api.wordpress.com/rest/v1.1';
 const CRLF = '\r\n';
-const DEFAULT_FILENAME = 'overpass';
+const DEFAULT_FILENAME = 'image';
 
 const contentTypeToExtension = {
 	'image/png': 'png',
