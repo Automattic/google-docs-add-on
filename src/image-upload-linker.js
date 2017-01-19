@@ -27,9 +27,14 @@ export function imageUploadLinker( uploadImage, imageCache ) {
 			Logger.log( 'image has name ' + imageBlob.getBlob() )
 		}
 
-		const response = uploadImage( image );
-		const url = response.media[ 0 ].URL;
-		imageCache.set( image, url );
-		return url
+		try {
+			const response = uploadImage( image );
+			const url = response.media[ 0 ].URL;
+			imageCache.set( image, url );
+			return url
+		} catch ( e ) {
+			Logger.log( e )
+			return;
+		}
 	}
 }
