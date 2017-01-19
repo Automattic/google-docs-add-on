@@ -1,8 +1,7 @@
 {
-  "name": "overpass",
-  "version": "0.2.0",
-  "description": "",
-  "main": "index.js",
+  "name": "wordpress-for-google-docs",
+  "version": "1.0.0",
+  "description": "Post to WordPress.com from Google Docs",
   "private": true,
   "directories": {
     "test": "test"
