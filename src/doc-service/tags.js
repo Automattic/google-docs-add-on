@@ -35,7 +35,7 @@ function tagsForAttrDiff( diffParam ) {
 	let tags = '';
 
 	if ( diff.LINK_URL ) {
-		tags += `<a href="${ diff.LINK_URL }">`
+		tags += `<a href="${ quoteattr( diff.LINK_URL ) }">`
 		delete diff.UNDERLINE;
 		delete diff.FOREGROUND_COLOR;
 	}
@@ -58,3 +58,29 @@ function tagsForAttrDiff( diffParam ) {
 }
 
 export const changedTags = ( elAttributes, prevAttributes ) => tagsForAttrDiff( objectDiff( prevAttributes, elAttributes ) )
+
+/*
+ * From StackOverflow - http://stackoverflow.com/a/9756789
+ * (cc) by-sa 3.0 verdy-p http://stackoverflow.com/users/407132/verdy-p
+ */
+export function quoteattr( s, preserveCR ) {
+	if ( ! s ) {
+		return s;
+	}
+
+	preserveCR = preserveCR ? '&#13;' : '\n';
+	return ( '' + s ) /* Forces the conversion to string. */
+		.replace( /&/g, '&amp;' ) /* This MUST be the 1st replacement. */
+		.replace( /'/g, '&apos;' ) /* The 4 other predefined entities, required. */
+		.replace( /"/g, '&quot;' )
+		.replace( /</g, '&lt;' )
+		.replace( />/g, '&gt;' )
+		/*
+		You may add other replacements here for HTML only
+		(but it's not necessary).
+		Or for XML, only if the named entities are defined in its DTD.
+		*/
+		.replace( /\r\n/g, preserveCR ) /* Must be before the next replacement. */
+		.replace( /[\r\n]/g, preserveCR );
+	;
+}

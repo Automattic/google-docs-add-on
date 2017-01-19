@@ -1188,6 +1188,8 @@ function SHARED() {
 
 	var _keys2 = _interopRequireDefault(_keys);
 
+	exports.quoteattr = quoteattr;
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	var simpleTagMap = {
@@ -1227,7 +1229,7 @@ function SHARED() {
 		var tags = '';
 
 		if (diff.LINK_URL) {
-			tags += '<a href="' + diff.LINK_URL + '">';
+			tags += '<a href="' + quoteattr(diff.LINK_URL) + '">';
 			delete diff.UNDERLINE;
 			delete diff.FOREGROUND_COLOR;
 		}
@@ -1252,6 +1254,30 @@ function SHARED() {
 	var changedTags = exports.changedTags = function changedTags(elAttributes, prevAttributes) {
 		return tagsForAttrDiff(objectDiff(prevAttributes, elAttributes));
 	};
+
+	/*
+	 * From StackOverflow - http://stackoverflow.com/a/9756789
+	 * (cc) by-sa 3.0 verdy-p http://stackoverflow.com/users/407132/verdy-p
+	 */
+	function quoteattr(s, preserveCR) {
+		if (!s) {
+			return s;
+		}
+
+		preserveCR = preserveCR ? '&#13;' : '\n';
+		return ('' + s). /* Forces the conversion to string. */
+		replace(/&/g, '&amp;') /* This MUST be the 1st replacement. */
+		.replace(/'/g, '&apos;') /* The 4 other predefined entities, required. */
+		.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+		/*
+	 You may add other replacements here for HTML only
+	 (but it's not necessary).
+	 Or for XML, only if the named entities are defined in its DTD.
+	 */
+		.replace(/\r\n/g, preserveCR) /* Must be before the next replacement. */
+		.replace(/[\r\n]/g, preserveCR);
+		;
+	}
 
 /***/ },
 /* 46 */
@@ -1327,23 +1353,29 @@ function SHARED() {
 
 /***/ },
 /* 51 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
 	exports.InlineImage = InlineImage;
+
+	var _tags = __webpack_require__(45);
+
 	function InlineImage(imageLinker) {
 		return function renderInlineImage(element) {
-			var url = imageLinker(element),
-			    imgWidth = element.getWidth(),
+			var url = imageLinker(element);
+			if (!url) {
+				return '';
+			}
+
+			var imgWidth = element.getWidth(),
 			    imgHeight = element.getHeight(),
-			    title = element.getAltTitle(),
-			    // TODO ESCAPE THESE
-			alt = element.getAltDescription(); // TODO ESCAPE THESE
-			return "<img src=\"" + url + "\" width=\"" + imgWidth + "\" height=\"" + imgHeight + "\" alt=\"" + alt + "\" title=\"" + title + "\">";
+			    title = (0, _tags.quoteattr)(element.getAltTitle()),
+			    alt = (0, _tags.quoteattr)(element.getAltDescription());
+			return '<img src="' + url + '" width="' + imgWidth + '" height="' + imgHeight + '" alt="' + alt + '" title="' + title + '">';
 		};
 	}
 
@@ -1529,10 +1561,15 @@ function SHARED() {
 				Logger.log('image has name ' + imageBlob.getBlob());
 			}
 
-			var response = uploadImage(image);
-			var url = response.media[0].URL;
-			imageCache.set(image, url);
-			return url;
+			try {
+				var response = uploadImage(image);
+				var url = response.media[0].URL;
+				imageCache.set(image, url);
+				return url;
+			} catch (e) {
+				Logger.log(e);
+				return;
+			}
 		};
 	}
 
@@ -1704,7 +1741,10 @@ function SHARED() {
 		value: true
 	});
 	exports.getDateFromIso = getDateFromIso;
-	// http://stackoverflow.com/a/11820304
+	/*
+	 * From StackOverflow - http://stackoverflow.com/a/11820304
+	 * (cc) by-sa 3.0 mhawksey http://stackoverflow.com/users/1027723/mhawksey
+	 */
 	function getDateFromIso(string) {
 		try {
 			var aDate = new Date();

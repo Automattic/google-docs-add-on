@@ -1,4 +1,7 @@
-// http://stackoverflow.com/a/11820304
+/*
+ * From StackOverflow - http://stackoverflow.com/a/11820304
+ * (cc) by-sa 3.0 mhawksey http://stackoverflow.com/users/1027723/mhawksey
+ */
 export function getDateFromIso( string ) {
 	try {
 		const aDate = new Date();
