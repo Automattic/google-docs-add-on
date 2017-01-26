@@ -10,7 +10,8 @@ import {
 	postToWordPress,
 	devTest,
 	listSites,
-	deleteSite
+	deleteSite,
+	clearSiteData
 } from './index'
 
 global.onOpen = onOpen;
@@ -21,3 +22,4 @@ global.postToWordPress = postToWordPress;
 global.devTest = devTest;
 global.listSites = listSites;
 global.deleteSite = deleteSite;
+global.clearSiteData = clearSiteData;

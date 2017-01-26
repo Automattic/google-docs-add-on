@@ -341,6 +341,9 @@ $( function() {
 	loadSites();
 } );
 
+// reload every half hour to refresh the auth url
+window.setTimeout( function() { google.script.run.showSidebar() }, 1000 * 60 * 30 );
+
 function postToWordPress( el, forceOverwrite ) {
 	var site_id = $( this ).attr( 'data-blogid' )
 	this.disabled = true;

@@ -32,6 +32,7 @@ const store = Persistance( PropertiesService )
 export function onOpen() {
 	DocumentApp.getUi().createAddonMenu()
 		.addItem( 'Open', 'showSidebar' )
+		// .addItem( 'Clear All Site Data', 'clearSiteData' )
 		// .addItem( 'Dev Testing', 'devTest' )
 		.addToUi();
 }
@@ -178,24 +179,40 @@ export function deleteSite( site_id ) {
 }
 
 export function devTest() {
-	const doc = DocumentApp.getActiveDocument();
-	const body = doc.getBody();
-	const images = [];
-	let imageRange = body.findElement( DocumentApp.ElementType.INLINE_IMAGE );
-	while ( imageRange ) {
-		const image = imageRange.getElement();
-		const blob = image.getBlob();
-		images.push( {
-			attributes: image.getAttributes(),
-			altTitle: image.getAltTitle(),
-			altDescription: image.getAltDescription(),
-			blob: {
-				name: blob.getName(),
-			}
-		} )
-		imageRange = body.findElement( DocumentApp.ElementType.INLINE_IMAGE, imageRange );
+	// const doc = DocumentApp.getActiveDocument();
+	// const body = doc.getBody();
+	// const images = [];
+	// let imageRange = body.findElement( DocumentApp.ElementType.INLINE_IMAGE );
+	// while ( imageRange ) {
+	// 	const image = imageRange.getElement();
+	// 	const blob = image.getBlob();
+	// 	images.push( {
+	// 		attributes: image.getAttributes(),
+	// 		altTitle: image.getAltTitle(),
+	// 		altDescription: image.getAltDescription(),
+	// 		blob: {
+	// 			name: blob.getName(),
+	// 		}
+	// 	} )
+	// 	imageRange = body.findElement( DocumentApp.ElementType.INLINE_IMAGE, imageRange );
+	// }
+	DocumentApp.getUi().alert( JSON.stringify( PropertiesService.getUserProperties().getProperty( 'oauth2.overpass' ) ) )
+}
+
+export function clearSiteData() {
+	const ui = DocumentApp.getUi();
+	const promptResponse = ui.alert(
+		'Are you sure you want to clear all sites?',
+		ui.ButtonSet.YES_NO
+	);
+
+	if ( promptResponse === ui.Button.YES ) {
+		oauthClient().reset();
+		PropertiesService.getUserProperties().deleteAllProperties();
+		PropertiesService.getDocumentProperties().deleteAllProperties();
 	}
-	DocumentApp.getUi().alert( JSON.stringify( images ) )
+
+	showSidebar();
 }
 
 let oauthService = undefined;

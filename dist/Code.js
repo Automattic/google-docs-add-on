@@ -14,6 +14,8 @@ function listSites() {
 }
 function deleteSite() {
 }
+function clearSiteData() {
+}
 function SHARED() {
 }(function(e, a) { for(var i in a) e[i] = a[i]; }(this, /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -76,6 +78,7 @@ function SHARED() {
 	global.devTest = _index.devTest;
 	global.listSites = _index.listSites;
 	global.deleteSite = _index.deleteSite;
+	global.clearSiteData = _index.clearSiteData;
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
@@ -100,6 +103,7 @@ function SHARED() {
 	exports.listSites = listSites;
 	exports.deleteSite = deleteSite;
 	exports.devTest = devTest;
+	exports.clearSiteData = clearSiteData;
 
 	var _wpClient = __webpack_require__(5);
 
@@ -141,6 +145,7 @@ function SHARED() {
 	 */
 	function onOpen() {
 		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar')
+		// .addItem( 'Clear All Site Data', 'clearSiteData' )
 		// .addItem( 'Dev Testing', 'devTest' )
 		.addToUi();
 	}
@@ -285,24 +290,37 @@ function SHARED() {
 	}
 
 	function devTest() {
-		var doc = DocumentApp.getActiveDocument();
-		var body = doc.getBody();
-		var images = [];
-		var imageRange = body.findElement(DocumentApp.ElementType.INLINE_IMAGE);
-		while (imageRange) {
-			var image = imageRange.getElement();
-			var blob = image.getBlob();
-			images.push({
-				attributes: image.getAttributes(),
-				altTitle: image.getAltTitle(),
-				altDescription: image.getAltDescription(),
-				blob: {
-					name: blob.getName()
-				}
-			});
-			imageRange = body.findElement(DocumentApp.ElementType.INLINE_IMAGE, imageRange);
+		// const doc = DocumentApp.getActiveDocument();
+		// const body = doc.getBody();
+		// const images = [];
+		// let imageRange = body.findElement( DocumentApp.ElementType.INLINE_IMAGE );
+		// while ( imageRange ) {
+		// 	const image = imageRange.getElement();
+		// 	const blob = image.getBlob();
+		// 	images.push( {
+		// 		attributes: image.getAttributes(),
+		// 		altTitle: image.getAltTitle(),
+		// 		altDescription: image.getAltDescription(),
+		// 		blob: {
+		// 			name: blob.getName(),
+		// 		}
+		// 	} )
+		// 	imageRange = body.findElement( DocumentApp.ElementType.INLINE_IMAGE, imageRange );
+		// }
+		DocumentApp.getUi().alert((0, _stringify2['default'])(PropertiesService.getUserProperties().getProperty('oauth2.overpass')));
+	}
+
+	function clearSiteData() {
+		var ui = DocumentApp.getUi();
+		var promptResponse = ui.alert('Are you sure you want to clear all sites?', ui.ButtonSet.YES_NO);
+
+		if (promptResponse === ui.Button.YES) {
+			oauthClient().reset();
+			PropertiesService.getUserProperties().deleteAllProperties();
+			PropertiesService.getDocumentProperties().deleteAllProperties();
 		}
-		DocumentApp.getUi().alert((0, _stringify2['default'])(images));
+
+		showSidebar();
 	}
 
 	var oauthService = undefined;
