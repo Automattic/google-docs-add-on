@@ -8,7 +8,8 @@
  * presented to users will reflect this limited scope.
  */
 
-/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, OAuth2, Logger */
+/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, Logger */
+import { OAuth2 } from 'imports-loader?_=./Underscore.gs!../vendor/apps-script-oauth2/dist/OAuth2.gs'
 
 import { WPClient } from './wp-client';
 import { DocService } from './doc-service';
@@ -33,7 +34,7 @@ export function onOpen() {
 	DocumentApp.getUi().createAddonMenu()
 		.addItem( 'Open', 'showSidebar' )
 		// .addItem( 'Clear All Site Data', 'clearSiteData' )
-		// .addItem( 'Dev Testing', 'devTest' )
+		.addItem( 'Dev Testing', 'devTest' )
 		.addToUi();
 }
 
@@ -194,7 +195,7 @@ export function devTest() {
 	// 	} )
 	// 	imageRange = body.findElement( DocumentApp.ElementType.INLINE_IMAGE, imageRange );
 	// }
-	DocumentApp.getUi().alert( JSON.stringify( PropertiesService.getUserProperties().getProperty( 'oauth2.overpass' ) ) )
+	DocumentApp.getUi().alert( JSON.stringify( Object.keys( _ ) ) )
 }
 
 export function clearSiteData() {
