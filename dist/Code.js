@@ -194,8 +194,7 @@ function SHARED() {
 		try {
 			isAuthorized = oauthClient().handleCallback(request);
 		} catch (e) {
-			Logger.log(e);
-			return HtmlService.createHtmlOutput('Denied 3. You can close this tab' + (0, _stringify2['default'])(request));
+			return HtmlService.createHtmlOutput('There was a problem getting access to your site. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.');
 		}
 
 		if (isAuthorized) {
@@ -203,8 +202,7 @@ function SHARED() {
 			try {
 				site.info = wpClient.getSiteInfo(site);
 			} catch (e) {
-				Logger.log(e);
-				return HtmlService.createHtmlOutput('Denied 1. You can close this tab' + (0, _stringify2['default'])(site));
+				return HtmlService.createHtmlOutput('There was a problem getting your site\'s information. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.');
 			}
 			store.addSite(site);
 			var template = HtmlService.createTemplateFromFile('oauthSuccess');
@@ -212,7 +210,7 @@ function SHARED() {
 			return template.evaluate();
 		}
 
-		return HtmlService.createHtmlOutput('Denied 2. You can close this tab');
+		return HtmlService.createHtmlOutput('There was a problem adding your site. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.');
 	}
 
 	function postToWordPress(site_id) {

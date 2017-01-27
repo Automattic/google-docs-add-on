@@ -81,8 +81,7 @@ export function authCallback( request ) {
 	try {
 		isAuthorized = oauthClient().handleCallback( request );
 	} catch ( e ) {
-		Logger.log( e )
-		return HtmlService.createHtmlOutput( 'Denied 3. You can close this tab' + JSON.stringify( request ) );
+		return HtmlService.createHtmlOutput( 'There was a problem getting access to your site. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.' );
 	}
 
 	if ( isAuthorized ) {
@@ -90,8 +89,7 @@ export function authCallback( request ) {
 		try {
 			site.info = wpClient.getSiteInfo( site )
 		} catch ( e ) {
-			Logger.log( e )
-			return HtmlService.createHtmlOutput( 'Denied 1. You can close this tab' + JSON.stringify( site ) );
+			return HtmlService.createHtmlOutput( 'There was a problem getting your site\'s information. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.' );
 		}
 		store.addSite( site )
 		const template = HtmlService.createTemplateFromFile( 'oauthSuccess' );
@@ -99,7 +97,7 @@ export function authCallback( request ) {
 		return template.evaluate();
 	}
 
-	return HtmlService.createHtmlOutput( 'Denied 2. You can close this tab' );
+	return HtmlService.createHtmlOutput( 'There was a problem adding your site. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.' );
 }
 
 export function postToWordPress( site_id ) {

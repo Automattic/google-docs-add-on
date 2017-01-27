@@ -363,7 +363,9 @@ function postToWordPress( el, forceOverwrite ) {
 function loadSites() {
 	google.script.run
 		.withSuccessHandler( function( sites ) {
-			$( '#foo' ).val( JSON.stringify( sites) )
+			if ( ! ( sites.length > 0 ) ) {
+				google.script.run.showSidebar();
+			}
 			var siteElements = sites.map( siteListItem ).join( '' )
 			var $siteList = $( '.sites-list ul' )
 			$siteList.html( siteElements )
@@ -438,7 +440,6 @@ function showDebugOutput() {
  * @param element The element after which to display the error.
  */
 function showError( msg, element ) {
-	console.error( msg )
 	var div = $( '<div id="error" class="error">' + msg + '</div>' );
 	$( element ).after( div );
 }
