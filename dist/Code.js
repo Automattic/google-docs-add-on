@@ -151,7 +151,8 @@ function SHARED() {
 	function onOpen() {
 		DocumentApp.getUi().createAddonMenu().addItem('Open', 'showSidebar')
 		// .addItem( 'Clear All Site Data', 'clearSiteData' )
-		.addItem('Dev Testing', 'devTest').addToUi();
+		// .addItem( 'Dev Testing', 'devTest' )
+		.addToUi();
 	}
 
 	/**
@@ -193,12 +194,20 @@ function SHARED() {
 		DocumentApp.getUi().showSidebar(page);
 	}
 
+	function wpDie() {
+		var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+
+		var out = HtmlService.createTemplateFromFile('wp-die');
+		out.message = message;
+		return out.evaluate();
+	}
+
 	function authCallback(request) {
 		var isAuthorized = void 0;
 		try {
 			isAuthorized = oauthClient().handleCallback(request);
 		} catch (e) {
-			return HtmlService.createHtmlOutput('There was a problem getting access to your site. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.');
+			return wpDie('There was a problem getting access to your site. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.<pre>' + e);
 		}
 
 		if (isAuthorized) {
@@ -206,7 +215,7 @@ function SHARED() {
 			try {
 				site.info = wpClient.getSiteInfo(site);
 			} catch (e) {
-				return HtmlService.createHtmlOutput('There was a problem getting your site\'s information. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.');
+				return wpDie('There was a problem getting your site\'s information. Please make sure you have the <a href="https://jetpack.com/support/json-api/">Jetpack JSON API</a> enabled, and try re-adding it. <a href="https://support.wordpress.com/">Contact support</a> if you need more help. <pre>' + e);
 			}
 			store.addSite(site);
 			var template = HtmlService.createTemplateFromFile('oauthSuccess');
@@ -214,7 +223,7 @@ function SHARED() {
 			return template.evaluate();
 		}
 
-		return HtmlService.createHtmlOutput('There was a problem adding your site. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.');
+		return wpDie('There was a problem adding your site. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.');
 	}
 
 	function postToWordPress(site_id) {

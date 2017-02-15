@@ -337,7 +337,6 @@ button:focus {
  * user's origin and destination language preferences if previously set.
  */
 $( function() {
-	$( '#baz' ).click( showDebugOutput );
 	loadSites();
 } );
 
@@ -349,11 +348,10 @@ function postToWordPress( el, forceOverwrite ) {
 	this.disabled = true;
 	google.script.run
 		.withSuccessHandler( function( html, element ) {
-			$( '#foo' ).val( JSON.stringify( html ) );
 			loadSites();
 		} )
 		.withFailureHandler( function( msg, element ) {
-			showError( msg, $( '#sites-list' ) );
+			showError( msg, '.sites-list' );
 			element.disabled = false;
 		} )
 		.withUserObject( this )
@@ -373,7 +371,7 @@ function loadSites() {
 			$siteList.find( '.sites-list__delete-site' ).click( deleteSite )
 		} )
 		.withFailureHandler( function( msg, element ) {
-			showError( msg, $( '#sites-list' ) );
+			showError( msg, $( '.sites-list' ) );
 		})
 		.withUserObject( this )
 		.listSites();
@@ -386,7 +384,7 @@ function deleteSite() {
 			loadSites();
 		})
 		.withFailureHandler( function( msg, element ) {
-			showError( msg, $( '#sites-list' ) );
+			showError( msg, $( '.sites-list' ) );
 		})
 		.withUserObject( this )
 		.deleteSite( site_id );
@@ -421,18 +419,6 @@ function siteListItem( site ) {
 	return template;
 }
 
-function showDebugOutput() {
-	google.script.run
-		.withSuccessHandler( function( value ) {
-			$( '#foo' ).val( value )
-		} )
-		.withFailureHandler( function( msg, element ) {
-			showError( msg, $( '#bar' ) );
-		})
-		.withUserObject( this )
-		.devTest();
-}
-
 /**
  * Inserts a div that contains an error message after a given element.
  *
@@ -440,7 +426,11 @@ function showDebugOutput() {
  * @param element The element after which to display the error.
  */
 function showError( msg, element ) {
-	var div = $( '<div id="error" class="error">' + msg + '</div>' );
+	console.error( msg );
+	var div = $( '<div class="error"><svg style="cursor: pointer;" width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg>' + msg + '</div>' );
+	$( div ).find( 'svg' ).click( function() {
+		$( this ).closest( 'div.error' ).remove();
+	} )
 	$( element ).after( div );
 }
 </script>
