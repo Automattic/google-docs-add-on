@@ -54,6 +54,17 @@ export function onInstall( e ) {
 }
 
 /**
+ * Allow the HTML template to include files
+ *
+ * @param {string} filename file to include
+ * @returns {string} rendered content
+ */
+export function include( filename ) {
+	return HtmlService.createHtmlOutputFromFile( filename )
+		.getContent();
+}
+
+/**
  * Opens a sidebar in the document containing the add-on's user interface.
  * This method is only used by the regular add-on, and is never called by
  * the mobile add-on version.
@@ -118,8 +129,8 @@ export function postToWordPress( site_id ) {
 	const body = renderContainer( doc.getBody() );
 	const cachedPostData = store.getPostStatus();
 	let postId, cachedPost;
-	if ( cachedPostData[site_id] ) {
-		cachedPost = cachedPostData[site_id]
+	if ( cachedPostData[ site_id ] ) {
+		cachedPost = cachedPostData[ site_id ]
 		postId = cachedPost.ID;
 	}
 
@@ -166,7 +177,7 @@ export function listSites() {
 
 export function deleteSite( site_id ) {
 	const site = store.findSite( site_id );
-	if ( ! site ) {
+	if ( !site ) {
 		return;
 	}
 
@@ -241,16 +252,16 @@ function oauthClient() {
 
 function md5( message ) {
 	return Utilities.computeDigest( Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.US_ASCII )
-	.map( ( byte ) => {
-		let char = '';
-		if ( byte < 0 ) {
-			byte += 255;
-		}
-		char = byte.toString( 16 );
-		if ( char.length === 1 ) {
-			char = '0' + char;
-		}
-		return char;
-	} )
-	.join( '' )
+		.map(( byte ) => {
+			let char = '';
+			if ( byte < 0 ) {
+				byte += 255;
+			}
+			char = byte.toString( 16 );
+			if ( char.length === 1 ) {
+				char = '0' + char;
+			}
+			return char;
+		})
+		.join( '' )
 }

@@ -16,6 +16,8 @@ function deleteSite() {
 }
 function clearSiteData() {
 }
+function include() {
+}
 function SHARED() {
 }(function(e, a) { for(var i in a) e[i] = a[i]; }(this, /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -79,6 +81,7 @@ function SHARED() {
 	global.listSites = _index.listSites;
 	global.deleteSite = _index.deleteSite;
 	global.clearSiteData = _index.clearSiteData;
+	global.include = _index.include;
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
@@ -101,6 +104,7 @@ function SHARED() {
 
 	exports.onOpen = onOpen;
 	exports.onInstall = onInstall;
+	exports.include = include;
 	exports.showSidebar = showSidebar;
 	exports.authCallback = authCallback;
 	exports.postToWordPress = postToWordPress;
@@ -168,6 +172,16 @@ function SHARED() {
 	 */
 	function onInstall(e) {
 		onOpen(e);
+	}
+
+	/**
+	 * Allow the HTML template to include files
+	 *
+	 * @param {string} filename file to include
+	 * @returns {string} rendered content
+	 */
+	function include(filename) {
+		return HtmlService.createHtmlOutputFromFile(filename).getContent();
 	}
 
 	/**

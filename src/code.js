@@ -11,7 +11,8 @@ import {
 	devTest,
 	listSites,
 	deleteSite,
-	clearSiteData
+	clearSiteData,
+	include
 } from './index'
 
 global.onOpen = onOpen;
@@ -23,3 +24,4 @@ global.devTest = devTest;
 global.listSites = listSites;
 global.deleteSite = deleteSite;
 global.clearSiteData = clearSiteData;
+global.include = include;

@@ -28,5 +28,8 @@
     "node-google-apps-script": "^1.1.5",
     "testdouble": "^1.9.0",
     "webpack": "^1.13.3"
+  },
+  "dependencies": {
+    "wrapper-webpack-plugin": "^0.1.11"
   }
 }
