@@ -9,7 +9,7 @@
  */
 
 /* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, Logger */
-import { OAuth2 } from 'imports-loader?_=./Underscore.gs!../vendor/apps-script-oauth2/dist/OAuth2.gs'
+import { OAuth2 } from 'imports-loader?_=./Underscore.gs!apps-script-oauth2/dist/OAuth2.gs'
 
 import { WPClient } from './wp-client';
 import { DocService } from './doc-service';

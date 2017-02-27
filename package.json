@@ -30,6 +30,7 @@
     "webpack": "^1.13.3"
   },
   "dependencies": {
+    "apps-script-oauth2": "git+https://github.com/googlesamples/apps-script-oauth2.git",
     "wrapper-webpack-plugin": "^0.1.11"
   }
 }
