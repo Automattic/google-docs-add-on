@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Post to WordPress.com from Google Docs",
   "private": true,
+  "license": "GPL-3.0",
   "directories": {
     "test": "test"
   },

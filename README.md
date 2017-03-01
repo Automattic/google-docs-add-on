@@ -30,10 +30,5 @@ from the Add-ons menu.
 
 # Forking
 
-If you create a fork of this project, you will need to update `gapps.config.json`
+If you create a fork of this project, you will need to create a `gapps.config.json`
 with your script's ID.
-
-You will also need to add the
-[OAuth2 for Apps Script](https://github.com/googlesamples/apps-script-oauth2)
-library, [create an OAuth application](https://developer.wordpress.com/apps/)
-and set the Script properties for `OauthClientId` and `OauthClientSecret`
