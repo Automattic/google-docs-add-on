@@ -1,6 +1,6 @@
 # Getting started
 
-The add-on lives [in Google's Script Editor](https://script.google.com/a/a8c.com/macros/d/1hJ0JBL8vjffwQUzhls0-ihgI7Rb-TcFcKo6qG74TGHE9VFN5gUa8XjUY/edit)
+The add-on lives in Google's Script Editor
 but, in keeping with [best practices](https://developers.googleblog.com/2015/12/advanced-development-process-with-apps.html),
 this repo is the source of truth, and the script editor will be overwritten with
 changes from this repo.
