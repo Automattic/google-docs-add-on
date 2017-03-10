@@ -16,7 +16,7 @@ const range = ( n ) => {
 export function DocService( DocumentApp, imageLinker ) {
 	const childrenOf = ( element ) => range( element.getNumChildren() ).map( i => element.getChild( i ) )
 
-	const renderContainer = ( element ) => childrenOf( element ).map( renderElement ).join( '' )
+	const renderContainer = ( element ) => childrenOf( element ).map( renderElement ).concat( renderPositionedImages( element ) ).join( '' )
 
 	const renderParagraph = Paragraph( DocumentApp, renderContainer );
 	const renderTable = Table( renderContainer );
@@ -38,6 +38,10 @@ export function DocService( DocumentApp, imageLinker ) {
 			default:
 				return element.getType() + ': ' + element.toString()
 		}
+	}
+
+	function renderPositionedImages( container ) {
+		return container.getPositionedImages().map( renderInlineImage )
 	}
 
 	return renderContainer

@@ -71,7 +71,7 @@ function mockText( text = MOCK_TEXT ) {
 }
 
 function containerOf( ...elements ) {
-	const container = td.object( ['getNumChildren', 'getChild', 'getType', 'getPreviousSibling', 'getNextSibling', 'getAttributes'] )
+	const container = td.object( ['getNumChildren', 'getChild', 'getType', 'getPreviousSibling', 'getNextSibling', 'getAttributes', 'getPositionedImages'] )
 
 	elements.forEach( ( el, i ) => {
 		td.when( container.getChild( i ) ).thenReturn( el )
@@ -79,6 +79,8 @@ function containerOf( ...elements ) {
 		td.when( el.getNextSibling() ).thenReturn( elements[i + 1] )
 	} )
 	td.when( container.getNumChildren() ).thenReturn( elements.length )
+	td.when( container.getPositionedImages() ).thenReturn( [] )
+
 	return container
 }
 
@@ -276,6 +278,20 @@ describe( 'renderContainer()', function() {
 			const actual = renderContainer( containerOf( image ) )
 
 			expect( actual ).to.equal( '<img src="https://cldup.com/E0CqGcUcow.gif" width="640" height="480" alt="Wapuu in a winter outfit" title="Wapuu">' )
+		} )
+	} )
+
+	describe( 'PositionedImage', function() {
+		it( 'should render in a paragraph', function() {
+			const p = paragraphOf( mockText( 'Who knew we owned 8000 salad plates' ) )
+			const positionedImage = td.object( [ 'getHeight', 'getWidth' ] );
+			td.when( positionedImage.getHeight() ).thenReturn( 716 );
+			td.when( positionedImage.getWidth() ).thenReturn( 717 );
+			td.when( p.getPositionedImages() ).thenReturn( [ positionedImage ] )
+			td.when( imageLinker( positionedImage ) ).thenReturn( 'https://cdn.wapuu.jp/wp-content/uploads/2015/12/wapuu_mcfly.png' )
+
+			const actual = renderContainer( p )
+			expect( actual ).to.equal( 'Who knew we owned 8000 salad plates<img src="https://cdn.wapuu.jp/wp-content/uploads/2015/12/wapuu_mcfly.png" width="717" height="716" alt="" title="">' )
 		} )
 	} )
 
