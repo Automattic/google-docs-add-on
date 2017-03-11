@@ -112,18 +112,8 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		const { blog_id, access_token } = site;
 		const path = `/sites/${ blog_id }/media/new`
 		const imageBlob = image.getBlob()
-		Logger.log( JSON.stringify( {
-			image: {
-				attributes: image.getAttributes(),
-				altDescription: image.getAltDescription(),
-				altTitle: image.getAltTitle()
-			},
-			imageBlob: {
-				contentType: imageBlob.getContentType(),
-				name: imageBlob.getName()
-			}
-		} ) )
-		if ( ! imageBlob.getName() ) {
+
+		if ( ! imageBlob.getName() && image.getAltDescription ) {
 			imageBlob.setName( image.getAltDescription() );
 		}
 		const boundary = '-----CUTHEREelH7faHNSXWNi72OTh08zH29D28Zhr3Rif3oupOaDrj'

@@ -20,7 +20,7 @@ export function DocService( DocumentApp, imageLinker ) {
 
 	const renderParagraph = Paragraph( DocumentApp, renderContainer );
 	const renderTable = Table( renderContainer );
-	const renderInlineImage = InlineImage( imageLinker );
+	const renderImage = InlineImage( imageLinker );
 	const renderListItem = ListItem( DocumentApp, renderContainer );
 
 	function renderElement( element ) {
@@ -30,7 +30,7 @@ export function DocService( DocumentApp, imageLinker ) {
 			case DocumentApp.ElementType.TEXT:
 				return renderText( element )
 			case DocumentApp.ElementType.INLINE_IMAGE:
-				return renderInlineImage( element )
+				return renderImage( element )
 			case DocumentApp.ElementType.LIST_ITEM:
 				return renderListItem( element )
 			case DocumentApp.ElementType.TABLE:
@@ -41,7 +41,11 @@ export function DocService( DocumentApp, imageLinker ) {
 	}
 
 	function renderPositionedImages( container ) {
-		return container.getPositionedImages().map( renderInlineImage )
+		if ( ! container.getPositionedImages ) {
+			return [];
+		}
+
+		return container.getPositionedImages().map( renderImage )
 	}
 
 	return renderContainer
