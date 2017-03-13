@@ -94,6 +94,12 @@ function wpDie( message = '' ) {
 	return out.evaluate();
 }
 
+function wpDieTemplate( template, error ) {
+	const out = HtmlService.createTemplateFromFile( 'wp-die-' + template );
+	out.error = error.message;
+	return out.evaluate();
+}
+
 export function authCallback( request ) {
 	let isAuthorized;
 	try {
@@ -107,7 +113,7 @@ export function authCallback( request ) {
 		try {
 			site.info = wpClient.getSiteInfo( site )
 		} catch ( e ) {
-			return wpDie( 'There was a problem getting your site\'s information. Please make sure you have the <a href="https://jetpack.com/support/json-api/">Jetpack JSON API</a> enabled, and try re-adding it. <a href="https://support.wordpress.com/">Contact support</a> if you need more help. <pre>' + e );
+			return wpDieTemplate( 'json-api', e );
 		}
 		store.addSite( site )
 		const template = HtmlService.createTemplateFromFile( 'oauthSuccess' );
