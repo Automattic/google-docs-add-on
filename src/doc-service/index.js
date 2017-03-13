@@ -16,11 +16,11 @@ const range = ( n ) => {
 export function DocService( DocumentApp, imageLinker ) {
 	const childrenOf = ( element ) => range( element.getNumChildren() ).map( i => element.getChild( i ) )
 
-	const renderContainer = ( element ) => childrenOf( element ).map( renderElement ).join( '' )
+	const renderContainer = ( element ) => childrenOf( element ).map( renderElement ).concat( renderPositionedImages( element ) ).join( '' )
 
 	const renderParagraph = Paragraph( DocumentApp, renderContainer );
 	const renderTable = Table( renderContainer );
-	const renderInlineImage = InlineImage( imageLinker );
+	const renderImage = InlineImage( imageLinker );
 	const renderListItem = ListItem( DocumentApp, renderContainer );
 
 	function renderElement( element ) {
@@ -30,7 +30,7 @@ export function DocService( DocumentApp, imageLinker ) {
 			case DocumentApp.ElementType.TEXT:
 				return renderText( element )
 			case DocumentApp.ElementType.INLINE_IMAGE:
-				return renderInlineImage( element )
+				return renderImage( element )
 			case DocumentApp.ElementType.LIST_ITEM:
 				return renderListItem( element )
 			case DocumentApp.ElementType.TABLE:
@@ -38,6 +38,14 @@ export function DocService( DocumentApp, imageLinker ) {
 			default:
 				return element.getType() + ': ' + element.toString()
 		}
+	}
+
+	function renderPositionedImages( container ) {
+		if ( ! container.getPositionedImages ) {
+			return [];
+		}
+
+		return container.getPositionedImages().map( renderImage )
 	}
 
 	return renderContainer

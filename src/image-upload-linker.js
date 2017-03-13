@@ -18,8 +18,8 @@ export function imageUploadLinker( uploadImage, imageCache ) {
 		if ( ! imageBlob.getName() ) {
 			const contentType = imageBlob.getContentType()
 			if ( contentTypeToExtension[ contentType ] ) {
-				Logger.log( 'Setting name to overpass.' + contentTypeToExtension[ contentType ] )
-				imageBlob.setName( 'overpass.' + contentTypeToExtension[ contentType ] );
+				Logger.log( 'Setting name to image.' + contentTypeToExtension[ contentType ] )
+				imageBlob.setName( 'image.' + contentTypeToExtension[ contentType ] );
 			} else {
 				Logger.log( 'No content type for ' + contentType );
 			}
@@ -33,6 +33,7 @@ export function imageUploadLinker( uploadImage, imageCache ) {
 			imageCache.set( image, url );
 			return url
 		} catch ( e ) {
+			DocumentApp.getUi().alert( JSON.stringify( e ) )
 			Logger.log( e )
 			return;
 		}
