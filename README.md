@@ -4,18 +4,30 @@ The add-on lives in Google's Script Editor but, in keeping with [best practices]
 this repo is the source of truth, and the script editor will be overwritten with
 local changes.
 
-To start developing, you will need to create [a blank Script Editor project](https://script.google.com/).
+# Configuring
+
+This process needs to be performed once:
+
+1. `npm install` to install all dependencies
+1. Follow the first step here:
+[Node Google Apps Quickstart](https://github.com/danthareja/node-google-apps-script/blob/master/README.md#quickstart) - "Independent Developer Console Project" is recommended.
+1. Download the JSON oAuth details
+1. `./node_modules/bin/gapps auth <PATH-TO-JSON-OAUTH-FILE>` and follow instructions
+1. Edit the generated `gapps.config.json` file and change the value for `path` to be `dist`
+1. Create a new apps script here: https://script.google.com
+1. Get the script ID from the URL (everything between the `/d/` and `/edit` - `script.google.com/a/google.com/d/SCRIPT_ID_HERE/edit`)
+1. `./node_modules/bin/gapps init <SCRIPT_ID>`
+1. Create a new [WordPress.com App](https://developer.wordpress.com/apps/new/):
+  1. Set the redirect URL to be `https://script.google.com/macros/d/SCRIPT_ID/usercallback`
+  1. Make a note of the app client ID and client secret
+1. In the app script, go to `File` and `Project Properties`
+  1. Select the `Script properties` tab
+  1. Add `OauthClientId` and set the value to your app
+  1. Add `OauthClientSecret` and set the value to your app
+
+Everything is now setup.
 
 # Deploying
-
-In order for this to work, you will need to follow the first 2 steps of the
-[Quickstart](https://github.com/danthareja/node-google-apps-script/blob/master/README.md#quickstart)
-for [node-google-apps-script](https://github.com/danthareja/node-google-apps-script).
-I recommend "Independent Developer Console Project" for step 1.
-
-You should only need to do this once. Once you have `gapps auth` working you will
-need to rename `gapps.config.json-sample` to `gapps.config.json` and put in your
-script's id. Finally, run
 
 `npm run deploy`
 
