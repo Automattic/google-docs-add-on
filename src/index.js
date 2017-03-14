@@ -96,7 +96,12 @@ function wpDie( message = '' ) {
 
 function wpDieTemplate( template, error ) {
 	const out = HtmlService.createTemplateFromFile( 'wp-die-' + template );
-	out.error = error.message;
+
+	out.error = '';
+	if ( error ) {
+		out.error = error.message;
+	}
+
 	return out.evaluate();
 }
 
@@ -121,7 +126,7 @@ export function authCallback( request ) {
 		return template.evaluate();
 	}
 
-	return wpDie( 'There was a problem adding your site. Please try re-adding it, or <a href="https://support.wordpress.com/">contact support</a>.' );
+	return wpDieTemplate( 'deny' );
 }
 
 export function postToWordPress( site_id ) {
