@@ -66,7 +66,7 @@
 				loadSites();
 			} )
 			.withFailureHandler( function( msg, element ) {
-				showError( msg, '.sites-list' );
+				showError( msg, '.sites-list', 'posting to WordPress' );
 				element.disabled = false;
 			} )
 			.withUserObject( this )
@@ -86,7 +86,7 @@
 				$siteList.find( '.sites-list__delete-site' ).click( deleteSite )
 			} )
 			.withFailureHandler( function( msg, element ) {
-				showError( msg, $( '.sites-list' ) );
+				showError( msg, $( '.sites-list' ), 'loading sites' );
 			})
 			.withUserObject( this )
 			.listSites();
@@ -99,7 +99,7 @@
 				loadSites();
 			})
 			.withFailureHandler( function( msg, element ) {
-				showError( msg, $( '.sites-list' ) );
+				showError( msg, $( '.sites-list' ), 'deleting a site' );
 			})
 			.withUserObject( this )
 			.deleteSite( site_id );
@@ -140,14 +140,25 @@
 	 * @param msg The error message to display.
 	 * @param element The element after which to display the error.
 	 */
-	function showError( msg, element ) {
+	function showError( msg, element, errorTitle ) {
+		var error = '<strong>Error ' + errorTitle + '</strong></p>';
+
+		// Bit of sniffing
+		if ( msg.message.indexOf( 'API calls to this blog have been disabled' ) !== -1 ) {
+			error += '<p>Jetpack JSON API has been disabled - please <a href="https://apps.wordpress.com/google-docs/support/#json-api" target="_blank">re-enable it</a> to continue posting.</p>';
+		} else {
+			error += '<p><code style="font-size: 12px; word-wrap: break-word">' + msg.message + '</code></p>';
+			error += '<p><a href="https://support.wordpress.com" target="_blank">Please report this error</p>';
+		}
+
 		console.error( msg );
-		var div = $( '<div class="error"><svg style="cursor: pointer;" width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg>' + msg + '</div>' );
+		var div = $( '<div class="error" style="margin: 0px 6px; position: relative"><p><svg style="cursor: pointer; position: absolute; right: 5px; top: 12px" width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg>' + error + '</div>' );
 		$( div ).find( 'svg' ).click( function() {
 			$( this ).closest( 'div.error' ).remove();
 		} )
 		$( element ).after( div );
 	}
+
 
 /***/ },
 /* 1 */
