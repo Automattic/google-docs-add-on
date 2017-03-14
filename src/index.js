@@ -97,6 +97,7 @@ function wpDie( message = '' ) {
 function wpDieTemplate( template, error ) {
 	const out = HtmlService.createTemplateFromFile( 'wp-die-' + template );
 
+	out.error = '';
 	if ( error ) {
 		out.error = error.message;
 	}
