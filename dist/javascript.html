@@ -142,10 +142,19 @@
 	 */
 	function showError( msg, element, errorTitle ) {
 		var error = '<strong>Error ' + errorTitle + '</strong></p>';
+		var errorMatch = msg.message.match( /"message":"(.*?)"}/ );
 
 		// Bit of sniffing
 		if ( msg.message.indexOf( 'API calls to this blog have been disabled' ) !== -1 ) {
 			error += '<p>Jetpack JSON API has been disabled - please <a href="https://apps.wordpress.com/google-docs/support/#json-api" target="_blank">re-enable it</a> to continue posting.</p>';
+		} else if ( msg.message.indexOf( 'cURL error 28:' ) !== -1 ) {
+			error += '<p>Connection to your site timed out. Try again and/or investigate server load.</p>';
+		} else if ( msg.message.indexOf( '[-32700]' ) !== -1 ) {
+			error += '<p>Your site returned an unexpected response - are you <a href="https://apps.wordpress.com/google-docs/support/#other-plugins">running plugins</a> that may be causing a problem?</p>';
+		} else if ( msg.message.indexOf( 'HTTP status code was not 200' ) !== -1 ) {
+			error += '<p>Your server returned an unexpected response. This could be a misconfiguration, a bad plugin, or something may be broken. <a href="https://apps.wordpress.com/google-docs/support/#unexpected-response">Don\'t panic yet though!</a></p>';
+		} else if ( errorMatch && errorMatch.length > 0 ) {
+			error += '<p>' + errorMatch[ 1 ] + '</p>';
 		} else {
 			error += '<p><code style="font-size: 12px; word-wrap: break-word">' + msg.message + '</code></p>';
 			error += '<p><a href="https://support.wordpress.com" target="_blank">Please report this error</p>';
