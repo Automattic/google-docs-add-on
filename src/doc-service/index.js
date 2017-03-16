@@ -22,6 +22,7 @@ export function DocService( DocumentApp, imageLinker ) {
 	const renderTable = Table( renderContainer );
 	const renderImage = InlineImage( imageLinker );
 	const renderListItem = ListItem( DocumentApp, renderContainer );
+	const renderHorizontalRule = () => '<hr>';
 
 	function renderElement( element ) {
 		switch ( element.getType() ) {
@@ -35,6 +36,8 @@ export function DocService( DocumentApp, imageLinker ) {
 				return renderListItem( element )
 			case DocumentApp.ElementType.TABLE:
 				return renderTable( element )
+			case DocumentApp.ElementType.HORIZONTAL_RULE:
+				return renderHorizontalRule( element )
 			default:
 				return element.getType() + ': ' + element.toString()
 		}
