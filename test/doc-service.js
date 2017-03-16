@@ -12,7 +12,8 @@ const DocumentApp = {
 		LIST_ITEM: 'LIST_ITEM',
 		TABLE: 'TABLE',
 		TABLE_ROW: 'TABLE_ROW',
-		TABLE_CELL: 'TABLE_CELL'
+		TABLE_CELL: 'TABLE_CELL',
+		HORIZONTAL_RULE: 'HORIZONTAL_RULE'
 	},
 	ParagraphHeading: {
 		HEADING1: 'HEADING1',
@@ -317,6 +318,17 @@ describe( 'renderContainer()', function() {
 			const actual = renderContainer( containerOf( table ) )
 
 			expect( actual ).to.equal( '<table><tbody><tr><td>Homer</td><td>Marge</td><td>Bart</td></tr><tr><td>Lisa</td><td>Maggie</td><td>Grandpa</td></tr></tbody></table>' )
+		} )
+	} )
+
+	describe( 'HorizontalRule', function() {
+		it( 'renders', function() {
+			const hr = mockElement()
+			td.when( hr.getType() ).thenReturn( DocumentApp.ElementType.HORIZONTAL_RULE )
+
+			const actual = renderContainer( containerOf( hr ) )
+
+			expect( actual ).to.equal( '<hr>' )
 		} )
 	} )
 
