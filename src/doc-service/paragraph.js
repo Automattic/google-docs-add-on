@@ -24,12 +24,38 @@ export function Paragraph( DocumentApp, renderContainer ) {
 		}
 	}
 
+	function stylesForTag( paragraph ) {
+		const styles = {}
+		const alignment = paragraph.getAlignment();
+
+		switch ( alignment ) {
+			case DocumentApp.HorizontalAlignment.CENTER:
+				styles['text-align'] = 'center';
+				break;
+			case DocumentApp.HorizontalAlignment.RIGHT:
+				styles['text-align'] = 'right';
+				break;
+		}
+		return styles;
+	}
+
+	function renderStyles( styles ) {
+		const cssReducer = ( css, prop ) => css + `${prop}: ${styles[prop]};`;
+		return Object.keys( styles ).reduce( cssReducer, '' )
+	}
+
 	function renderParagraph( paragraph ) {
 		const tag = tagForParagraph( paragraph ),
+			styles = renderStyles( stylesForTag( paragraph ) ),
 			openTags = changedTags( paragraph.getAttributes(), blankAttributes ),
 			closedTags = changedTags( blankAttributes, paragraph.getAttributes() ),
 			contents = renderContainer( paragraph );
-		return `<${ tag }>` + openTags + contents + closedTags + `</${ tag }>\n`
+
+		let styleAttr = '';
+		if ( styles ) {
+			styleAttr = ` style="${styles}"`
+		}
+		return `<${ tag }${styleAttr}>` + openTags + contents + closedTags + `</${ tag }>\n`
 	}
 
 	return renderParagraph;
