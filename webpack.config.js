@@ -4,11 +4,11 @@ var GasPlugin = require( 'gas-webpack-plugin' ),
 
 module.exports = [
 	{
-		entry: './src/code.js',
+		entry: './server/code.js',
 		output: {
 			libraryTarget: 'this',
 			filename: 'Code.js',
-			path: './dist'
+			path: './src'
 		},
 		module: {
 			loaders: [ {
@@ -17,7 +17,7 @@ module.exports = [
 				loader: 'babel-loader'
 			}],
 			resolveLoader: {
-				modulesDirectories: [ "src" ]
+				modulesDirectories: [ "server" ]
 			}
 		},
 		plugins: [
@@ -28,7 +28,7 @@ module.exports = [
 		entry: './client/index.js',
 		output: {
 			filename: 'javascript.html',
-			path: './dist'
+			path: './src'
 		},
 		plugins: [
 			new WrapperPlugin( {
