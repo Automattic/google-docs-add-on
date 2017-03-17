@@ -13,7 +13,7 @@ This process needs to be performed once:
 [Node Google Apps Quickstart](https://github.com/danthareja/node-google-apps-script/blob/master/README.md#quickstart) - "Independent Developer Console Project" is recommended.
 1. Download the JSON oAuth details
 1. `./node_modules/bin/gapps auth <PATH-TO-JSON-OAUTH-FILE>` and follow instructions
-1. Edit the generated `gapps.config.json` file and change the value for `path` to be `dist`
+1. Edit the generated `gapps.config.json` file and change the value for `path` to be `src`
 1. Create a new apps script here: https://script.google.com
 1. Get the script ID from the URL (everything between the `/d/` and `/edit` - `script.google.com/a/google.com/d/SCRIPT_ID_HERE/edit`)
 1. `./node_modules/bin/gapps init <SCRIPT_ID>`
@@ -31,7 +31,7 @@ Everything is now setup.
 
 `npm run deploy`
 
-This will use node-google-apps-script to upload the `dist` directory to the
+This will use node-google-apps-script to upload the `src` directory to the
 add-on's script editor.
 
 # Testing
