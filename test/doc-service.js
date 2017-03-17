@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import td from 'testdouble';
-import { DocService } from '../src/doc-service'
+import { DocService } from '../server/doc-service'
 
 const noop = () => {};
 
