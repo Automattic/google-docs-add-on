@@ -105,10 +105,12 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 	}
 
 	/**
+	 * @param {Site} site { blog_id, access_token }
 	 * @param {Blob} image a Google InlineImage
+	 * @param {Number} parentId blog post id to attach to
 	 * @return {object} response
 	 */
-	function uploadImage( site, image ) {
+	function uploadImage( site, image, parentId = 0 ) {
 		const { blog_id, access_token } = site;
 		const path = `/sites/${ blog_id }/media/new`
 		const imageBlob = image.getBlob()
@@ -121,7 +123,7 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		const options = {
 			method: 'post',
 			contentType: `multipart/form-data; boundary=${ boundary }`,
-			payload: makeMultipartBody( { 'media[]': imageBlob }, boundary )
+			payload: makeMultipartBody( { 'media[0]': imageBlob, 'attrs[0][parent_id]': parentId }, boundary )
 		}
 
 		const response = post( access_token, path, options )
