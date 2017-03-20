@@ -183,7 +183,7 @@ function confirmOverwrite() {
 		ui.ButtonSet.YES_NO
 	);
 
-	return ( promptResponse !== ui.Button.YES )
+	return ( promptResponse === ui.Button.YES )
 }
 
 export function listSites() {
