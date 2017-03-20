@@ -2,7 +2,6 @@
   "name": "wordpress-for-google-docs",
   "version": "1.0.0",
   "description": "Post to WordPress.com from Google Docs",
-  "private": true,
   "license": "GPL-3.0",
   "directories": {
     "test": "test"
@@ -11,7 +10,8 @@
     "build": "webpack --config webpack.config.js",
     "test": "mocha --require babel-register",
     "test:watch": "npm test -- --watch -R min",
-    "deploy": "npm run build && $(npm bin)/gapps upload"
+    "deploy": "npm run build && $(npm bin)/gapps upload",
+    "postversion": "git push && git push --tags"
   },
   "author": "George Hotelling <george.hotelling@automattic.com>",
   "devDependencies": {
