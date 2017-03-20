@@ -133,30 +133,26 @@ export function postToWordPress( site_id ) {
 	const doc = DocumentApp.getActiveDocument();
 	const docProps = PropertiesService.getDocumentProperties();
 	const site = store.findSite( site_id );
-	const upload = image => wpClient.uploadImage( site, image );
-	const imageCache = ImageCache( site, docProps, md5 )
-	const imageUrlMapper = imageUploadLinker( upload, imageCache )
-	const renderContainer = DocService( DocumentApp, imageUrlMapper )
-	const body = renderContainer( doc.getBody() );
+
 	const cachedPostData = store.getPostStatus();
 	let postId, cachedPost;
 	if ( cachedPostData[ site_id ] ) {
 		cachedPost = cachedPostData[ site_id ]
 		postId = cachedPost.ID;
-	}
 
-	if ( cachedPost && postOnServerIsNewer( site, cachedPost ) ) {
-		const ui = DocumentApp.getUi();
-		const promptResponse = ui.alert(
-			'The post has been modified on the site',
-			'If you continue, any changes you made to the post on the site will be overwritten with this document.\n\nDo you want to overwrite the changes on the site?',
-			ui.ButtonSet.YES_NO
-		);
-
-		if ( promptResponse !== ui.Button.YES ) {
-			return {};
+		if ( postOnServerIsNewer( site, cachedPost ) && ! confirmOverwrite() ) {
+			return cachedPost;
 		}
+	} else {
+		const response = wpClient.postToWordPress( site, doc.getName(), '', 'new' );
+		postId = response.ID;
 	}
+
+	const upload = image => wpClient.uploadImage( site, image, postId );
+	const imageCache = ImageCache( site, docProps, md5 )
+	const imageUrlMapper = imageUploadLinker( upload, imageCache )
+	const renderContainer = DocService( DocumentApp, imageUrlMapper )
+	const body = renderContainer( doc.getBody() );
 
 	const response = wpClient.postToWordPress( site, doc.getName(), body, postId );
 
@@ -177,6 +173,17 @@ function postOnServerIsNewer( site, cachedPost ) {
 	const serverDate = getDateFromIso( serverPost.modified );
 
 	return ( localDate < serverDate );
+}
+
+function confirmOverwrite() {
+	const ui = DocumentApp.getUi();
+	const promptResponse = ui.alert(
+		'The post has been modified on the site',
+		'If you continue, any changes you made to the post on the site will be overwritten with this document. This will also unpublish the post if it has been published.\n\nDo you want to overwrite the changes on the site?',
+		ui.ButtonSet.YES_NO
+	);
+
+	return ( promptResponse === ui.Button.YES )
 }
 
 export function listSites() {
