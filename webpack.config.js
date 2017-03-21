@@ -1,4 +1,5 @@
-var GasPlugin = require( 'gas-webpack-plugin' ),
+var webpack = require( 'webpack' ),
+	GasPlugin = require( 'gas-webpack-plugin' ),
 	WrapperPlugin = require( 'wrapper-webpack-plugin' );
 
 module.exports = [
@@ -23,13 +24,9 @@ module.exports = [
 					]
 				}
 			}],
-			resolveLoader: {
-				modulesDirectories: [ 'server' ]
-			}
+			resolveLoader: { modulesDirectories: [ 'server' ] }
 		},
-		plugins: [
-			new GasPlugin()
-		]
+		plugins: [ new GasPlugin() ]
 	},
 	{
 		entry: './client/index.jsx',
@@ -44,19 +41,19 @@ module.exports = [
 				loader: 'babel-loader',
 				query: {
 					presets: [ 'react', 'es2015' ],
+					plugins: [ 'transform-runtime' ]
 				}
 			} ]
 		},
 		plugins: [
-			new WrapperPlugin( {
-				header: '<script>',
-				footer: '</script>'
-			} )
-		],
-		externals: {
-			// require("jquery") is external and available
-			//  on the global var jQuery
-			jquery: 'jQuery'
-		}
+			new webpack.optimize.UglifyJsPlugin(), // TODO fix
+			new WrapperPlugin( { header: '<script>', footer: '</script>' } ),
+		]
+		// ,
+		// externals: {
+		// 	// require("jquery") is external and available
+		// 	//  on the global var jQuery
+		// 	jquery: 'jQuery'
+		// }
 	}
 ]
