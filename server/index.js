@@ -70,7 +70,7 @@ export function include( filename ) {
  * the mobile add-on version.
  */
 export function showSidebar() {
-	const page = HtmlService.createTemplateFromFile( 'Sidebar' ).evaluate();
+	const page = HtmlService.createTemplateFromFile( 'sidebar' ).evaluate();
 
 	page.setTitle( 'WordPress' );
 	DocumentApp.getUi().showSidebar( page );
@@ -111,7 +111,7 @@ export function authCallback( request ) {
 			return wpDieTemplate( 'json-api', e );
 		}
 		store.addSite( site )
-		const template = HtmlService.createTemplateFromFile( 'oauthSuccess' );
+		const template = HtmlService.createTemplateFromFile( 'oauth-success' );
 		showSidebar(); // reload
 		return template.evaluate();
 	}
