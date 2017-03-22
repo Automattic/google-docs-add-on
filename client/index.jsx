@@ -25,7 +25,7 @@ class PostButton extends React.Component {
 	}
 
 	render() {
-		const buttonLabel = ( this.props.post ) ? 'Update Draft' : 'Save Draft';
+		const buttonLabel = ( this.state.post ) ? 'Update Draft' : 'Save Draft';
 
 		return <button className="sites-list__save-draft" disabled={ this.state.disabled } onClick={ this.savePost }>{ buttonLabel }</button>
 	}
