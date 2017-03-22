@@ -70,19 +70,7 @@ export function include( filename ) {
  * the mobile add-on version.
  */
 export function showSidebar() {
-	var template;
-	const siteList = store.listSites();
-
-	if ( siteList.length !== 0 ) {
-		template = HtmlService.createTemplateFromFile( 'Sidebar' )
-		template.siteList = siteList
-	} else {
-		template = HtmlService.createTemplateFromFile( 'needsOauth' );
-	}
-
-	const authorizationUrl = oauthClient().getAuthorizationUrl();
-	template.authorizationUrl = authorizationUrl;
-	const page = template.evaluate();
+	const page = HtmlService.createTemplateFromFile( 'Sidebar' ).evaluate();
 
 	page.setTitle( 'WordPress' );
 	DocumentApp.getUi().showSidebar( page );

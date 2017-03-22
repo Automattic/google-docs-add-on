@@ -52,10 +52,6 @@ const Site = ( props ) => {
 }
 
 const SiteList = ( props ) => {
-	if ( 0 === props.sites.length ) {
-		return <h1>Loading…</h1>
-	}
-
 	return <ul>
 		{ props.sites.map( site => <Site key={ site.blog_id } site={ site } {...props} /> ) }
 	</ul>
@@ -138,16 +134,23 @@ class App extends React.Component {
 	}
 
 	render() {
+		const hasSites = this.state.sitesLoaded && ( this.state.sites.length > 0 )
+		const headerCopy = hasSites
+			? 'Pick a site to copy this document to below. It will be saved on your site as a draft.'
+			: 'Welcome! To get started, add your first WordPress.com or Jetpack-connected site by clicking the button at the bottom.'
+		const loadingMessage = ( ! this.state.sitesLoaded ) ? <h1>Loading…</h1> : null
+
 		return <div className="container">
 			<div className="header">
 				<h1><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M21 11v8c0 1.105-.895 2-2 2H5c-1.105 0-2-.895-2-2V5c0-1.105.895-2 2-2h8l-2 2H5v14h14v-6l2-2zM7 17h3l7.5-7.5-3-3L7 14v3zm9.94-12.94L15.5 5.5l3 3 1.44-1.44c.585-.585.585-1.535 0-2.12l-.88-.88c-.585-.585-1.535-.585-2.12 0z"/></g></svg> Draft to WordPress</h1>
 
 				<div className="header__help-text">
-					<p>Pick a site to copy this document to below. It will be saved on your site as a draft.</p>
+					<p>{ headerCopy }</p>
 				</div>
 			</div>
 
 			<div className="sites-list" id="sites-list">
+				{ loadingMessage }
 				<SiteList sites={ this.state.sites } errorHandler={ this.errorHandler } updateSiteList={ this.updateSiteList } />
 			</div>
 
