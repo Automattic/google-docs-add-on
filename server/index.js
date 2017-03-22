@@ -88,6 +88,8 @@ export function showSidebar() {
 	DocumentApp.getUi().showSidebar( page );
 }
 
+export const getAuthUrl = () => oauthClient().getAuthorizationUrl()
+
 function wpDie( message = '' ) {
 	const out = HtmlService.createTemplateFromFile( 'wp-die' );
 	out.message = message;

@@ -1,11 +1,11 @@
-/* global window, document, google, React, ReactDOM,  */
-import { loadSites, deleteSite, postToWordPress } from './services';
+/* global document, google, React, ReactDOM */
+import { loadSites, deleteSite, postToWordPress, getAuthUrl } from './services';
 
 class PostButton extends React.Component {
 	constructor( props ) {
 		super( props );
 		this.state = {
-			disabled: props.disabled,
+			disabled: false,
 			post: props.site.post
 		};
 		this.savePost = this.savePost.bind( this )
@@ -13,13 +13,13 @@ class PostButton extends React.Component {
 
 	savePost() {
 		this.setState( { disabled: true } )
-		postToWordPress( this.props.blog_id )
+		postToWordPress( this.props.site.blog_id )
 			.then( ( post ) => {
 				this.setState( { disabled: null } )
 				this.setState( { post } )
 			} )
 			.catch( ( e ) => {
-				this.props.onError( e )
+				this.props.errorHandler( e )
 				this.setState( { disabled: null } )
 			} )
 	}
@@ -34,9 +34,9 @@ class PostButton extends React.Component {
 const Site = ( props ) => {
 	const blavatar = ( props.site.info.icon && props.site.info.icon.img ) ? props.site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
 	const previewLink = ( props.site.post ) ? <span className="sites-list__post-link"><a href={ props.site.post.URL }>Preview on { props.site.info.name }</a></span> : null;
-	const removeSite = () => deleteSite( props.site.blog_id ).then( reloadSites ).catch( props.onError )
+	const removeSite = () => deleteSite( props.site.blog_id ).then( reloadSites ).catch( props.errorHandler )
 
-	return <li key={ props.site.blog_id }>
+	return <li>
 		<div className="sites-list__blavatar">
 			<img src={ blavatar } alt="" />
 		</div>
@@ -57,7 +57,7 @@ const SiteList = ( props ) => {
 	}
 
 	return <ul>
-		{ props.sites.map( site => <Site site={ site } onError={ props.onError } /> ) }
+		{ props.sites.map( site => <Site key={ site.blog_id } site={ site } errorHandler={ props.errorHandler } /> ) }
 	</ul>
 }
 
@@ -85,9 +85,10 @@ const ErrorMessage = ( props ) => {
 		errorBody = <p>{ errorMatch[ 1 ] }</p>
 	}
 
-	return <div class="error" style="margin: 0px 6px; position: relative"><p><svg onClick={ this.props.clearError } style="cursor: pointer; position: absolute; right: 5px; top: 12px" width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg>
-	<strong>Error { props.errorTitle }</strong></p>
-	{ errorBody }
+	return <div className="error" style={ {margin: '0px 6px', position: 'relative' } }>
+		<p style={ { width: '100%' } } ><svg onClick={ props.clearError } style={ { cursor: 'pointer', position: 'absolute', right: '5px', top: '12px' } } width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg>
+		<strong>Error { props.errorTitle }</strong></p>
+		{ errorBody }
 	</div>
 }
 
@@ -95,19 +96,43 @@ class App extends React.Component {
 	constructor( props ) {
 		super( props )
 		this.state = {
+			sitesLoaded: false,
 			sites: [],
-			error: null
+			error: null,
+			authorizationUrl: null
 		};
+		this.updateAuthUrl = this.updateAuthUrl.bind( this )
+		this.errorHandler = this.errorHandler.bind( this )
+		this.clearError = this.clearError.bind( this )
 	}
 
 	componentDidMount() {
-		loadSites().then( ( sites ) => this.setState( { sites } ) );
+		loadSites()
+			.then( ( sites ) => this.setState( { sites, sitesLoaded: true } ) )
+			.catch( ( e ) => this.setState( { error: e } ) )
+		this.updateAuthUrl()
+		this.authTimer = setInterval( () => this.updateAuthUrl(), 1000 * 60 * 3 )
+	}
+
+	componentWillUnmount() {
+		clearInterval( this.authTimer )
+	}
+
+	updateAuthUrl() {
+		getAuthUrl()
+			.then( ( authorizationUrl ) => this.setState( { authorizationUrl } ) )
+			.catch( ( e ) => this.setState( { error: e } ) )
+	}
+
+	errorHandler( e ) {
+		this.setState( { error: e } )
+	}
+
+	clearError() {
+		this.setState( { error: null } )
 	}
 
 	render() {
-		const onError = ( e ) => this.setState( { error: e } )
-		const clearError = () => this.setState( { error: null} )
-
 		return <div className="container">
 			<div className="header">
 				<h1><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M21 11v8c0 1.105-.895 2-2 2H5c-1.105 0-2-.895-2-2V5c0-1.105.895-2 2-2h8l-2 2H5v14h14v-6l2-2zM7 17h3l7.5-7.5-3-3L7 14v3zm9.94-12.94L15.5 5.5l3 3 1.44-1.44c.585-.585.585-1.535 0-2.12l-.88-.88c-.585-.585-1.535-.585-2.12 0z"/></g></svg> Draft to WordPress</h1>
@@ -118,14 +143,14 @@ class App extends React.Component {
 			</div>
 
 			<div className="sites-list" id="sites-list">
-				<SiteList sites={ this.state.sites } onError={ onError } />
+				<SiteList sites={ this.state.sites } errorHandler={ this.errorHandler } />
 			</div>
 
-			<ErrorMessage msg={ this.state.error } clearError={ clearError } />
+			<ErrorMessage msg={ this.state.error } clearError={ this.clearError } />
 
 			<div className="footer">
 				<div className="footer__add-site">
-					<a href="<?= authorizationUrl ?>" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 9h-4V7h-2v4H7v2h4v4h2v-4h4v-2z"/></g></svg> Add WordPress Site</a>
+					<a href={ this.state.authorizationUrl } target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 9h-4V7h-2v4H7v2h4v4h2v-4h4v-2z"/></g></svg> Add WordPress Site</a>
 				</div>
 				<div className="footer__help-link">
 					<a title="Help" href="https://apps.wordpress.com/support/#faq-googledocs-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4 8c0-2.21-1.79-4-4-4s-4 1.79-4 4h2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2c-.552 0-1 .448-1 1v2h2v-1.14c1.722-.447 3-1.998 3-3.86zm-3 6h-2v2h2v-2z"/></g></svg></a>
@@ -154,7 +179,3 @@ function reloadSites() {
 }
 
 render()
-
-// reload every half hour to refresh the auth url
-const reload = google.script.run.showSidebar.bind( google.script.run );
-window.setTimeout( reload, 1000 * 60 * 30 );

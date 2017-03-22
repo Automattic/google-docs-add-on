@@ -12,7 +12,8 @@ import {
 	listSites,
 	deleteSite,
 	clearSiteData,
-	include
+	include,
+	getAuthUrl
 } from './index'
 
 global.onOpen = onOpen;
@@ -25,3 +26,4 @@ global.listSites = listSites;
 global.deleteSite = deleteSite;
 global.clearSiteData = clearSiteData;
 global.include = include;
+global.getAuthUrl = getAuthUrl;
