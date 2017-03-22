@@ -40,20 +40,13 @@ module.exports = [
 				exclude: /node_modules/,
 				loader: 'babel-loader',
 				query: {
-					presets: [ 'react', 'es2015' ],
-					plugins: [ 'transform-runtime' ]
+					presets: [ 'react', 'es2015' ]
 				}
 			} ]
 		},
 		plugins: [
-			new webpack.optimize.UglifyJsPlugin(), // TODO fix
+			new webpack.optimize.UglifyJsPlugin( { test: [ /\.js($|\?)/i, /\.html$/i ] } ),
 			new WrapperPlugin( { header: '<script>', footer: '</script>' } ),
 		]
-		// ,
-		// externals: {
-		// 	// require("jquery") is external and available
-		// 	//  on the global var jQuery
-		// 	jquery: 'jQuery'
-		// }
 	}
 ]

@@ -31,3 +31,12 @@ export function deleteSite( blogId ) {
 			.deleteSite( blogId );
 	} )
 }
+
+export function getAuthUrl() {
+	return new Promise( ( resolve, reject ) => {
+		google.script.run
+			.withSuccessHandler( resolve )
+			.withFailureHandler( reject )
+			.getAuthUrl();
+	} )
+}
