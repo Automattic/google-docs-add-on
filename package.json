@@ -33,6 +33,7 @@
   "dependencies": {
     "apps-script-oauth2": "git+https://github.com/googlesamples/apps-script-oauth2.git",
     "babel-preset-react": "^6.23.0",
+    "promise-polyfill": "^6.0.2",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "wrapper-webpack-plugin": "^0.1.11"

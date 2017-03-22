@@ -1,4 +1,4 @@
-/* global document, google, React, ReactDOM */
+/* global document, React, ReactDOM */
 import { loadSites, deleteSite, postToWordPress, getAuthUrl } from './services';
 
 class PostButton extends React.Component {
@@ -34,7 +34,7 @@ class PostButton extends React.Component {
 const Site = ( props ) => {
 	const blavatar = ( props.site.info.icon && props.site.info.icon.img ) ? props.site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
 	const previewLink = ( props.site.post ) ? <span className="sites-list__post-link"><a href={ props.site.post.URL }>Preview on { props.site.info.name }</a></span> : null;
-	const removeSite = () => deleteSite( props.site.blog_id ).then( reloadSites ).catch( props.errorHandler )
+	const removeSite = () => deleteSite( props.site.blog_id ).then( props.updateSiteList ).catch( props.errorHandler )
 
 	return <li>
 		<div className="sites-list__blavatar">
@@ -57,7 +57,7 @@ const SiteList = ( props ) => {
 	}
 
 	return <ul>
-		{ props.sites.map( site => <Site key={ site.blog_id } site={ site } errorHandler={ props.errorHandler } /> ) }
+		{ props.sites.map( site => <Site key={ site.blog_id } site={ site } {...props} /> ) }
 	</ul>
 }
 
@@ -102,20 +102,25 @@ class App extends React.Component {
 			authorizationUrl: null
 		};
 		this.updateAuthUrl = this.updateAuthUrl.bind( this )
+		this.updateSiteList = this.updateSiteList.bind( this )
 		this.errorHandler = this.errorHandler.bind( this )
 		this.clearError = this.clearError.bind( this )
 	}
 
 	componentDidMount() {
-		loadSites()
-			.then( ( sites ) => this.setState( { sites, sitesLoaded: true } ) )
-			.catch( ( e ) => this.setState( { error: e } ) )
+		this.updateSiteList()
 		this.updateAuthUrl()
 		this.authTimer = setInterval( () => this.updateAuthUrl(), 1000 * 60 * 3 )
 	}
 
 	componentWillUnmount() {
 		clearInterval( this.authTimer )
+	}
+
+	updateSiteList() {
+		loadSites()
+			.then( ( sites ) => this.setState( { sites, sitesLoaded: true } ) )
+			.catch( ( e ) => this.setState( { error: e } ) )
 	}
 
 	updateAuthUrl() {
@@ -143,7 +148,7 @@ class App extends React.Component {
 			</div>
 
 			<div className="sites-list" id="sites-list">
-				<SiteList sites={ this.state.sites } errorHandler={ this.errorHandler } />
+				<SiteList sites={ this.state.sites } errorHandler={ this.errorHandler } updateSiteList={ this.updateSiteList } />
 			</div>
 
 			<ErrorMessage msg={ this.state.error } clearError={ this.clearError } />
@@ -160,22 +165,4 @@ class App extends React.Component {
 	}
 }
 
-function render() {
-	ReactDOM.render(
-		<App />,
-		document.getElementById( 'container' )
-	);
-}
-
-function reloadSites() {
-	return loadSites()
-	.then( ( sites ) => {
-		// TODO merge needsOauth.html with this
-		if ( ! ( sites.length > 0 ) ) {
-			google.script.run.showSidebar();
-		}
-		render( sites )
-	} )
-}
-
-render()
+ReactDOM.render( <App />, document.getElementById( 'container' ) );
