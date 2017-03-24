@@ -51,12 +51,6 @@ const Site = ( props ) => {
 	</li>
 }
 
-const SiteList = ( props ) => {
-	return <ul>
-		{ props.sites.map( site => <Site key={ site.blog_id } site={ site } {...props} /> ) }
-	</ul>
-}
-
 const ErrorMessage = ( props ) => {
 	if ( ! props.msg ) {
 		return null;
@@ -151,15 +145,15 @@ class App extends React.Component {
 
 			<div className="sites-list" id="sites-list">
 				{ loadingMessage }
-				<SiteList sites={ this.state.sites } errorHandler={ this.errorHandler } updateSiteList={ this.updateSiteList } />
+				<ul>
+					{ this.state.sites.map( site => <Site key={ site.blog_id } site={ site } errorHandler={ this.errorHandler } updateSiteList={ this.updateSiteList } /> ) }
+					<li><a href={ this.state.authorizationUrl } target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 9h-4V7h-2v4H7v2h4v4h2v-4h4v-2z"/></g></svg> Add WordPress Site</a></li>
+				</ul>
 			</div>
 
 			<ErrorMessage msg={ this.state.error } clearError={ this.clearError } />
 
 			<div className="footer">
-				<div className="footer__add-site">
-					<a href={ this.state.authorizationUrl } target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 9h-4V7h-2v4H7v2h4v4h2v-4h4v-2z"/></g></svg> Add WordPress Site</a>
-				</div>
 				<div className="footer__help-link">
 					<a title="Help" href="https://apps.wordpress.com/google-docs/support/#add-site"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4 8c0-2.21-1.79-4-4-4s-4 1.79-4 4h2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2c-.552 0-1 .448-1 1v2h2v-1.14c1.722-.447 3-1.998 3-3.86zm-3 6h-2v2h2v-2z"/></g></svg></a>
 				</div>
