@@ -136,10 +136,22 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		return get( access_token, `/sites/${ blog_id }` )
 	}
 
+	function getPostTypes( site ) {
+		const { blog_id, access_token } = site;
+		return get( access_token, `/sites/${ blog_id }/post-types` )
+	}
+
+	function getCategories( site ) {
+		const { blog_id, access_token } = site;
+		return get( access_token, `/sites/${ blog_id }/categories` )
+	}
+
 	return {
 		postToWordPress,
 		getSiteInfo,
 		uploadImage,
 		getPostStatus,
+		getPostTypes,
+		getCategories
 	}
 }

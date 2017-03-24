@@ -107,6 +107,8 @@ export function authCallback( request ) {
 		const site = oauthClient().getToken_()
 		try {
 			site.info = wpClient.getSiteInfo( site )
+			site.postTypes = wpClient.getPostTypes( site )
+			site.categories = wpClient.getCategories( site )
 		} catch ( e ) {
 			return wpDieTemplate( 'json-api', e );
 		}
