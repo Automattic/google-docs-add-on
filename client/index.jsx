@@ -51,6 +51,14 @@ const Site = ( props ) => {
 		<div className="sites-list__extended">
 			{ previewLink }
 		</div>
+		<PostButton {...props} />
+
+		{ previewLink }
+		<div className="sites-extended">
+			Categories: { props.site.categories }
+			Tags: { props.site.post.tags }
+			Custom post types: { props.site.postTypes }
+		</div>
 	</li>
 }
 
