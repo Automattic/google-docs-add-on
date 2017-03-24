@@ -1,4 +1,4 @@
-/* globals Utilities, Logger */
+/* globals Utilities */
 
 const API_BASE = 'https://public-api.wordpress.com/rest/v1.1';
 const CRLF = '\r\n';
@@ -138,12 +138,22 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 
 	function getPostTypes( site ) {
 		const { blog_id, access_token } = site;
-		return get( access_token, `/sites/${ blog_id }/post-types` )
+		const response = get( access_token, `/sites/${ blog_id }/post-types` )
+		if ( response.post_types ) {
+			return response.post_types;
+		} else {
+			return []
+		}
 	}
 
 	function getCategories( site ) {
 		const { blog_id, access_token } = site;
-		return get( access_token, `/sites/${ blog_id }/categories` )
+		const response = get( access_token, `/sites/${ blog_id }/categories` )
+		if ( response.categories ) {
+			return response.categories;
+		} else {
+			return []
+		}
 	}
 
 	return {

@@ -31,6 +31,10 @@ class PostButton extends React.Component {
 	}
 }
 
+const CategoryInput = ( props ) => {
+	return <li><input type="checkbox" /> { props.name }</li>
+}
+
 const Site = ( props ) => {
 	const blavatar = ( props.site.info.icon && props.site.info.icon.img ) ? props.site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
 	const previewLink = ( props.site.post ) ? <span className="sites-list__post-link"><a href={ props.site.post.URL }>Preview on { props.site.info.name }</a></span> : null;
@@ -43,15 +47,24 @@ const Site = ( props ) => {
 		<div className="sites-list__sitename">
 			<a className="sites-list__title" href={ props.site.blog_url }>{ props.site.info.name }<br />
 			<em>{ props.site.blog_url }</em></a>
-			<a title="Remove site from this list" className="sites-list__delete-site" onClick={ removeSite }><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg></a>
 		</div>
 		<PostButton {...props} />
 
 		{ previewLink }
 		<div className="sites-extended">
-			Categories: { props.site.categories }
-			Tags: { props.site.post.tags }
-			Custom post types: { props.site.postTypes }
+			<div><label>
+				<strong>Tags:</strong><br />
+				<input placeholder="Add tags, separate with commas…" style={ { width: '100%' } } />
+			</label></div>
+			<div>
+				<strong>Categories:</strong>
+				<ul>
+					{ props.site.categories.map( c => <CategoryInput key={ c.ID } {...c} /> ) }
+				</ul>
+			</div>
+			<div>
+				<a title="Remove site from this list" className="sites-list__delete-site" onClick={ removeSite }>Remove { props.site.info.name }<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg></a>
+			</div>
 		</div>
 	</li>
 }
