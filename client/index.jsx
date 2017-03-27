@@ -132,7 +132,7 @@ class App extends React.Component {
 		const headerCopy = hasSites
 			? 'Pick a site to copy this document to below. It will be saved on your site as a draft.'
 			: 'Welcome! To get started, add your first WordPress.com or Jetpack-connected site by clicking the button at the bottom.'
-		const loadingMessage = ( ! this.state.sitesLoaded ) ? <h1>Loading…</h1> : null
+		const loadingMessage = ( ! this.state.sitesLoaded ) ? <p className="loading">Loading…</p> : null
 
 		return <div className="container">
 			<div className="header">
@@ -147,7 +147,7 @@ class App extends React.Component {
 				{ loadingMessage }
 				<ul>
 					{ this.state.sites.map( site => <Site key={ site.blog_id } site={ site } errorHandler={ this.errorHandler } updateSiteList={ this.updateSiteList } /> ) }
-					<li><a href={ this.state.authorizationUrl } target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 9h-4V7h-2v4H7v2h4v4h2v-4h4v-2z"/></g></svg> Add WordPress Site</a></li>
+					<li><a className="button button-secondary" href={ this.state.authorizationUrl } target="_blank">Add WordPress Site</a></li>
 				</ul>
 			</div>
 
