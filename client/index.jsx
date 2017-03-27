@@ -25,7 +25,7 @@ class PostButton extends React.Component {
 	}
 
 	render() {
-		const buttonLabel = ( this.state.post ) ? 'Update Draft' : 'Save Draft';
+		const buttonLabel = ( this.state.post ) ? 'Update' : 'Save';
 
 		return <button className="sites-list__save-draft" disabled={ this.state.disabled } onClick={ this.savePost }>{ buttonLabel }</button>
 	}
@@ -37,17 +37,21 @@ const Site = ( props ) => {
 	const removeSite = () => deleteSite( props.site.blog_id ).then( props.updateSiteList ).catch( props.errorHandler )
 
 	return <li>
-		<div className="sites-list__blavatar">
-			<img src={ blavatar } alt="" />
+		<div className="sites-list__basic">
+			<div className="sites-list__blavatar">
+				<img src={ blavatar } alt="" />
+			</div>
+			<div className="sites-list__sitename">
+				<a className="sites-list__title" href={ props.site.blog_url }>{ props.site.info.name }<br />
+				<em>{ props.site.blog_url }</em></a>
+				<a title="Remove site from this list" className="sites-list__delete-site" onClick={ removeSite }><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg></a>
+			</div>
+			<PostButton {...props} />
+			<a className="sites-list__extended-toggle" href=""><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Dropdown</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M7 10l5 5 5-5"/></g></svg></a>
 		</div>
-		<div className="sites-list__sitename">
-			<a className="sites-list__title" href={ props.site.blog_url }>{ props.site.info.name }<br />
-			<em>{ props.site.blog_url }</em></a>
-			<a title="Remove site from this list" className="sites-list__delete-site" onClick={ removeSite }><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg></a>
+		<div className="sites-list__extended">
+			{ previewLink }
 		</div>
-		<PostButton {...props} />
-
-		{ previewLink }
 	</li>
 }
 
