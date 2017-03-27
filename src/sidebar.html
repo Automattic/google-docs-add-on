@@ -23,7 +23,7 @@ html, body {
 textarea,
 input,
 body {
-	font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen-Sans", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
+	font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen-Sans", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
 }
 
 body {
@@ -57,7 +57,8 @@ svg {
 	font-size: 100%;
 	background: #0087be;
 	margin: 0;
-	padding: 12px 16px;
+	padding: 0 12px;
+	line-height: 48px;
 	color: #fff;
 	font-weight: 600;
 	border-bottom: 1px solid #0079aa;
@@ -66,14 +67,18 @@ svg {
 .header h1 svg {
 	float: left;
 	margin-right: 8px;
+	margin-top: 12px;
 	width: 24px;
 	height: 24px;
 }
 
 .header .header__help-text {
-	background: #fff;
-	padding: 4px 16px;
+	padding: 4px 12px;
 	border-bottom: 1px solid #c8d7e0;
+}
+
+.loading {
+	text-align: center;
 }
 
 .sites-list {
@@ -90,9 +95,16 @@ svg {
 }
 
 .sites-list ul li {
+	background: #fff;
 	border-bottom: 1px solid #c8d7e0;
-	padding: 16px;
+	padding: 16px 12px;
 	overflow: hidden;
+}
+
+.sites-list ul li:last-child {
+	background: none;
+	border-bottom: none;
+	text-align: center;
 }
 
 .sites-list ul li button {
@@ -127,6 +139,7 @@ svg {
 	text-decoration: none;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	font-weight: bold;
 }
 
 .sites-list ul li .sites-list__sitename a:hover {
@@ -273,7 +286,9 @@ input:focus {
 	box-shadow: 0 0 0 2px #78dcfa;
 }
 
-button {
+button,
+.button {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen-Sans", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
 	cursor: pointer;
 	font-size: 12px;
 	background: #13aadc;
@@ -281,21 +296,42 @@ button {
 	border-radius: 4px;
 	border: 1px solid #0987be;
 	border-bottom-width: 2px;
+	padding: 0 8px;
+	height: auto;
+	line-height: 28px;
+}
+
+.button-secondary {
+	background: #fff;
+	color: #2d4454;
+	border-color: #c8d7e2;
 }
 
 button:hover,
-button:active {
+button:active,
+.button:hover,
+.button:active {
 	background: #13aadc;
 	color: #fff;
 	border-color: #015082;
 }
 
-button:active {
+.button-secondary:hover,
+.button-secondary:active {
+	background: #fff;
+	color: #2d4454;
+	border-color: #a8bece;
+	border-bottom-width: 2px;
+}
+
+button:active,
+.button:active {
 	border-bottom-width: 1px;
 	border-top-width: 2px;
 }
 
-button:focus {
+button:focus,
+.button:focus {
 	box-shadow: none;
 }
 </style>
