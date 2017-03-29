@@ -16,6 +16,7 @@ class PostButton extends React.Component {
 		postToWordPress( this.props.site.blog_id )
 			.then( ( post ) => {
 				this.setState( { disabled: false } )
+				this.setState( { post} )
 				this.props.onPostSave( post )
 			} )
 			.catch( ( e ) => {
