@@ -45,7 +45,7 @@ module.exports = [
 			} ]
 		},
 		plugins: [
-			new webpack.optimize.UglifyJsPlugin( { test: [ /\.js($|\?)/i, /\.html$/i ] } ),
+			// new webpack.optimize.UglifyJsPlugin( { test: [ /\.js($|\?)/i, /\.html$/i ] } ),
 			new WrapperPlugin( { header: '<script>', footer: '</script>' } ),
 		]
 	}
