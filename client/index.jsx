@@ -52,17 +52,6 @@ const Site = ( props ) => {
 			</div>
 			<PostButton {...props} />
 		</div>
-<<<<<<< HEAD
-		<div className="sites-list__extended">
-			{ previewLink }
-=======
-		<div className="sites-list__sitename">
-			<a className="sites-list__title" href={ props.site.blog_url }>{ props.site.info.name }<br />
-			<em>{ props.site.blog_url }</em></a>
->>>>>>> Roughing in tags and categories
-		</div>
-		<PostButton {...props} />
-
 		{ previewLink }
 		<div className="sites-extended">
 			<div><label>
