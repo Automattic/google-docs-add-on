@@ -6,7 +6,7 @@ class PostButton extends React.Component {
 		super( props );
 		this.state = {
 			disabled: false,
-			post: props.site.post
+			post: props.post
 		};
 		this.savePost = this.savePost.bind( this )
 	}
@@ -15,12 +15,12 @@ class PostButton extends React.Component {
 		this.setState( { disabled: true } )
 		postToWordPress( this.props.site.blog_id )
 			.then( ( post ) => {
-				this.setState( { disabled: null } )
-				this.setState( { post } )
+				this.setState( { disabled: false } )
+				this.props.onPostSave( post )
 			} )
 			.catch( ( e ) => {
 				this.props.errorHandler( e )
-				this.setState( { disabled: null } )
+				this.setState( { disabled: false } )
 			} )
 	}
 
@@ -31,27 +31,42 @@ class PostButton extends React.Component {
 	}
 }
 
-const Site = ( props ) => {
-	const blavatar = ( props.site.info.icon && props.site.info.icon.img ) ? props.site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
-	const previewLink = ( props.site.post ) ? <span className="sites-list__post-link"><a href={ props.site.post.URL }>Preview on { props.site.info.name }</a></span> : null;
-	const removeSite = () => deleteSite( props.site.blog_id ).then( props.updateSiteList ).catch( props.errorHandler )
+class Site extends React.Component {
+	constructor( props ) {
+		super( props )
+		this.state = {
+			post: props.site.post,
+		};
+		this.setPost = this.setPost.bind( this )
+	}
 
-	return <li>
-		<div className="sites-list__basic">
-			<div className="sites-list__blavatar">
-				<img src={ blavatar } alt="" />
+	setPost( post ) {
+		this.setState( { post } )
+	}
+
+	render() {
+		const site = this.props.site
+		const blavatar = ( site.info.icon && site.info.icon.img ) ? site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
+		const previewLink = ( this.state.post ) ? <span className="sites-list__post-link"><a href={ this.state.post.URL }>Preview on { site.info.name }</a></span> : null;
+		const removeSite = () => deleteSite( site.blog_id ).then( this.props.updateSiteList ).catch( this.props.errorHandler )
+
+		return <li>
+			<div className="sites-list__basic">
+				<div className="sites-list__blavatar">
+					<img src={ blavatar } alt="" />
+				</div>
+				<div className="sites-list__sitename">
+					<a className="sites-list__title" href={ site.blog_url }>{ site.info.name }<br />
+					<em>{ site.blog_url }</em></a>
+					<a title="Remove site from this list" className="sites-list__delete-site" onClick={ removeSite }><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg></a>
+				</div>
+				<PostButton site={ site } post={ this.state.post } onPostSave={ this.setPost } />
 			</div>
-			<div className="sites-list__sitename">
-				<a className="sites-list__title" href={ props.site.blog_url }>{ props.site.info.name }<br />
-				<em>{ props.site.blog_url }</em></a>
-				<a title="Remove site from this list" className="sites-list__delete-site" onClick={ removeSite }><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg></a>
+			<div className="sites-list__extended">
+				{ previewLink }
 			</div>
-			<PostButton {...props} />
-		</div>
-		<div className="sites-list__extended">
-			{ previewLink }
-		</div>
-	</li>
+		</li>
+	}
 }
 
 const ErrorMessage = ( props ) => {
