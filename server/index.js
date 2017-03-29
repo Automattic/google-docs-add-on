@@ -70,23 +70,13 @@ export function include( filename ) {
  * the mobile add-on version.
  */
 export function showSidebar() {
-	var template;
-	const siteList = store.listSites();
-
-	if ( siteList.length !== 0 ) {
-		template = HtmlService.createTemplateFromFile( 'Sidebar' )
-		template.siteList = siteList
-	} else {
-		template = HtmlService.createTemplateFromFile( 'needsOauth' );
-	}
-
-	const authorizationUrl = oauthClient().getAuthorizationUrl();
-	template.authorizationUrl = authorizationUrl;
-	const page = template.evaluate();
+	const page = HtmlService.createTemplateFromFile( 'sidebar' ).evaluate();
 
 	page.setTitle( 'WordPress' );
 	DocumentApp.getUi().showSidebar( page );
 }
+
+export const getAuthUrl = () => oauthClient().getAuthorizationUrl()
 
 function wpDie( message = '' ) {
 	const out = HtmlService.createTemplateFromFile( 'wp-die' );
@@ -121,7 +111,7 @@ export function authCallback( request ) {
 			return wpDieTemplate( 'json-api', e );
 		}
 		store.addSite( site )
-		const template = HtmlService.createTemplateFromFile( 'oauthSuccess' );
+		const template = HtmlService.createTemplateFromFile( 'oauth-success' );
 		showSidebar(); // reload
 		return template.evaluate();
 	}

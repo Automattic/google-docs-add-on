@@ -1,3 +1,4 @@
 node_modules
 gapps.config.json*
 src/Code.js
+.vscode
