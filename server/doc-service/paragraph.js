@@ -35,6 +35,9 @@ export function Paragraph( DocumentApp, renderContainer ) {
 			case DocumentApp.HorizontalAlignment.RIGHT:
 				styles['text-align'] = 'right';
 				break;
+			case DocumentApp.HorizontalAlignment.JUSTIFY:
+				styles['text-align'] = 'justify';
+				break;
 		}
 		return styles;
 	}
