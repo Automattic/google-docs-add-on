@@ -269,12 +269,14 @@ describe( 'renderContainer()', function() {
 		it( 'should align paragraphs', function() {
 			const center = paragraphOf( mockText( 'Out there theres a world outside of Yonkers' ) )
 			td.when( center.getAlignment() ).thenReturn( DocumentApp.HorizontalAlignment.CENTER )
+			const justified = paragraphOf( mockText( 'Way out there beyond this hick town Barnaby theres a slick town Barnaby' ) )
+			td.when( justified.getAlignment() ).thenReturn( DocumentApp.HorizontalAlignment.JUSTIFY )
 			const right = paragraphOf( mockText( 'Put on your Sunday clothes theres lots of world out there' ) )
 			td.when( right.getAlignment() ).thenReturn( DocumentApp.HorizontalAlignment.RIGHT )
 
-			const actual = renderContainer( containerOf( center, right ) )
+			const actual = renderContainer( containerOf( center, justified, right ) )
 
-			expect( actual ).to.equal( '<p style="text-align: center;">Out there theres a world outside of Yonkers</p>\n<p style="text-align: right;">Put on your Sunday clothes theres lots of world out there</p>\n' )
+			expect( actual ).to.equal( '<p style="text-align: center;">Out there theres a world outside of Yonkers</p>\n<p style="text-align: justify;">Way out there beyond this hick town Barnaby theres a slick town Barnaby</p>\n<p style="text-align: right;">Put on your Sunday clothes theres lots of world out there</p>\n' )
 		} )
 	} )
 
