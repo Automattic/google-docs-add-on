@@ -1,3 +1,10 @@
+1.2.0
+=====
+
+* Rewrite UI in React
+* Allow fully justified paragraphs
+* Point support links to new support page
+
 1.1.0
 =====
 

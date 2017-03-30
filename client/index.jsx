@@ -6,7 +6,7 @@ class PostButton extends React.Component {
 		super( props );
 		this.state = {
 			disabled: false,
-			post: props.site.post
+			post: props.post
 		};
 		this.savePost = this.savePost.bind( this )
 	}
@@ -15,12 +15,13 @@ class PostButton extends React.Component {
 		this.setState( { disabled: true } )
 		postToWordPress( this.props.site.blog_id )
 			.then( ( post ) => {
-				this.setState( { disabled: null } )
-				this.setState( { post } )
+				this.setState( { disabled: false } )
+				this.setState( { post} )
+				this.props.onPostSave( post )
 			} )
 			.catch( ( e ) => {
 				this.props.errorHandler( e )
-				this.setState( { disabled: null } )
+				this.setState( { disabled: false } )
 			} )
 	}
 
@@ -39,9 +40,11 @@ class Site extends React.Component {
 	constructor( props ) {
 		super( props );
 		this.state = {
+			post: props.site.post,
 			postCategories: ( props.site.post && props.site.post.categories ) ? props.site.post.categories : {},
 			postTags: ( props.site.post && props.site.post.tags ) ? props.site.post.tags : {},
 		}
+		this.setPost = this.setPost.bind( this )
 	}
 
 	addCategory( category ) {
@@ -62,8 +65,8 @@ class Site extends React.Component {
 
 	render() {
 		const site = this.props.site
-		const previewLink = ( site.post ) ? <span className="sites-list__post-link"><a href={ site.post.URL }>Preview on { site.info.name }</a></span> : null;
 		const blavatar = ( site.info.icon && site.info.icon.img ) ? site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
+		const previewLink = ( this.state.post ) ? <span className="sites-list__post-link"><a href={ this.state.post.URL }>Preview on { site.info.name }</a></span> : null;
 		const removeSite = () => deleteSite( site.blog_id ).then( this.props.updateSiteList ).catch( this.props.errorHandler )
 
 		return <li>
@@ -74,8 +77,9 @@ class Site extends React.Component {
 				<div className="sites-list__sitename">
 					<a className="sites-list__title" href={ site.blog_url }>{ site.info.name }<br />
 					<em>{ site.blog_url }</em></a>
+					<a title="Remove site from this list" className="sites-list__delete-site" onClick={ removeSite }><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg></a>
 				</div>
-				<PostButton site={ site } errorHandler={ this.props.errorHandler } />
+				<PostButton site={ site } post={ this.state.post } onPostSave={ this.setPost } errorHandler={ this.props.errorHandler } />
 				<a className="sites-list__extended-toggle" href=""><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Dropdown</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M7 10l5 5 5-5"/></g></svg></a>
 			</div>
 			<div className="sites-list__extended">
@@ -204,7 +208,7 @@ class App extends React.Component {
 
 			<div className="footer">
 				<div className="footer__help-link">
-					<a title="Help" href="https://apps.wordpress.com/google-docs/support/#add-site"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4 8c0-2.21-1.79-4-4-4s-4 1.79-4 4h2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2c-.552 0-1 .448-1 1v2h2v-1.14c1.722-.447 3-1.998 3-3.86zm-3 6h-2v2h2v-2z"/></g></svg></a>
+					<a title="Help" href="https://apps.wordpress.com/google-docs/support/"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8m0-2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4 8c0-2.21-1.79-4-4-4s-4 1.79-4 4h2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2c-.552 0-1 .448-1 1v2h2v-1.14c1.722-.447 3-1.998 3-3.86zm-3 6h-2v2h2v-2z"/></g></svg></a>
 				</div>
 			</div>
 		</div>
