@@ -121,7 +121,7 @@ export function authCallback( request ) {
 	return wpDieTemplate( 'deny' );
 }
 
-export function postToWordPress( site_id ) {
+export function postToWordPress( site_id, { categories = [], tags = [] } ) {
 	const doc = DocumentApp.getActiveDocument();
 	const docProps = PropertiesService.getDocumentProperties();
 	const site = store.findSite( site_id );
@@ -144,9 +144,16 @@ export function postToWordPress( site_id ) {
 	const imageCache = ImageCache( site, docProps, md5 )
 	const imageUrlMapper = imageUploadLinker( upload, imageCache )
 	const renderContainer = DocService( DocumentApp, imageUrlMapper )
-	const body = renderContainer( doc.getBody() );
+	const content = renderContainer( doc.getBody() );
 
-	const response = wpClient.postToWordPress( site, doc.getName(), body, postId );
+	const postParams = {
+		title: doc.getName(),
+		content,
+		categories,
+		tags
+	}
+
+	const response = wpClient.postToWordPress( site, postId, postParams );
 
 	store.savePostToSite( response, site );
 	return response;
