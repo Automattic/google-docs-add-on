@@ -63,16 +63,13 @@ function makeMultipartBody( payload, boundary ) {
 
 export function WPClient( PropertiesService, UrlFetchApp ) {
 	function request( access_token, path, options ) {
-		const payload = ( options.payload ) ? JSON.stringify( options.payload ) : null
 		const url = API_BASE + path;
-		const defaultOptions = {
-			headers: {
-				Authorization: `Bearer ${ access_token }`,
-				'Content-Type': 'application/json'
-			}
-		};
+		let headers = { Authorization: `Bearer ${ access_token }` }
+		if ( options.headers ) {
+			headers = Object.assign( headers, options.headers )
+		}
 
-		return JSON.parse( UrlFetchApp.fetch( url, Object.assign( defaultOptions, options, { payload } ) ) )
+		return JSON.parse( UrlFetchApp.fetch( url, Object.assign( options, { headers } ) ) )
 	}
 
 	function get( access_token, path, options = {} ) {
@@ -80,7 +77,8 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 	}
 
 	function post( access_token, path, options = {} ) {
-		return request( access_token, path, Object.assign( { method: 'post' }, options ) )
+		const payload = ( options.payload ) ? JSON.stringify( options.payload ) : null
+		return request( access_token, path, Object.assign( { method: 'post' }, options, { payload } ) )
 	}
 
 	function postToWordPress( site, postIdParam, postContentParams = {} ) {
@@ -121,7 +119,7 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 			payload: makeMultipartBody( { 'media[0]': imageBlob, 'attrs[0][parent_id]': parentId }, boundary )
 		}
 
-		return post( access_token, path, options )
+		return request( access_token, path, options )
 	}
 
 	function getSiteInfo( site ) {
