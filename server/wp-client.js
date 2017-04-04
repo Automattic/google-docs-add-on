@@ -1,8 +1,8 @@
 /* globals Utilities */
 
-const API_BASE = 'https://public-api.wordpress.com/rest/v1.1';
-const CRLF = '\r\n';
-const DEFAULT_FILENAME = 'image';
+const API_BASE = 'https://public-api.wordpress.com/rest/v1.1'
+const CRLF = '\r\n'
+const DEFAULT_FILENAME = 'image'
 
 const contentTypeToExtension = {
 	'image/png': 'png',
@@ -13,10 +13,10 @@ const contentTypeToExtension = {
 
 function fileNameForBlob( blob ) {
 	if ( blob.getName() ) {
-		return blob.getName();
+		return blob.getName()
 	}
 
-	const contentType = blob.getContentType();
+	const contentType = blob.getContentType()
 	if ( contentTypeToExtension[ contentType ] ) {
 		return DEFAULT_FILENAME + '.' + contentTypeToExtension[ contentType ]
 	}
@@ -84,28 +84,24 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 	}
 
 	function postToWordPress( site, postIdParam, postContentParams = {} ) {
-		const postId = postIdParam || 'new';
-		const { blog_id, access_token } = site;
+		const postId = postIdParam || 'new'
+		const { blog_id, access_token } = site
 		const path = `/sites/${ blog_id }/posts/${ postId }`
 		const payload = Object.assign( {}, postContentParams, { status: 'draft' } )
 
-		const response = post( access_token, path, { payload } );
-
-		return response
+		return post( access_token, path, { payload } )
 	}
 
 	function getPostStatus( site, postId ) {
 		const { blog_id, access_token } = site;
 		const path = `/sites/${ blog_id }/posts/${ postId }`
 
-		const response = get( access_token, path );
-
-		return response;
+		return get( access_token, path )
 	}
 
 	/**
 	 * @param {Site} site { blog_id, access_token }
-	 * @param {Blob} image a Google InlineImage
+	 * @param {InlineImage} image a Google InlineImage
 	 * @param {Number} parentId blog post id to attach to
 	 * @return {object} response
 	 */
@@ -115,7 +111,7 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		const imageBlob = image.getBlob()
 
 		if ( ! imageBlob.getName() && image.getAltDescription ) {
-			imageBlob.setName( image.getAltDescription() );
+			imageBlob.setName( image.getAltDescription() )
 		}
 		const boundary = '-----CUTHEREelH7faHNSXWNi72OTh08zH29D28Zhr3Rif3oupOaDrj'
 
@@ -125,34 +121,24 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 			payload: makeMultipartBody( { 'media[0]': imageBlob, 'attrs[0][parent_id]': parentId }, boundary )
 		}
 
-		const response = post( access_token, path, options )
-
-		return response
+		return post( access_token, path, options )
 	}
 
 	function getSiteInfo( site ) {
-		const { blog_id, access_token } = site;
+		const { blog_id, access_token } = site
 		return get( access_token, `/sites/${ blog_id }` )
 	}
 
 	function getPostTypes( site ) {
-		const { blog_id, access_token } = site;
+		const { blog_id, access_token } = site
 		const response = get( access_token, `/sites/${ blog_id }/post-types` )
-		if ( response.post_types ) {
-			return response.post_types;
-		} else {
-			return []
-		}
+		return response.post_types || []
 	}
 
 	function getCategories( site ) {
-		const { blog_id, access_token } = site;
+		const { blog_id, access_token } = site
 		const response = get( access_token, `/sites/${ blog_id }/categories` )
-		if ( response.categories ) {
-			return response.categories;
-		} else {
-			return []
-		}
+		return response.categories || []
 	}
 
 	return {

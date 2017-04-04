@@ -4,10 +4,7 @@ import { postToWordPress } from './services';
 export default class PostButton extends React.Component {
 	constructor( props ) {
 		super( props );
-		this.state = {
-			disabled: false,
-			post: props.post
-		};
+		this.state = { disabled: false };
 		this.savePost = this.savePost.bind( this )
 	}
 
@@ -18,7 +15,6 @@ export default class PostButton extends React.Component {
 		} )
 			.then( ( post ) => {
 				this.setState( { disabled: false } )
-				this.setState( { post } )
 				this.props.onPostSave( post )
 			} )
 			.catch( ( e ) => {
@@ -28,7 +24,7 @@ export default class PostButton extends React.Component {
 	}
 
 	render() {
-		const buttonLabel = ( this.state.post ) ? 'Update' : 'Save';
+		const buttonLabel = ( this.props.post ) ? 'Update' : 'Save';
 
 		return <button className="sites-list__save-draft" disabled={ this.state.disabled } onClick={ this.savePost }>{ buttonLabel }</button>
 	}
