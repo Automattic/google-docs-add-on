@@ -86,7 +86,6 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		const { blog_id, access_token } = site;
 		const path = `/sites/${ blog_id }/posts/${ postId }`
 		const payload = Object.assign( {}, postContentParams, { status: 'draft' } )
-		DocumentApp.getUi().alert( JSON.stringify( payload ) )
 
 		const response = post( access_token, path, { payload } );
 
