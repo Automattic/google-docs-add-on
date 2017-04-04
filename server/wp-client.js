@@ -63,14 +63,16 @@ function makeMultipartBody( payload, boundary ) {
 
 export function WPClient( PropertiesService, UrlFetchApp ) {
 	function request( access_token, path, options ) {
+		const payload = ( options.payload ) ? JSON.stringify( options.payload ) : null
+		const url = API_BASE + path;
 		const defaultOptions = {
 			headers: {
-				Authorization: `Bearer ${ access_token }`
+				Authorization: `Bearer ${ access_token }`,
+				'Content-Type': 'application/json'
 			}
 		};
-		const url = API_BASE + path;
 
-		return JSON.parse( UrlFetchApp.fetch( url, Object.assign( defaultOptions, options ) ) )
+		return JSON.parse( UrlFetchApp.fetch( url, Object.assign( defaultOptions, options, { payload } ) ) )
 	}
 
 	function get( access_token, path, options = {} ) {
