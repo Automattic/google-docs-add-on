@@ -7,14 +7,9 @@ export default class Site extends React.Component {
 	constructor( props ) {
 		super( props );
 
-		let postCategories = []
-		if ( props.site.post && props.site.post.categories ) {
-			postCategories = props.site.post.categories.map( ( c ) => c.name )
-		}
-
 		this.state = {
 			post: props.site.post,
-			postCategories: postCategories,
+			postCategories: ( props.site.post && props.site.post.categories ) ? props.site.post.categories : [],
 			postTags: ( props.site.post && props.site.post.tags ) ? props.site.post.tags : [],
 		}
 		this.addCategory = this.addCategory.bind( this )

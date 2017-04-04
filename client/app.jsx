@@ -68,7 +68,7 @@ export default class App extends React.Component {
 				{ loadingMessage }
 				<ul>
 					{ this.state.sites.map( site => <Site key={ site.blog_id } site={ site } errorHandler={ this.errorHandler } updateSiteList={ this.updateSiteList } /> ) }
-					<li><a className="button button-secondary" href={ this.state.authorizationUrl } target="_blank">Add WordPress Site</a></li>
+					<li className="sites-list__add-site"><a className="button button-secondary" href={ this.state.authorizationUrl } target="_blank">Add WordPress Site</a></li>
 				</ul>
 			</div>
 

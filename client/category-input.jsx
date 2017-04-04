@@ -1,6 +1,6 @@
 export default ( props ) => {
 	const { category } = props
-	const { checked } = ( -1 !== props.postCategories.indexOf( category.name ) )
+	const checked = ( -1 !== props.postCategories.indexOf( category.name ) )
 	const changeHandler = ( { target } ) => {
 		if ( target.checked ) {
 			props.addCategory( props.category.name )
