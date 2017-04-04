@@ -9,12 +9,14 @@ export default class Site extends React.Component {
 
 		this.state = {
 			post: props.site.post,
+			optionsExpanded: !! props.site.post,
 			postCategories: ( props.site.post && props.site.post.categories ) ? props.site.post.categories : [],
 			postTags: ( props.site.post && props.site.post.tags ) ? props.site.post.tags : [],
 		}
 		this.addCategory = this.addCategory.bind( this )
 		this.removeCategory = this.removeCategory.bind( this )
 		this.setPost = this.setPost.bind( this )
+		this.toggleOptions = this.toggleOptions.bind( this )
 	}
 
 	/**
@@ -46,12 +48,17 @@ export default class Site extends React.Component {
 		this.setState( { post } )
 	}
 
+	toggleOptions() {
+		this.setState( { optionsExpanded: ! this.state.optionsExpanded } )
+	}
+
 	render() {
 		const site = this.props.site
 		const categories = site.categories || []
 		const blavatar = ( site.info.icon && site.info.icon.img ) ? site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
 		const previewLink = ( this.state.post ) ? <span className="sites-list__post-link"><a href={ this.state.post.URL }>Preview on { site.info.name }</a></span> : null;
 		const removeSite = () => deleteSite( site.blog_id ).then( this.props.updateSiteList ).catch( this.props.errorHandler )
+		const extendedStyle = ( ! this.state.optionsExpanded ) ? { display: 'none' } : {}
 
 		return <li>
 			<div className="sites-list__basic">
@@ -63,12 +70,12 @@ export default class Site extends React.Component {
 					<em>{ site.blog_url }</em></a>
 				</div>
 				<PostButton site={ site } { ...this.state } onPostSave={ this.setPost } errorHandler={ this.props.errorHandler } />
-				<a className="sites-list__extended-toggle" href=""><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Dropdown</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M7 10l5 5 5-5"/></g></svg></a>
+				<a className="sites-list__extended-toggle" onClick={ this.toggleOptions }><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Dropdown</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M7 10l5 5 5-5"/></g></svg></a>
 			</div>
 			<div className="sites-list__extended">
 				{ previewLink }
 			</div>
-			<div className="sites-extended">
+			<div className="sites-extended" style={ extendedStyle }>
 				<div><label>
 					<strong>Tags:</strong><br />
 					<input placeholder="Add tags, separate with commas…" style={ { width: '100%' } } />
