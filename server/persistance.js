@@ -58,7 +58,6 @@ export function Persistance( propertieService ) {
 
 	function persisitSites( sites ) {
 		sitesCache = sites;
-		DocumentApp.getUi().alert( JSON.stringify( sites ) )
 		userProps().setProperty( SITE_PERSISTANCE_KEY, JSON.stringify( sites ) )
 	}
 

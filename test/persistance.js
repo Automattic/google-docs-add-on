@@ -14,7 +14,11 @@ describe( 'Sites', function() {
 			icon: {
 				img: 'http://placekitten.com/90/90'
 			}
-		}
+		},
+		categories: [
+			{ name: 'foo' },
+			{ name: 'bar' }
+		]
 	}
 
 	const post = {
