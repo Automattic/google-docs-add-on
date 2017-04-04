@@ -5,7 +5,7 @@ export default ( props ) => {
 
 	const errorMatch = props.msg.message.match( /"message":"(.*?)"}/ );
 	let errorBody = <div>
-		<p><code style="font-size: 12px; word-wrap: break-word">{ props.msg.message }</code></p>
+		<p><code style={ { fontSize: '12px', wordWrap: 'break-word' } }>{ props.msg.message }</code></p>
 		<p><a href="https://support.wordpress.com" target="_blank">Please report this error</a></p>
 	</div>
 

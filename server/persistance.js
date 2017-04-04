@@ -37,13 +37,19 @@ export function Persistance( propertieService ) {
 		persisitSites( listSites().concat( siteIdentity( site ) ) );
 	}
 
+	function categoryIdentity( category ) {
+		const { ID, name } = category;
+		return { ID, name }
+	}
+
 	function siteIdentity( site ) {
 		let img;
-		const { access_token, blog_id, blog_url, info: { name }, postTypes, categories } = site;
+		const { access_token, blog_id, blog_url, info: { name }, categories } = site;
 		if ( site.info.icon && site.info.icon.img ) {
 			img = site.info.icon.img;
 		}
-		return { access_token, blog_id, blog_url, info: { name, icon: { img } }, postTypes, categories };
+		const persistCategories = categories.map( categoryIdentity )
+		return { access_token, blog_id, blog_url, info: { name, icon: { img } }, categories: persistCategories };
 	}
 
 	function deleteSite( site_id ) {
@@ -52,6 +58,7 @@ export function Persistance( propertieService ) {
 
 	function persisitSites( sites ) {
 		sitesCache = sites;
+		DocumentApp.getUi().alert( JSON.stringify( sites ) )
 		userProps().setProperty( SITE_PERSISTANCE_KEY, JSON.stringify( sites ) )
 	}
 

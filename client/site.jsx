@@ -6,29 +6,49 @@ import CategoryInput from './category-input.jsx';
 export default class Site extends React.Component {
 	constructor( props ) {
 		super( props );
+
+		let postCategories = []
+		if ( props.site.post && props.site.post.categories ) {
+			postCategories = props.site.post.categories.map( ( c ) => c.name )
+		}
+
 		this.state = {
 			post: props.site.post,
-			postCategories: ( props.site.post && props.site.post.categories ) ? props.site.post.categories : [],
+			postCategories: postCategories,
 			postTags: ( props.site.post && props.site.post.tags ) ? props.site.post.tags : [],
 		}
 		this.addCategory = this.addCategory.bind( this )
 		this.removeCategory = this.removeCategory.bind( this )
+		this.setPost = this.setPost.bind( this )
 	}
 
+	/**
+	 * @param {String} category name of the category
+	 */
 	addCategory( category ) {
-		this.setState( {
-			postCategories: Object.assign( this.state.postCategories, {
-				[category.name]: category
+		if ( -1 === this.state.postCategories.indexOf( category ) ) {
+			this.setState( {
+				postCategories: [ ...this.state.postCategories, category ]
 			} )
-		} )
+		}
 	}
 
+	/**
+	 * @param {String} category name of the category
+	 */
 	removeCategory( category ) {
-		if ( this.state.postCategories[ category.name ] ) {
-			const categories = Object.assign( {}, this.state.postCategories )
-			delete categories[ category.name ]
-			this.setState( { postCategories: categories } )
+		const index = this.state.postCategories.indexOf( category );
+		if ( -1 !== index ) {
+			const postCategories = [
+				...this.state.postCategories.slice( 0, index ),
+				...this.state.postCategories.slice( index + 1 )
+			];
+			this.setState( { postCategories } )
 		}
+	}
+
+	setPost( post ) {
+		this.setState( { post } )
 	}
 
 	render() {
@@ -61,7 +81,7 @@ export default class Site extends React.Component {
 				<div>
 					<strong>Categories:</strong>
 					<ul>
-						{ categories.map( c => <CategoryInput key={ c.ID } category={ c } postCategories={ this.state.postCategories } addCategory={ this.addCategory.bind( this, c ) } removeCategory={ this.removeCategory.bind( this, c ) } /> ) }
+						{ categories.map( c => <CategoryInput key={ c.ID } category={ c } postCategories={ this.state.postCategories } addCategory={ this.addCategory } removeCategory={ this.removeCategory } /> ) }
 					</ul>
 				</div>
 				<div>

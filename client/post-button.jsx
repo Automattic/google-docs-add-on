@@ -13,10 +13,12 @@ export default class PostButton extends React.Component {
 
 	savePost() {
 		this.setState( { disabled: true } )
-		postToWordPress( this.props.site.blog_id )
+		postToWordPress( this.props.site.blog_id, {
+			categories: this.props.postCategories
+		} )
 			.then( ( post ) => {
 				this.setState( { disabled: false } )
-				this.setState( { post} )
+				this.setState( { post } )
 				this.props.onPostSave( post )
 			} )
 			.catch( ( e ) => {
