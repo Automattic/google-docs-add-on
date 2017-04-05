@@ -168,7 +168,7 @@ svg {
 	color: #668EAA;
 }
 
-.sites-list__basic .sites-list__delete-site {
+.sites-list__basic .sites-list__delete-site, {
 	width: 18px;
 	height: 18px;
 	display: none;
@@ -291,22 +291,32 @@ svg {
 	width: 100%;
 }
 
-.sites-list__extended a.sites-list__delete-site {
+.sites-list__extended a.sites-list__delete-site,
+.sites-list__extended a.sites-list__update-site {
 	color: #648eab;
 	float: right;
 }
 
-.sites-list__extended a.sites-list__delete-site svg {
+.sites-list__extended a.sites-list__delete-site svg,
+.sites-list__extended a.sites-list__update-site svg {
 	position: relative;
 	top: 7px;
 }
 
-.sites-list__extended a.sites-list__delete-site:hover {
+.sites-list__extended a.sites-list__delete-site:hover,
+.sites-list__extended a.sites-list__update-site:hover {
 	color: #d94f4f;
 	text-decoration: none;
 }
 
-
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.sites-list__extended a.sites-list__update-site--updating svg {
+	animation-name: spin;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
+	transform-origin: 50% 50%;
+	display: inline-block;
+}
 /**
  * Footer
  */
@@ -441,12 +451,10 @@ button:focus,
 }
 </style>
 </head>
-
 <body>
 <div id="container" class="container"></div>
-
-<script src="https://unpkg.com/react@15/dist/react.min.js"></script>
-<script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+<script src="https://unpkg.com/react@15.4.2/dist/react.min.js" integrity="sha384-LQJt2WYLVjqR6CtPmZ7RlCwSnRxagESW5PKN9LCewWq4KnCIZIQewStnUJ/KEc+w" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@15.4.2/dist/react-dom.min.js" integrity="sha384-s7tOAUHnUBShLPptKaX9Zt4W4KPFr/mQ2TXWbxuY4TRv+7cl9zFzVPcR31MfzphO" crossorigin="anonymous"></script>
 <?!= include('javascript'); ?>
 </body>
 </html>

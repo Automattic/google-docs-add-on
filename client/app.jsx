@@ -1,5 +1,5 @@
 /* global React */
-import { loadSites, getAuthUrl } from './services';
+import { loadSites, getAuthUrl, deleteSite, refreshSite } from './services';
 import Site from './site.jsx';
 import ErrorMessage from './error-message.jsx'
 
@@ -48,6 +48,73 @@ export default class App extends React.Component {
 		this.setState( { error: null } )
 	}
 
+	removeSite( blog_id ) {
+		return deleteSite( blog_id )
+			.then( this.updateSiteList )
+			.catch( this.errorHandler )
+	}
+
+	setPost( blog_id, post ) {
+		const sites = this.state.sites.map( site => ( site.blog_id === blog_id ) ? Object.assign( {}, site, { post } ) : site )
+		this.setState( { sites } )
+	}
+
+	/**
+	 * @param {number} blog_id unique id for the site
+	 * @returns {Promise} for new site information
+	 */
+	updateSite( blog_id ) {
+		return refreshSite( blog_id )
+			.then( updatedSite => {
+				const sites = this.state.sites.map( site => ( site.blog_id === updatedSite.blog_id ) ? updatedSite : site )
+				this.setState( { sites } )
+				return updatedSite
+			} )
+			.catch( this.errorHandler )
+	}
+
+	/**
+	 * @param {number} blog_id unique id for the site
+	 * @param {string} category name of the category
+	 */
+	addCategoryToPost( blog_id, category ) {
+		const updatedSites = this.state.sites.map( site => {
+			if ( site.blog_id !== blog_id ) {
+				return site
+			}
+
+			if ( -1 === site.post.categories.indexOf( category ) ) {
+				site.post.categories = [ ...site.post.categories, category ]
+			}
+			return site
+		} )
+
+		this.setState( { sites: updatedSites } )
+	}
+
+	/**
+	 * @param {number} blog_id unique id for the site
+	 * @param {string} category name of the category
+	 */
+	removeCategoryFromPost( blog_id, category ) {
+		const updatedSites = this.state.sites.map( site => {
+			if ( site.blog_id !== blog_id ) {
+				return site
+			}
+
+			const index = site.post.categories.indexOf( category );
+			if ( -1 !== index ) {
+				site.post.categories = [
+					...site.post.categories.slice( 0, index ),
+					...site.post.categories.slice( index + 1 )
+				];
+			}
+			return site
+		} )
+
+		this.setState( { sites: updatedSites } )
+	}
+
 	render() {
 		const hasSites = this.state.sitesLoaded && ( this.state.sites.length > 0 )
 		const headerCopy = hasSites
@@ -67,7 +134,17 @@ export default class App extends React.Component {
 			<div className="sites-list" id="sites-list">
 				{ loadingMessage }
 				<ul>
-					{ this.state.sites.map( site => <Site key={ site.blog_id } site={ site } errorHandler={ this.errorHandler } updateSiteList={ this.updateSiteList } /> ) }
+					{ this.state.sites.map( site =>
+						<Site
+							key={ site.blog_id }
+							site={ site }
+							errorHandler={ this.errorHandler }
+							setPost={ this.setPost.bind( this, site.blog_id ) }
+							removeSite={ this.removeSite.bind( this, site.blog_id ) }
+							refreshSite={ this.updateSite.bind( this, site.blog_id ) }
+							addCategoryToPost={ this.addCategoryToPost.bind( this, site.blog_id ) }
+							removeCategoryFromPost={ this.removeCategoryFromPost.bind( this, site.blog_id ) }
+							updateSiteList={ this.updateSiteList } /> ) }
 					<li className="sites-list__add-site"><a className="button button-secondary" href={ this.state.authorizationUrl } target="_blank">Add WordPress Site</a></li>
 				</ul>
 			</div>

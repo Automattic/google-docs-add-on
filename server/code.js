@@ -12,6 +12,7 @@ import {
 	listSites,
 	deleteSite,
 	clearSiteData,
+	refreshSite,
 	include,
 	getAuthUrl
 } from './index'
@@ -24,6 +25,7 @@ global.postToWordPress = postToWordPress;
 global.devTest = devTest;
 global.listSites = listSites;
 global.deleteSite = deleteSite;
+global.refreshSite = refreshSite;
 global.clearSiteData = clearSiteData;
 global.include = include;
 global.getAuthUrl = getAuthUrl;

@@ -37,6 +37,13 @@ export function Persistance( propertieService ) {
 		persisitSites( listSites().concat( siteIdentity( site ) ) );
 	}
 
+	function updateSite( siteArg ) {
+		persisitSites( listSites().map( site => ( site.blog_id === siteArg.blog_id )
+			? siteIdentity( siteArg )
+			: site
+		) )
+	}
+
 	function categoryIdentity( category ) {
 		const { ID, name } = category;
 		return { ID, name }
@@ -66,6 +73,7 @@ export function Persistance( propertieService ) {
 		const postData = getPostStatus();
 		postData[ blog_id ] = postIdentity( post );
 		docProps().setProperty( POST_PERSISTANCE_KEY, JSON.stringify( postData ) )
+		return postData[ blog_id ]
 	}
 
 	function postIdentity( post ) {
@@ -92,6 +100,7 @@ export function Persistance( propertieService ) {
 
 	return {
 		addSite,
+		updateSite,
 		listSites,
 		findSite,
 		deleteSite,

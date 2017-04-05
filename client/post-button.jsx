@@ -11,7 +11,7 @@ export default class PostButton extends React.Component {
 	savePost() {
 		this.setState( { disabled: true } )
 		postToWordPress( this.props.site.blog_id, {
-			categories: this.props.postCategories
+			categories: this.props.site.post.categories
 		} )
 			.then( ( post ) => {
 				this.setState( { disabled: false } )
@@ -24,7 +24,7 @@ export default class PostButton extends React.Component {
 	}
 
 	render() {
-		const buttonLabel = ( this.props.post ) ? 'Update' : 'Save';
+		const buttonLabel = ( this.props.site.post ) ? 'Update' : 'Save';
 
 		return <button className="sites-list__save-draft" disabled={ this.state.disabled } onClick={ this.savePost }>{ buttonLabel }</button>
 	}

@@ -95,6 +95,12 @@ function wpDieTemplate( template, error ) {
 	return out.evaluate();
 }
 
+const updateSiteInfo = site => Object.assign( {}, site, {
+	info: wpClient.getSiteInfo( site ),
+	postTypes: wpClient.getPostTypes( site ),
+	categories: wpClient.getCategories( site )
+} )
+
 export function authCallback( request ) {
 	let isAuthorized;
 	try {
@@ -104,11 +110,9 @@ export function authCallback( request ) {
 	}
 
 	if ( isAuthorized ) {
-		const site = oauthClient().getToken_()
+		let site = oauthClient().getToken_()
 		try {
-			site.info = wpClient.getSiteInfo( site )
-			site.postTypes = wpClient.getPostTypes( site )
-			site.categories = wpClient.getCategories( site )
+			site = updateSiteInfo( site )
 		} catch ( e ) {
 			return wpDieTemplate( 'json-api', e );
 		}
@@ -119,6 +123,15 @@ export function authCallback( request ) {
 	}
 
 	return wpDieTemplate( 'deny' );
+}
+
+export function refreshSite( site_id ) {
+	const site = store.findSite( site_id )
+	const updated = updateSiteInfo( site )
+	store.updateSite( updated )
+	const cachedPostData = store.getPostStatus();
+	updated.post = cachedPostData[ site_id ]
+	return updated
 }
 
 export function postToWordPress( site_id, { categories = [], tags = [] } ) {
@@ -145,11 +158,10 @@ export function postToWordPress( site_id, { categories = [], tags = [] } ) {
 	const imageCache = ImageCache( site, docProps, md5 )
 	const imageUrlMapper = imageUploadLinker( upload, imageCache )
 	const renderContainer = DocService( DocumentApp, imageUrlMapper )
-	const content = renderContainer( doc.getBody() );
+	const content = renderContainer( doc.getBody() )
 	const postParams = { title, content, categories, tags }
-	const response = wpClient.postToWordPress( site, postId, postParams );
-	store.savePostToSite( response, site );
-	return response;
+	const response = wpClient.postToWordPress( site, postId, postParams )
+	return store.savePostToSite( response, site )
 }
 
 function postOnServerIsNewer( site, cachedPost ) {
@@ -262,7 +274,7 @@ function oauthClient() {
 
 function md5( message ) {
 	return Utilities.computeDigest( Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.US_ASCII )
-		.map(( byte ) => {
+		.map( ( byte ) => {
 			let char = '';
 			if ( byte < 0 ) {
 				byte += 255;
@@ -272,6 +284,6 @@ function md5( message ) {
 				char = '0' + char;
 			}
 			return char;
-		})
+		} )
 		.join( '' )
 }
