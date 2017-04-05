@@ -106,7 +106,7 @@ svg {
 	overflow: hidden;
 }
 
-.sites-list__add-site {
+.sites-list ul li.sites-list__add-site {
 	background: none;
 	border-bottom: none;
 	text-align: center;
@@ -236,6 +236,33 @@ svg {
 	width: 24px;
 	height: 24px;
 	margin: 6px 0 0 6px;
+	transition: all .15s ease-in-out;
+}
+
+.sites-list__extended-toggle.is-toggled svg {
+	transform: rotate( 180deg );
+}
+
+
+/**
+ * Preview
+ */
+
+.sites-list__preview {
+    padding: 12px 0 0 0;
+	display: block;
+	clear: both;
+}
+
+.sites-list__preview .sites-list__post-link a {
+	text-decoration: underline;
+	color: #0087be;
+}
+
+.sites-list__preview .sites-list__save-draft {
+	margin-left: auto;
+	margin-right: 0;
+	flex: 0 0 auto;
 }
 
 
@@ -244,20 +271,40 @@ svg {
  */
 
 .sites-list__extended {
-    padding: 15px 0 0 0;
+	border-top: 1px solid #c8d7e0;
+	margin-top: 12px;
+	padding-top: 12px;
+	color: #2E4453;
+}
+
+.sites-list__extended h4 {
+	font-weight: 600;
+	margin: 0;
+}
+
+.sites-list__extended input {
+	margin-top: 4px;
+}
+
+.sites-list__extended input,
+.sites-list__extended textarea {
 	display: block;
-	clear: both;
+	width: 100%;
 }
 
-.sites-list__extended .sites-list__post-link a {
-	text-decoration: underline;
-	color: #0087be;
+.sites-list__extended a.sites-list__delete-site {
+	color: #648eab;
+	float: right;
 }
 
-.sites-list__extended .sites-list__save-draft {
-	margin-left: auto;
-	margin-right: 0;
-	flex: 0 0 auto;
+.sites-list__extended a.sites-list__delete-site svg {
+	position: relative;
+	top: 7px;
+}
+
+.sites-list__extended a.sites-list__delete-site:hover {
+	color: #d94f4f;
+	text-decoration: none;
 }
 
 
@@ -325,6 +372,15 @@ input {
     transition: all .15s ease-in-out;
 	border: 1px solid #c8d7e1;
     outline: none;
+	padding: 4px 6px;
+	border-radius: 4px;
+}
+
+textarea::placeholder,
+input::placeholder,
+textarea::-webkit-input-placeholder,
+input::-webkit-input-placeholder {
+	color: #a7becf;
 }
 
 textarea:focus,
@@ -347,6 +403,7 @@ button,
 	height: auto;
 	line-height: 29px;
 	font-weight: 600;
+	min-width: 64px;
 }
 
 .button-secondary {

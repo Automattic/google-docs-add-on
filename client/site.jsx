@@ -59,6 +59,7 @@ export default class Site extends React.Component {
 		const previewLink = ( this.state.post ) ? <span className="sites-list__post-link"><a href={ this.state.post.URL }>Preview on { site.info.name }</a></span> : null;
 		const removeSite = () => deleteSite( site.blog_id ).then( this.props.updateSiteList ).catch( this.props.errorHandler )
 		const extendedStyle = ( ! this.state.optionsExpanded ) ? { display: 'none' } : {}
+		const extendedToggled = ( ! this.state.optionsExpanded ) ? 'sites-list__extended-toggle' : 'sites-list__extended-toggle is-toggled'
 
 		return <li>
 			<div className="sites-list__basic">
@@ -70,24 +71,25 @@ export default class Site extends React.Component {
 					<em>{ site.blog_url }</em></a>
 				</div>
 				<PostButton site={ site } { ...this.state } onPostSave={ this.setPost } errorHandler={ this.props.errorHandler } />
-				<a className="sites-list__extended-toggle" onClick={ this.toggleOptions }><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Dropdown</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M7 10l5 5 5-5"/></g></svg></a>
+				<a className={ extendedToggled } onClick={ this.toggleOptions }><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Dropdown</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M7 10l5 5 5-5"/></g></svg></a>
 			</div>
-			<div className="sites-list__extended">
+			<div className="sites-list__preview">
 				{ previewLink }
 			</div>
-			<div className="sites-extended" style={ extendedStyle }>
+			<div className="sites-list__extended" style={ extendedStyle }>
+				<h4>Post Settings</h4>
 				<div><label>
-					<strong>Tags:</strong><br />
-					<input placeholder="Add tags, separate with commas…" style={ { width: '100%' } } />
+					<p><label>Tags<br />
+					<input placeholder="Add tags, separate with commas…" /></label></p>
 				</label></div>
 				<div>
-					<strong>Categories:</strong>
+					<p>Categories</p>
 					<ul>
 						{ categories.map( c => <CategoryInput key={ c.ID } category={ c } postCategories={ this.state.postCategories } addCategory={ this.addCategory } removeCategory={ this.removeCategory } /> ) }
 					</ul>
 				</div>
 				<div>
-					<a title="Remove site from this list" className="sites-list__delete-site" onClick={ removeSite }>Remove { site.info.name }<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="0" fill="none" width="24" height="24"/><g><path d="M17.705 7.705l-1.41-1.41L12 10.59 7.705 6.295l-1.41 1.41L10.59 12l-4.295 4.295 1.41 1.41L12 13.41l4.295 4.295 1.41-1.41L13.41 12l4.295-4.295z"/></g></svg></a>
+					<a title="Remove site from this list" className="sites-list__delete-site" onClick={ removeSite }>Remove { site.info.name } <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Trash</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M6.187 8h11.625l-.695 11.125C17.05 20.18 16.177 21 15.12 21H8.88c-1.057 0-1.93-.82-1.997-1.875L6.187 8zM19 5v2H5V5h3V4c0-1.105.895-2 2-2h4c1.105 0 2 .895 2 2v1h3zm-9 0h4V4h-4v1z"/></g></svg></a>
 				</div>
 			</div>
 		</li>
