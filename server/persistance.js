@@ -77,9 +77,10 @@ export function Persistance( propertieService ) {
 	}
 
 	function postIdentity( post ) {
-		const { date, URL, ID, modified, categories } = post
+		const { date, URL, ID, modified, categories, tags } = post
 		const postCategories = Object.keys( categories )
-		return { date, URL, ID, modified, categories: postCategories }
+		const postTags = Object.keys( tags )
+		return { date, URL, ID, modified, categories: postCategories, tags: postTags }
 	}
 
 	function getPostStatus() {

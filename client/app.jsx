@@ -55,7 +55,13 @@ export default class App extends React.Component {
 	}
 
 	setPost( blog_id, post ) {
-		const sites = this.state.sites.map( site => ( site.blog_id === blog_id ) ? Object.assign( {}, site, { post } ) : site )
+		const sites = this.state.sites.map( site => {
+			if ( site.blog_id !== blog_id ) {
+				return site
+			}
+
+			return Object.assign( {}, site, { post } )
+		} )
 		this.setState( { sites } )
 	}
 
@@ -71,48 +77,6 @@ export default class App extends React.Component {
 				return updatedSite
 			} )
 			.catch( this.errorHandler )
-	}
-
-	/**
-	 * @param {number} blog_id unique id for the site
-	 * @param {string} category name of the category
-	 */
-	addCategoryToPost( blog_id, category ) {
-		const updatedSites = this.state.sites.map( site => {
-			if ( site.blog_id !== blog_id ) {
-				return site
-			}
-
-			if ( -1 === site.post.categories.indexOf( category ) ) {
-				site.post.categories = [ ...site.post.categories, category ]
-			}
-			return site
-		} )
-
-		this.setState( { sites: updatedSites } )
-	}
-
-	/**
-	 * @param {number} blog_id unique id for the site
-	 * @param {string} category name of the category
-	 */
-	removeCategoryFromPost( blog_id, category ) {
-		const updatedSites = this.state.sites.map( site => {
-			if ( site.blog_id !== blog_id ) {
-				return site
-			}
-
-			const index = site.post.categories.indexOf( category );
-			if ( -1 !== index ) {
-				site.post.categories = [
-					...site.post.categories.slice( 0, index ),
-					...site.post.categories.slice( index + 1 )
-				];
-			}
-			return site
-		} )
-
-		this.setState( { sites: updatedSites } )
 	}
 
 	render() {
@@ -142,8 +106,6 @@ export default class App extends React.Component {
 							setPost={ this.setPost.bind( this, site.blog_id ) }
 							removeSite={ this.removeSite.bind( this, site.blog_id ) }
 							refreshSite={ this.updateSite.bind( this, site.blog_id ) }
-							addCategoryToPost={ this.addCategoryToPost.bind( this, site.blog_id ) }
-							removeCategoryFromPost={ this.removeCategoryFromPost.bind( this, site.blog_id ) }
 							updateSiteList={ this.updateSiteList } /> ) }
 					<li className="sites-list__add-site"><a className="button button-secondary" href={ this.state.authorizationUrl } target="_blank">Add WordPress Site</a></li>
 				</ul>

@@ -11,7 +11,8 @@ export default class PostButton extends React.Component {
 	savePost() {
 		this.setState( { disabled: true } )
 		postToWordPress( this.props.site.blog_id, {
-			categories: this.props.site.post.categories
+			categories: this.props.postCategories,
+			tags: this.props.postTags
 		} )
 			.then( ( post ) => {
 				this.setState( { disabled: false } )

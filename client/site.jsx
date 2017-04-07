@@ -1,7 +1,8 @@
 /* global React */
-import { refreshSite } from './services';
-import PostButton from './post-button.jsx';
-import CategoryInput from './category-input.jsx';
+import { refreshSite } from './services'
+import PostButton from './post-button.jsx'
+import CategoryInput from './category-input.jsx'
+import TagInput from './tag-input.jsx'
 
 export default class Site extends React.Component {
 	constructor( props ) {
@@ -10,10 +11,16 @@ export default class Site extends React.Component {
 
 		this.state = {
 			optionsExpanded: !! post,
-			siteRefreshing: false
+			siteRefreshing: false,
+			postCategories: ( post && post.categories ) ? post.categories : [],
+			postTags: ( post && post.tags ) ? post.tags : [],
 		}
 		this.toggleOptions = this.toggleOptions.bind( this )
 		this.updateSite = this.updateSite.bind( this )
+		this.categorizePost = this.categorizePost.bind( this )
+		this.uncategorizePost = this.uncategorizePost.bind( this )
+		this.tagPost = this.tagPost.bind( this )
+		this.untagPost = this.untagPost.bind( this )
 	}
 
 	toggleOptions() {
@@ -27,10 +34,59 @@ export default class Site extends React.Component {
 			.catch( () => this.setState( { siteRefreshing: false } ) )
 	}
 
+	/**
+	 * @param {String} category name of the category
+	 */
+	categorizePost( category ) {
+		if ( -1 === this.state.postCategories.indexOf( category ) ) {
+			this.setState( {
+				postCategories: [ ...this.state.postCategories, category ]
+			} )
+		}
+	}
+
+	/**
+	 * @param {String} category name of the category
+	 */
+	uncategorizePost( category ) {
+		const index = this.state.postCategories.indexOf( category );
+		if ( -1 !== index ) {
+			const postCategories = [
+				...this.state.postCategories.slice( 0, index ),
+				...this.state.postCategories.slice( index + 1 )
+			];
+			this.setState( { postCategories } )
+		}
+	}
+
+	/**
+	 * @param {String} tag name of the category
+	 */
+	tagPost( tag ) {
+		if ( -1 === this.state.postTags.indexOf( tag ) ) {
+			this.setState( {
+				postTags: [ ...this.state.postTags, tag ]
+			} )
+		}
+	}
+
+	/**
+	 * @param {String} tag name of the category
+	 */
+	untagPost( tag ) {
+		const index = this.state.postTags.indexOf( tag );
+		if ( -1 !== index ) {
+			const postTags = [
+				...this.state.postTags.slice( 0, index ),
+				...this.state.postTags.slice( index + 1 )
+			];
+			this.setState( { postTags } )
+		}
+	}
+
 	render() {
 		const site = this.props.site
 		const { post } = site
-		const postCategories = ( post && post.categories ) || []
 		const categories = site.categories || []
 		const blavatar = ( site.info.icon && site.info.icon.img ) ? site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
 		const previewLink = ( post ) ? <span className="sites-list__post-link"><a href={ post.URL }>Preview on { site.info.name }</a></span> : null;
@@ -47,7 +103,7 @@ export default class Site extends React.Component {
 					<a className="sites-list__title" href={ site.blog_url }>{ site.info.name }<br />
 					<em>{ site.blog_url }</em></a>
 				</div>
-				<PostButton site={ site } onPostSave={ this.props.setPost } errorHandler={ this.props.errorHandler } />
+				<PostButton site={ site } onPostSave={ this.props.setPost } postTags={ this.state.postTags} postCategories={ this.state.postCategories } errorHandler={ this.props.errorHandler } />
 				<a className={ extendedToggled } onClick={ this.toggleOptions }><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Dropdown</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M7 10l5 5 5-5"/></g></svg></a>
 			</div>
 			<div className="sites-list__preview">
@@ -55,10 +111,13 @@ export default class Site extends React.Component {
 			</div>
 			<div className="sites-list__extended" style={ extendedStyle }>
 				<h4>Post Settings</h4>
-				<div><label>
-					<p><label>Tags<br />
-					<input type="text" placeholder="Add tags, separate with commas…" /></label></p>
-				</label></div>
+				<div>
+					<label>Tags<br />
+					<TagInput addTagToPost={ this.tagPost } /></label>
+					<ul className="sites-list__tags">
+						{ this.state.postTags.map( t => <li key={ t } onClick={ () => this.untagPost( t ) }>{ t }</li> ) }
+					</ul>
+				</div>
 				<div>
 					<p>Categories</p>
 					<ul>
@@ -66,9 +125,9 @@ export default class Site extends React.Component {
 							<CategoryInput
 								key={ c.ID }
 								category={ c }
-								postCategories={ postCategories }
-								addCategory={ this.props.addCategoryToPost }
-								removeCategory={ this.props.removeCategoryFromPost } /> ) }
+								postCategories={ this.state.postCategories }
+								addCategory={ this.categorizePost }
+								removeCategory={ this.uncategorizePost } /> ) }
 					</ul>
 				</div>
 				<div>
