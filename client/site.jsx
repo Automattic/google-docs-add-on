@@ -115,7 +115,7 @@ export default class Site extends React.Component {
 					<label>Tags<br />
 					<TagInput addTagToPost={ this.tagPost } /></label>
 					<ul className="sites-list__tags">
-						{ this.state.postTags.map( t => <li key={ t } onClick={ () => this.untagPost( t ) }>{ t }</li> ) }
+						{ this.state.postTags.map( t => <li key={ t } className="tag" onClick={ () => this.untagPost( t ) }>{ t }</li> ) }
 					</ul>
 				</div>
 				<div>
