@@ -25,7 +25,8 @@ describe( 'Sites', function() {
 		date: '2017-01-10T14:57:52+00:00',
 		URL: 'https://georgehtest2.wordpress.com/?p=184',
 		ID: 184,
-		categories: [ 'foo' ]
+		categories: [ 'foo' ],
+		tags: [ 'baz' ]
 	}
 
 	beforeEach( function() {
@@ -87,7 +88,8 @@ describe( 'Sites', function() {
 	describe( 'savePost()', function() {
 		it( 'stores the post info', function() {
 			const categories = { foo: {} }
-			const postResponse = Object.assign( {}, post, { categories } )
+			const tags = { baz: {} }
+			const postResponse = Object.assign( {}, post, { categories, tags } )
 			store.savePostToSite( postResponse, site )
 
 			const expected = JSON.stringify( {
