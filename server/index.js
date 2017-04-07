@@ -234,7 +234,7 @@ export function devTest() {
 	// 	} )
 	// 	imageRange = body.findElement( DocumentApp.ElementType.INLINE_IMAGE, imageRange );
 	// }
-	DocumentApp.getUi().alert( JSON.stringify( Object.keys( _ ) ) )
+	// DocumentApp.getUi().alert( JSON.stringify( Object.keys( _ ) ) )
 }
 
 export function clearSiteData() {
