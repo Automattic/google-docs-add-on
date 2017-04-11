@@ -1,5 +1,4 @@
 /* global React */
-import { refreshSite } from './services'
 import PostButton from './post-button.jsx'
 import CategoryInput from './category-input.jsx'
 
