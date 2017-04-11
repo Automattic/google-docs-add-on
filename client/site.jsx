@@ -2,25 +2,25 @@
 import { refreshSite } from './services'
 import PostButton from './post-button.jsx'
 import CategoryInput from './category-input.jsx'
-import TagInput from './tag-input.jsx'
 
-export default class Site extends React.Component {
+export default class Site extends React.PureComponent {
 	constructor( props ) {
 		super( props );
 		const { post } = props.site
+		const postTags = ( post && post.tags ) ? post.tags : []
 
 		this.state = {
 			optionsExpanded: !! post,
 			siteRefreshing: false,
 			postCategories: ( post && post.categories ) ? post.categories : [],
-			postTags: ( post && post.tags ) ? post.tags : [],
+			postTags,
+			postTagsStr: postTags.join( ', ' )
 		}
 		this.toggleOptions = this.toggleOptions.bind( this )
 		this.updateSite = this.updateSite.bind( this )
 		this.categorizePost = this.categorizePost.bind( this )
 		this.uncategorizePost = this.uncategorizePost.bind( this )
-		this.tagPost = this.tagPost.bind( this )
-		this.untagPost = this.untagPost.bind( this )
+		this.tagChangeHandler = this.tagChangeHandler.bind( this )
 	}
 
 	toggleOptions() {
@@ -59,29 +59,12 @@ export default class Site extends React.Component {
 		}
 	}
 
-	/**
-	 * @param {String} tag name of the category
-	 */
-	tagPost( tag ) {
-		if ( -1 === this.state.postTags.indexOf( tag ) ) {
-			this.setState( {
-				postTags: [ ...this.state.postTags, tag ]
-			} )
-		}
-	}
-
-	/**
-	 * @param {String} tag name of the category
-	 */
-	untagPost( tag ) {
-		const index = this.state.postTags.indexOf( tag );
-		if ( -1 !== index ) {
-			const postTags = [
-				...this.state.postTags.slice( 0, index ),
-				...this.state.postTags.slice( index + 1 )
-			];
-			this.setState( { postTags } )
-		}
+	tagChangeHandler( event ) {
+		const tags = event.target.value.split( /\s*,\s*/ )
+		this.setState( {
+			postTags: tags,
+			postTagsStr: event.target.value
+		} )
 	}
 
 	render() {
@@ -113,10 +96,7 @@ export default class Site extends React.Component {
 				<h4>Post Settings</h4>
 				<div>
 					<label>Tags<br />
-					<TagInput addTagToPost={ this.tagPost } /></label>
-					<ul className="sites-list__tags">
-						{ this.state.postTags.map( t => <li key={ t } className="tag" onClick={ () => this.untagPost( t ) }>{ t }</li> ) }
-					</ul>
+					<input type="text" placeholder="Add tags, separate with commas…" onChange={ this.tagChangeHandler } value={ this.state.postTagsStr } /></label>
 				</div>
 				<div>
 					<p>Categories</p>
