@@ -3,7 +3,6 @@
 <head>
 <title>Draft to WordPress</title>
 <base target="_top">
-<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
 <style type="text/css">
 /**
  * Reset
@@ -93,20 +92,20 @@ svg {
 	overflow: auto;
 }
 
-.sites-list ul {
+.sites-list>ul {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
 
-.sites-list ul li {
+.sites-list>ul>li {
 	background: #fff;
 	border-bottom: 1px solid #c8d7e0;
 	padding: 16px 12px;
 	overflow: hidden;
 }
 
-.sites-list ul li:last-child {
+.sites-list>ul>li.sites-list__add-site {
 	background: none;
 	border-bottom: none;
 	text-align: center;
@@ -169,7 +168,7 @@ svg {
 	color: #668EAA;
 }
 
-.sites-list__basic .sites-list__delete-site {
+.sites-list__basic .sites-list__delete-site, {
 	width: 18px;
 	height: 18px;
 	display: none;
@@ -191,13 +190,10 @@ svg {
 .sites-list__save-draft:disabled {
 	cursor: default;
 	position: relative;
-}
-
-.sites-list__save-draft:disabled:hover {
 	background: #f3f7f9;
 	border-color: #e2e6e8;
 	opacity: 1;
-	color: rgba( 51, 51, 51, .5 );	/* I know, not pretty, but we're working with CSS bleed upstream from Docs */
+	color: rgba( 51, 51, 51, .5 );
 }
 
 .sites-list__save-draft:disabled:before {	/* This label simply covers the "Update Draft" button */
@@ -226,6 +222,7 @@ svg {
 	display: block;
 	color: #648eab;
 	flex: 0 0 36px;
+	cursor: pointer;
 }
 
 .sites-list__extended-toggle:hover {
@@ -236,6 +233,38 @@ svg {
 	width: 24px;
 	height: 24px;
 	margin: 6px 0 0 6px;
+	transition: all .15s ease-in-out;
+}
+
+.sites-list__extended-toggle.is-toggled svg {
+	transform: rotate( 180deg );
+}
+
+
+/**
+ * Preview
+ */
+
+.sites-list__preview {
+    padding: 0;
+	display: block;
+	clear: both;
+}
+
+.sites-list__preview .sites-list__post-link {
+	display: block;
+	margin-top: 12px;
+}
+
+.sites-list__preview .sites-list__post-link a {
+	text-decoration: underline;
+	color: #0087be;
+}
+
+.sites-list__preview .sites-list__save-draft {
+	margin-left: auto;
+	margin-right: 0;
+	flex: 0 0 auto;
 }
 
 
@@ -244,20 +273,94 @@ svg {
  */
 
 .sites-list__extended {
-    padding: 15px 0 0 0;
+	border-top: 1px solid #c8d7e0;
+	margin-top: 12px;
+	padding-top: 12px;
+	color: #2E4453;
+}
+
+.sites-list__extended h4 {
+	font-weight: 600;
+	margin: 0 0 1em 0;
+}
+
+.sites-list__extended h4 span {
+	font-weight: normal;
+	margin-left: 4px;
+}
+
+.sites-list__extended div {
+	margin-bottom: 1em;
+}
+
+.sites-list__extended input[type="text"] {
+	margin-top: 4px;
+}
+
+.sites-list__extended input[type="text"],
+.sites-list__extended textarea {
 	display: block;
-	clear: both;
+	width: 100%;
 }
 
-.sites-list__extended .sites-list__post-link a {
-	text-decoration: underline;
-	color: #0087be;
+.sites-list__extended a.sites-list__delete-site {
+	color: #648eab;
+	float: right;
+	cursor: pointer;
 }
 
-.sites-list__extended .sites-list__save-draft {
-	margin-left: auto;
-	margin-right: 0;
-	flex: 0 0 auto;
+.sites-list__extended a.sites-list__delete-site svg {
+	position: relative;
+	top: 7px;
+}
+
+.sites-list__extended a.sites-list__update-site {
+	color: #648eab;
+	font-weight: normal;
+	cursor: pointer;
+}
+
+.sites-list__extended a.sites-list__update-site svg {
+	position: relative;
+	width: 18px;
+	height: 18px;
+	top: 4px;
+}
+
+.sites-list__extended a.sites-list__delete-site:hover,
+.sites-list__extended a.sites-list__update-site:hover {
+	color: #d94f4f;
+	text-decoration: none;
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.sites-list__extended a.sites-list__update-site--updating svg {
+	animation-name: spin;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
+	transform-origin: 50% 50%;
+	display: inline-block;
+}
+
+.sites-list__tags {
+	margin-top: 6px;
+}
+
+.sites-list__tags .tag {
+	display: inline;
+	border: 0;
+	padding-top: 0;
+}
+
+/* Categories */
+.sites-list__extended ul {
+	margin-top: 8px;
+	padding: 0;
+	list-style: none;
+}
+
+.sites-list__extended ul ul {
+	padding-left: 1em;
 }
 
 
@@ -325,6 +428,15 @@ input {
     transition: all .15s ease-in-out;
 	border: 1px solid #c8d7e1;
     outline: none;
+	padding: 4px 6px;
+	border-radius: 4px;
+}
+
+textarea::placeholder,
+input::placeholder,
+textarea::-webkit-input-placeholder,
+input::-webkit-input-placeholder {
+	color: #a7becf;
 }
 
 textarea:focus,
@@ -343,10 +455,11 @@ button,
 	border-radius: 4px;
 	border: 1px solid #0987be;
 	border-bottom-width: 2px;
-	padding: 0 8px;
+	padding: 6px 8px;
 	height: auto;
-	line-height: 29px;
 	font-weight: 600;
+	min-width: 64px;
+	text-decoration: none;
 }
 
 .button-secondary {
@@ -385,12 +498,12 @@ button:focus,
 }
 </style>
 </head>
-
 <body>
 <div id="container" class="container"></div>
-
-<script src="https://unpkg.com/react@15/dist/react.min.js"></script>
-<script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+<script src="https://unpkg.com/react@15/dist/react.js"></script>
+<script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+<!--<script src="https://unpkg.com/react@15.4.2/dist/react.min.js" integrity="sha384-LQJt2WYLVjqR6CtPmZ7RlCwSnRxagESW5PKN9LCewWq4KnCIZIQewStnUJ/KEc+w" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@15.4.2/dist/react-dom.min.js" integrity="sha384-s7tOAUHnUBShLPptKaX9Zt4W4KPFr/mQ2TXWbxuY4TRv+7cl9zFzVPcR31MfzphO" crossorigin="anonymous"></script>-->
 <?!= include('javascript'); ?>
 </body>
 </html>

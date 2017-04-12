@@ -14,13 +14,19 @@ describe( 'Sites', function() {
 			icon: {
 				img: 'http://placekitten.com/90/90'
 			}
-		}
+		},
+		categories: [
+			{ name: 'foo' },
+			{ name: 'bar' }
+		]
 	}
 
 	const post = {
 		date: '2017-01-10T14:57:52+00:00',
 		URL: 'https://georgehtest2.wordpress.com/?p=184',
-		ID: 184
+		ID: 184,
+		categories: [ 'foo' ],
+		tags: [ 'baz' ]
 	}
 
 	beforeEach( function() {
@@ -81,7 +87,10 @@ describe( 'Sites', function() {
 
 	describe( 'savePost()', function() {
 		it( 'stores the post info', function() {
-			store.savePostToSite( post, site )
+			const categories = { foo: {} }
+			const tags = { baz: {} }
+			const postResponse = Object.assign( {}, post, { categories, tags } )
+			store.savePostToSite( postResponse, site )
 
 			const expected = JSON.stringify( {
 				[ site.blog_id ]: post

@@ -14,12 +14,21 @@ export function loadSites() {
 	} )
 }
 
-export function postToWordPress( blogId ) {
+export function postToWordPress( blogId, extraFields = {} ) {
 	return new Promise( ( resolve, reject ) => {
 		google.script.run
 			.withSuccessHandler( resolve )
 			.withFailureHandler( reject )
-			.postToWordPress( blogId );
+			.postToWordPress( blogId, extraFields );
+	} )
+}
+
+export function refreshSite( blogId ) {
+	return new Promise( ( resolve, reject ) => {
+		google.script.run
+			.withSuccessHandler( resolve )
+			.withFailureHandler( reject )
+			.refreshSite( blogId );
 	} )
 }
 

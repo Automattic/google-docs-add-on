@@ -1,8 +1,8 @@
-/* globals Utilities, Logger */
+/* globals Utilities */
 
-const API_BASE = 'https://public-api.wordpress.com/rest/v1.1';
-const CRLF = '\r\n';
-const DEFAULT_FILENAME = 'image';
+const API_BASE = 'https://public-api.wordpress.com/rest/v1.1'
+const CRLF = '\r\n'
+const DEFAULT_FILENAME = 'image'
 
 const contentTypeToExtension = {
 	'image/png': 'png',
@@ -13,10 +13,10 @@ const contentTypeToExtension = {
 
 function fileNameForBlob( blob ) {
 	if ( blob.getName() ) {
-		return blob.getName();
+		return blob.getName()
 	}
 
-	const contentType = blob.getContentType();
+	const contentType = blob.getContentType()
 	if ( contentTypeToExtension[ contentType ] ) {
 		return DEFAULT_FILENAME + '.' + contentTypeToExtension[ contentType ]
 	}
@@ -63,14 +63,13 @@ function makeMultipartBody( payload, boundary ) {
 
 export function WPClient( PropertiesService, UrlFetchApp ) {
 	function request( access_token, path, options ) {
-		const defaultOptions = {
-			headers: {
-				Authorization: `Bearer ${ access_token }`
-			}
-		};
 		const url = API_BASE + path;
+		let headers = { Authorization: `Bearer ${ access_token }` }
+		if ( options.headers ) {
+			headers = Object.assign( headers, options.headers )
+		}
 
-		return JSON.parse( UrlFetchApp.fetch( url, Object.assign( defaultOptions, options ) ) )
+		return JSON.parse( UrlFetchApp.fetch( url, Object.assign( options, { headers } ) ) )
 	}
 
 	function get( access_token, path, options = {} ) {
@@ -78,35 +77,29 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 	}
 
 	function post( access_token, path, options = {} ) {
-		return request( access_token, path, Object.assign( { method: 'post' }, options ) )
+		const payload = ( options.payload ) ? JSON.stringify( options.payload ) : null
+		return request( access_token, path, Object.assign( { method: 'post' }, options, { payload } ) )
 	}
 
-	function postToWordPress( site, title, content, postIdParam ) {
-		const postId = postIdParam || 'new';
-		const { blog_id, access_token } = site;
+	function postToWordPress( site, postIdParam, postContentParams = {} ) {
+		const postId = postIdParam || 'new'
+		const { blog_id, access_token } = site
 		const path = `/sites/${ blog_id }/posts/${ postId }`
+		const payload = Object.assign( {}, postContentParams, { status: 'draft' } )
 
-		const response = post( access_token, path, { payload: {
-			status: 'draft',
-			title,
-			content
-		} } );
-
-		return response
+		return post( access_token, path, { payload } )
 	}
 
 	function getPostStatus( site, postId ) {
 		const { blog_id, access_token } = site;
 		const path = `/sites/${ blog_id }/posts/${ postId }`
 
-		const response = get( access_token, path );
-
-		return response;
+		return get( access_token, path )
 	}
 
 	/**
 	 * @param {Site} site { blog_id, access_token }
-	 * @param {Blob} image a Google InlineImage
+	 * @param {InlineImage} image a Google InlineImage
 	 * @param {Number} parentId blog post id to attach to
 	 * @return {object} response
 	 */
@@ -116,7 +109,7 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		const imageBlob = image.getBlob()
 
 		if ( ! imageBlob.getName() && image.getAltDescription ) {
-			imageBlob.setName( image.getAltDescription() );
+			imageBlob.setName( image.getAltDescription() )
 		}
 		const boundary = '-----CUTHEREelH7faHNSXWNi72OTh08zH29D28Zhr3Rif3oupOaDrj'
 
@@ -126,14 +119,24 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 			payload: makeMultipartBody( { 'media[0]': imageBlob, 'attrs[0][parent_id]': parentId }, boundary )
 		}
 
-		const response = post( access_token, path, options )
-
-		return response
+		return request( access_token, path, options )
 	}
 
 	function getSiteInfo( site ) {
-		const { blog_id, access_token } = site;
+		const { blog_id, access_token } = site
 		return get( access_token, `/sites/${ blog_id }` )
+	}
+
+	function getPostTypes( site ) {
+		const { blog_id, access_token } = site
+		const response = get( access_token, `/sites/${ blog_id }/post-types` )
+		return response.post_types || []
+	}
+
+	function getCategories( site ) {
+		const { blog_id, access_token } = site
+		const response = get( access_token, `/sites/${ blog_id }/categories` )
+		return response.categories || []
 	}
 
 	return {
@@ -141,5 +144,7 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		getSiteInfo,
 		uploadImage,
 		getPostStatus,
+		getPostTypes,
+		getCategories
 	}
 }

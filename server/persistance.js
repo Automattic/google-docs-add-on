@@ -37,13 +37,26 @@ export function Persistance( propertieService ) {
 		persisitSites( listSites().concat( siteIdentity( site ) ) );
 	}
 
+	function updateSite( siteArg ) {
+		persisitSites( listSites().map( site => ( site.blog_id === siteArg.blog_id )
+			? siteIdentity( siteArg )
+			: site
+		) )
+	}
+
+	function categoryIdentity( category ) {
+		const { ID, name } = category;
+		return { ID, name }
+	}
+
 	function siteIdentity( site ) {
 		let img;
-		const { access_token, blog_id, blog_url, info: { name } } = site;
+		const { access_token, blog_id, blog_url, info: { name }, categories } = site;
 		if ( site.info.icon && site.info.icon.img ) {
 			img = site.info.icon.img;
 		}
-		return { access_token, blog_id, blog_url, info: { name, icon: { img } } };
+		const persistCategories = categories.map( categoryIdentity )
+		return { access_token, blog_id, blog_url, info: { name, icon: { img } }, categories: persistCategories };
 	}
 
 	function deleteSite( site_id ) {
@@ -60,11 +73,14 @@ export function Persistance( propertieService ) {
 		const postData = getPostStatus();
 		postData[ blog_id ] = postIdentity( post );
 		docProps().setProperty( POST_PERSISTANCE_KEY, JSON.stringify( postData ) )
+		return postData[ blog_id ]
 	}
 
 	function postIdentity( post ) {
-		const { date, URL, ID, modified } = post;
-		return { date, URL, ID, modified };
+		const { date, URL, ID, modified, categories, tags } = post
+		const postCategories = Object.keys( categories )
+		const postTags = Object.keys( tags )
+		return { date, URL, ID, modified, categories: postCategories, tags: postTags }
 	}
 
 	function getPostStatus() {
@@ -85,6 +101,7 @@ export function Persistance( propertieService ) {
 
 	return {
 		addSite,
+		updateSite,
 		listSites,
 		findSite,
 		deleteSite,

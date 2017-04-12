@@ -42,7 +42,8 @@ module.exports = [
 				query: {
 					presets: [ 'react', 'es2015' ]
 				}
-			} ]
+			} ],
+			resolveLoader: { modulesDirectories: [ 'client' ] }
 		},
 		plugins: [
 			new webpack.optimize.UglifyJsPlugin( { test: [ /\.js($|\?)/i, /\.html$/i ] } ),
