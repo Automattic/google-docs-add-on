@@ -92,13 +92,13 @@ export default class Site extends React.PureComponent {
 				{ previewLink }
 			</div>
 			<div className="sites-list__extended" style={ extendedStyle }>
-				<h4>Post Settings</h4>
+				<h4>Post Settings <span>(<a title="Update site information" className={ refreshClasses } onClick={ this.updateSite }><svg height="24" width="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g><path d="M17.91 14c-.478 2.833-2.943 5-5.91 5-3.308 0-6-2.692-6-6s2.692-6 6-6h2.172l-2.086 2.086L13.5 10.5 18 6l-4.5-4.5-1.414 1.414L14.172 5H12c-4.418 0-8 3.582-8 8s3.582 8 8 8c4.08 0 7.438-3.055 7.93-7h-2.02z"></path></g></svg> Refresh</a>)</span></h4>
 				<div>
 					<label>Tags<br />
 					<input type="text" placeholder="Add tags, separate with commas…" onChange={ this.tagChangeHandler } value={ this.state.postTagsStr } /></label>
 				</div>
 				<div>
-					<p>Categories</p>
+					<span>Categories</span><br />
 					<ul>
 						{ categories.map( c =>
 							<CategoryInput
@@ -108,9 +108,6 @@ export default class Site extends React.PureComponent {
 								addCategory={ this.categorizePost }
 								removeCategory={ this.uncategorizePost } /> ) }
 					</ul>
-				</div>
-				<div>
-					<a title="Update site information" className={ refreshClasses } onClick={ this.updateSite }>Refresh { site.info.name } <svg height="24" width="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g><path d="M17.91 14c-.478 2.833-2.943 5-5.91 5-3.308 0-6-2.692-6-6s2.692-6 6-6h2.172l-2.086 2.086L13.5 10.5 18 6l-4.5-4.5-1.414 1.414L14.172 5H12c-4.418 0-8 3.582-8 8s3.582 8 8 8c4.08 0 7.438-3.055 7.93-7h-2.02z"></path></g></svg></a>
 				</div>
 				<div>
 					<a title="Remove site from this list" className="sites-list__delete-site" onClick={ this.props.removeSite }>Remove { site.info.name } <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Trash</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M6.187 8h11.625l-.695 11.125C17.05 20.18 16.177 21 15.12 21H8.88c-1.057 0-1.93-.82-1.997-1.875L6.187 8zM19 5v2H5V5h3V4c0-1.105.895-2 2-2h4c1.105 0 2 .895 2 2v1h3zm-9 0h4V4h-4v1z"/></g></svg></a>
