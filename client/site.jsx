@@ -22,6 +22,12 @@ export default class Site extends React.PureComponent {
 		this.tagChangeHandler = this.tagChangeHandler.bind( this )
 	}
 
+	componentDidMount() {
+		if ( ! this.props.site.categories || this.props.site.categories.length < 1 ) {
+			this.updateSite()
+		}
+	}
+
 	toggleOptions() {
 		this.setState( { optionsExpanded: ! this.state.optionsExpanded } )
 	}
