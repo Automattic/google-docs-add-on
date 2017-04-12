@@ -35,7 +35,7 @@ function makeMultipartBody( payload, boundary ) {
 			body = body.concat(
 				Utilities.newBlob(
 					'--' + boundary + CRLF
-					+ 'Content-Disposition: form-data; name="' + k + '"; filename="' + fileNameForBlob( v ) + '"' + CRLF
+					+ 'Content-Disposition: form-data; name="' + k + '"; filename="' + encodeURIComponent( fileNameForBlob( v ) ) + '"' + CRLF
 					+ 'Content-Type: ' + v.getContentType() + CRLF
 					// + 'Content-Transfer-Encoding: base64' + CRLF
 					+ CRLF
