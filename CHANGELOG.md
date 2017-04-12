@@ -1,3 +1,9 @@
+1.3.0
+=====
+
+* Add support for categories and tags
+* Fix bug when image URLs had non-alpha-numeric names ([#68](https://github.com/Automattic/google-docs-add-on/issues/68))
+
 1.2.0
 =====
 
