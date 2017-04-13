@@ -1,3 +1,8 @@
+1.3.1
+=====
+
+* Use minified production bundles for React
+
 1.3.0
 =====
 
