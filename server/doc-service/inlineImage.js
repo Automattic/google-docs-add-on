@@ -7,19 +7,10 @@ export function InlineImage( imageLinker ) {
 			return '';
 		}
 
-		const imgWidth = image.getWidth(),
-		      imgHeight = image.getHeight();
-
-		let title = '',
-		    alt = '';
-
-		if ( image.getAltTitle ) {
-			title = quoteattr( image.getAltTitle() )
-		}
-
-		if ( image.getAltDescription ) {
-			alt = quoteattr( image.getAltDescription() )
-		}
+		const imgWidth = image.getWidth()
+		const imgHeight = image.getHeight()
+		const title = image.getAltTitle() ? quoteattr( image.getAltTitle() ) : ''
+		const alt = image.getAltDescription() ? quoteattr( image.getAltDescription() ) : ''
 
 		return `<img src="${ url }" width="${ imgWidth }" height="${ imgHeight }" alt="${ alt }" title="${ title }">`
 	}
