@@ -148,6 +148,27 @@ describe( 'renderContainer()', function() {
 
 			expect( actual ).to.equal( 'More <a href="https://en.wikipedia.org/wiki/Test">test</a> <b>test</b>s' )
 		} )
+
+		it( 'does not link an auto-linked URL', function() {
+			const link = 'http://stackoverflow.com/a/1732454'
+			const linkAttrs = Object.assign( blankAttributes(), {
+				LINK_URL: link,
+				FOREGROUND_COLOR: '#1155cc',
+				UNDERLINE: true // Gdocs does this automagically for links
+			} )
+
+			const text = mockText( link )
+			const endPoint = link.length
+			td.when( text.getTextAttributeIndices() ).thenReturn( [ 0, endPoint ] )
+			td.when( text.getAttributes() ).thenReturn( blankAttributes() );
+			td.when( text.getAttributes( 0 ) ).thenReturn( linkAttrs );
+			td.when( text.getAttributes( endPoint ) ).thenReturn( blankAttributes() );
+			const container = containerOf( text )
+
+			const actual = renderContainer( container )
+
+			expect( actual ).to.equal( link )
+		} )
 	} )
 
 	describe( 'ListItem', function() {

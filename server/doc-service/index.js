@@ -16,7 +16,11 @@ const range = ( n ) => {
 export function DocService( DocumentApp, imageLinker ) {
 	const childrenOf = ( element ) => range( element.getNumChildren() ).map( i => element.getChild( i ) )
 
-	const renderContainer = ( element ) => childrenOf( element ).map( renderElement ).concat( renderPositionedImages( element ) ).join( '' )
+	const renderContainer = ( element ) => childrenOf( element )
+		.map( renderElement )
+		.concat( renderPositionedImages( element ) )
+		.map( removeAutolinkedUrls )
+		.join( '' )
 
 	const renderParagraph = Paragraph( DocumentApp, renderContainer );
 	const renderTable = Table( renderContainer );
@@ -49,6 +53,25 @@ export function DocService( DocumentApp, imageLinker ) {
 		}
 
 		return container.getPositionedImages().map( renderImage )
+	}
+
+	/**
+	 * Remove auto-linked URLs from markup
+	 *
+	 * Google Docs links URLs it sees. Which is helpful, WordPress does it too.
+	 * But it also interferes with oEmbeds, which is not helpful. So we identify
+	 * those auto-linked URLs and send them to WordPress as text.
+	 *
+	 * @param {string} markup Generated HTML
+	 * @return {string} markup without a tags around auto-linked URLs
+	 */
+	function removeAutolinkedUrls( markup ) {
+		if ( ! markup || ! markup.replace ) {
+			return markup
+		}
+
+		// http://stackoverflow.com/a/1732454
+		return markup.replace( /<a href="([^"]+)">\1<\/a>/g, '$1' )
 	}
 
 	return renderContainer
