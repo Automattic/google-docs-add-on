@@ -81,11 +81,10 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		return request( access_token, path, Object.assign( { method: 'post' }, options, { payload } ) )
 	}
 
-	function postToWordPress( site, postIdParam, postContentParams = {} ) {
+	function postToWordPress( site, postIdParam, payload = {} ) {
 		const postId = postIdParam || 'new'
 		const { blog_id, access_token } = site
 		const path = `/sites/${ blog_id }/posts/${ postId }`
-		const payload = Object.assign( {}, postContentParams, { status: 'draft' } )
 
 		return post( access_token, path, { payload } )
 	}

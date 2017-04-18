@@ -150,11 +150,11 @@ export function postToWordPress( site_id, { categories = [], tags = [] } ) {
 			return cachedPost;
 		}
 	} else {
-		const response = wpClient.postToWordPress( site, 'new', { title } );
+		const response = wpClient.postToWordPress( site, 'new', { title, status: 'draft' } );
 		postId = response.ID;
 	}
 
-	const upload = image => wpClient.uploadImage( site, image, postId );
+	const upload = image => wpClient.uploadImage( site, image, postId )
 	const imageCache = ImageCache( site, docProps, md5 )
 	const imageUrlMapper = imageUploadLinker( upload, imageCache )
 	const renderContainer = DocService( DocumentApp, imageUrlMapper )
@@ -183,7 +183,7 @@ function confirmOverwrite() {
 	const ui = DocumentApp.getUi();
 	const promptResponse = ui.alert(
 		'The post has been modified on the site',
-		'If you continue, any changes you made to the post on the site will be overwritten with this document. This will also unpublish the post if it has been published.\n\nDo you want to overwrite the changes on the site?',
+		'If you continue, any changes you made to the post on the site will be overwritten with this document.\n\nDo you want to overwrite the changes on the site?',
 		ui.ButtonSet.YES_NO
 	);
 
