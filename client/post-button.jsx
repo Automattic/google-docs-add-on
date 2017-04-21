@@ -1,5 +1,16 @@
-/* global React */
+/* global React, window */
 import { postToWordPress } from './services';
+
+const TIMEOUT_MS = 20000
+
+const withTimeout = ( prom ) => {
+	const timeoutPromise = new Promise( ( resolve, reject ) => {
+		const fail = () => reject( { message: 'Saving has timed out.' } )
+		window.setTimeout( fail, TIMEOUT_MS )
+	} )
+
+	return Promise.race( [prom, timeoutPromise] )
+}
 
 export default class PostButton extends React.Component {
 	constructor( props ) {
@@ -10,10 +21,10 @@ export default class PostButton extends React.Component {
 
 	savePost() {
 		this.setState( { disabled: true } )
-		postToWordPress( this.props.site.blog_id, {
+		withTimeout( postToWordPress( this.props.site.blog_id, {
 			categories: this.props.postCategories,
 			tags: this.props.postTags
-		} )
+		} ) )
 			.then( ( post ) => {
 				this.setState( { disabled: false } )
 				this.props.onPostSave( post )

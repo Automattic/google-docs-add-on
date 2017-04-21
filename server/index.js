@@ -151,6 +151,7 @@ export function postToWordPress( site_id, { categories = [], tags = [] } ) {
 		}
 	} else {
 		const response = wpClient.postToWordPress( site, 'new', { title, status: 'draft' } );
+		store.savePostToSite( response, site )
 		postId = response.ID;
 	}
 
