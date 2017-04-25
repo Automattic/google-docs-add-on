@@ -23,7 +23,8 @@ export default class PostButton extends React.Component {
 		this.setState( { disabled: true } )
 		withTimeout( postToWordPress( this.props.site.blog_id, {
 			categories: this.props.postCategories,
-			tags: this.props.postTags
+			tags: this.props.postTags,
+			type: this.props.postType
 		} ) )
 			.then( ( post ) => {
 				this.setState( { disabled: false } )
