@@ -18,7 +18,14 @@ describe( 'Sites', function() {
 		categories: [
 			{ name: 'foo' },
 			{ name: 'bar' }
-		]
+		],
+		postTypes: [ {
+			name: 'post',
+			labels: { singular_name: 'Post' }
+		}, {
+			name: 'page',
+			labels: { singular_name: 'Page' }
+		} ]
 	}
 
 	const post = {
