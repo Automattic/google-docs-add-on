@@ -1,6 +1,7 @@
 /* global React */
 import PostButton from './post-button.jsx'
 import CategoryInput from './category-input.jsx'
+import PostTypeInput from './post-type-input.jsx'
 
 export default class Site extends React.PureComponent {
 	constructor( props ) {
@@ -13,17 +14,22 @@ export default class Site extends React.PureComponent {
 			siteRefreshing: false,
 			postCategories: ( post && post.categories ) ? post.categories : [],
 			postTags,
-			postTagsStr: postTags.join( ', ' )
+			postTagsStr: postTags.join( ', ' ),
+			postType: ( post && post.type ) ? post.type : 'post'
 		}
 		this.toggleOptions = this.toggleOptions.bind( this )
 		this.updateSite = this.updateSite.bind( this )
 		this.categorizePost = this.categorizePost.bind( this )
 		this.uncategorizePost = this.uncategorizePost.bind( this )
 		this.tagChangeHandler = this.tagChangeHandler.bind( this )
+		this.postTypeChangeHandler = this.postTypeChangeHandler.bind( this )
 	}
 
 	componentDidMount() {
 		if ( ! this.props.site.categories || this.props.site.categories.length < 1 ) {
+			this.updateSite()
+		}
+		if ( ! this.props.site.postTypes || this.props.site.postTypes.length < 1 ) {
 			this.updateSite()
 		}
 	}
@@ -65,17 +71,22 @@ export default class Site extends React.PureComponent {
 	}
 
 	tagChangeHandler( event ) {
-		const tags = event.target.value.split( /\s*,\s*/ )
+		const postTagsStr = event.target.value
 		this.setState( {
-			postTags: tags,
-			postTagsStr: event.target.value
+			postTags: postTagsStr.split( /\s*,\s*/ ),
+			postTagsStr
 		} )
+	}
+
+	postTypeChangeHandler( event ) {
+		this.setState( { postType: event.target.value } )
 	}
 
 	render() {
 		const site = this.props.site
 		const { post } = site
 		const categories = site.categories || []
+		const postTypes = site.postTypes || []
 		const blavatar = ( site.info.icon && site.info.icon.img ) ? site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
 		const previewLink = ( post ) ? <span className="sites-list__post-link"><a href={ post.URL }>Preview on { site.info.name }</a></span> : null;
 		const extendedStyle = ( ! this.state.optionsExpanded ) ? { display: 'none' } : {}
@@ -91,6 +102,7 @@ export default class Site extends React.PureComponent {
 					<a className="sites-list__title" href={ site.blog_url }>{ site.info.name }<br />
 					<em>{ site.blog_url }</em></a>
 				</div>
+				<PostTypeInput postType={ this.state.postType } postTypes={ postTypes } onChoose={ this.postTypeChangeHandler } />
 				<PostButton site={ site } onPostSave={ this.props.setPost } postTags={ this.state.postTags} postCategories={ this.state.postCategories } errorHandler={ this.props.errorHandler } />
 				<a className={ extendedToggled } onClick={ this.toggleOptions }><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Dropdown</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M7 10l5 5 5-5"/></g></svg></a>
 			</div>
