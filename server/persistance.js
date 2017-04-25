@@ -49,14 +49,38 @@ export function Persistance( propertieService ) {
 		return { ID, name }
 	}
 
+	function postTypeIdentity( postType ) {
+		return {
+			name: postType.name,
+			labels: { singular_name: postType.labels.singular_name }
+		}
+	}
+
 	function siteIdentity( site ) {
-		let img;
-		const { access_token, blog_id, blog_url, info: { name }, categories } = site;
+		let img = '';
+		const {
+			access_token,
+			blog_id,
+			blog_url,
+			info: { name },
+			categories,
+			postTypes
+		} = site;
+
 		if ( site.info.icon && site.info.icon.img ) {
 			img = site.info.icon.img;
 		}
 		const persistCategories = categories.map( categoryIdentity )
-		return { access_token, blog_id, blog_url, info: { name, icon: { img } }, categories: persistCategories };
+		const persistPostTypes = postTypes.map( postTypeIdentity )
+
+		return {
+			access_token,
+			blog_id,
+			blog_url,
+			info: { name, icon: { img } },
+			categories: persistCategories,
+			postTypes: persistPostTypes
+		};
 	}
 
 	function deleteSite( site_id ) {
@@ -77,10 +101,10 @@ export function Persistance( propertieService ) {
 	}
 
 	function postIdentity( post ) {
-		const { date, URL, ID, modified, categories, tags } = post
+		const { date, URL, ID, modified, type, categories, tags } = post
 		const postCategories = Object.keys( categories )
 		const postTags = Object.keys( tags )
-		return { date, URL, ID, modified, categories: postCategories, tags: postTags }
+		return { date, URL, ID, modified, type, categories: postCategories, tags: postTags }
 	}
 
 	function getPostStatus() {
