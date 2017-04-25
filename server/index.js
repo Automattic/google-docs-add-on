@@ -134,7 +134,7 @@ export function refreshSite( site_id ) {
 	return updated
 }
 
-export function postToWordPress( site_id, { categories = [], tags = [] } ) {
+export function postToWordPress( site_id, { categories = [], tags = [], type = 'post' } ) {
 	const doc = DocumentApp.getActiveDocument();
 	const docProps = PropertiesService.getDocumentProperties();
 	const site = store.findSite( site_id );
@@ -150,7 +150,8 @@ export function postToWordPress( site_id, { categories = [], tags = [] } ) {
 			return cachedPost;
 		}
 	} else {
-		const response = wpClient.postToWordPress( site, 'new', { title, status: 'draft' } );
+		const postParams = { title, categories, tags, type, status: 'draft' }
+		const response = wpClient.postToWordPress( site, 'new', postParams );
 		store.savePostToSite( response, site )
 		postId = response.ID;
 	}
@@ -160,7 +161,7 @@ export function postToWordPress( site_id, { categories = [], tags = [] } ) {
 	const imageUrlMapper = imageUploadLinker( upload, imageCache )
 	const renderContainer = DocService( DocumentApp, imageUrlMapper )
 	const content = renderContainer( doc.getBody() )
-	const postParams = { title, content, categories, tags }
+	const postParams = { title, content, categories, tags, type }
 	const response = wpClient.postToWordPress( site, postId, postParams )
 	return store.savePostToSite( response, site )
 }
