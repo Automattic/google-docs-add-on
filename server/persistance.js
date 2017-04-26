@@ -52,7 +52,8 @@ export function Persistance( propertieService ) {
 	function postTypeIdentity( postType ) {
 		return {
 			name: postType.name,
-			labels: { singular_name: postType.labels.singular_name }
+			labels: { singular_name: postType.labels.singular_name },
+			supports: { editor: postType.supports.editor }
 		}
 	}
 
@@ -71,7 +72,9 @@ export function Persistance( propertieService ) {
 			img = site.info.icon.img;
 		}
 		const persistCategories = categories.map( categoryIdentity )
-		const persistPostTypes = postTypes.map( postTypeIdentity )
+		const persistPostTypes = postTypes
+			.map( postTypeIdentity )
+			.filter( ( t ) => t.supports.editor )
 
 		return {
 			access_token,
