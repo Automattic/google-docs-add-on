@@ -9,8 +9,8 @@ export function InlineImage( imageLinker ) {
 
 		const imgWidth = image.getWidth()
 		const imgHeight = image.getHeight()
-		const title = image.getAltTitle() ? quoteattr( image.getAltTitle() ) : ''
-		const alt = image.getAltDescription() ? quoteattr( image.getAltDescription() ) : ''
+		const title = image.getAltTitle ? quoteattr( image.getAltTitle() ) : ''
+		const alt = image.getAltDescription ? quoteattr( image.getAltDescription() ) : ''
 
 		return `<img src="${ url }" width="${ imgWidth }" height="${ imgHeight }" alt="${ alt }" title="${ title }">`
 	}

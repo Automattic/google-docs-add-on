@@ -327,11 +327,9 @@ describe( 'renderContainer()', function() {
 	describe( 'PositionedImage', function() {
 		it( 'should render in a paragraph', function() {
 			const p = paragraphOf( mockText( 'Who knew we owned 8000 salad plates' ) )
-			const positionedImage = td.object( [ 'getHeight', 'getWidth', 'getAltTitle', 'getAltDescription' ] );
+			const positionedImage = td.object( [ 'getHeight', 'getWidth' ] );
 			td.when( positionedImage.getHeight() ).thenReturn( 716 );
 			td.when( positionedImage.getWidth() ).thenReturn( 717 );
-			td.when( positionedImage.getAltTitle() ).thenReturn( null );
-			td.when( positionedImage.getAltDescription() ).thenReturn( null );
 			td.when( p.getPositionedImages() ).thenReturn( [ positionedImage ] )
 			td.when( imageLinker( positionedImage ) ).thenReturn( 'https://cdn.wapuu.jp/wp-content/uploads/2015/12/wapuu_mcfly.png' )
 
