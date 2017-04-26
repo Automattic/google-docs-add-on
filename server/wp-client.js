@@ -138,12 +138,20 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		return response.categories || []
 	}
 
+	function getTaxonomiesForPostType( site, postType ) {
+		const { blog_id, access_token } = site
+		const { name } = postType
+		const response = get( access_token, `/sites/${ blog_id }/post-types/${ name }/taxonomies` )
+		return response.taxonomies || []
+	}
+
 	return {
 		postToWordPress,
 		getSiteInfo,
 		uploadImage,
 		getPostStatus,
 		getPostTypes,
-		getCategories
+		getCategories,
+		getTaxonomiesForPostType
 	}
 }

@@ -95,11 +95,18 @@ function wpDieTemplate( template, error ) {
 	return out.evaluate();
 }
 
-const updateSiteInfo = site => Object.assign( {}, site, {
-	info: wpClient.getSiteInfo( site ),
-	postTypes: wpClient.getPostTypes( site ),
-	categories: wpClient.getCategories( site )
-} )
+const updateSiteInfo = site => {
+	const postTypes = wpClient.getPostTypes( site ).map( postType => {
+		const taxonomies = wpClient.getTaxonomiesForPostType( site ).map( t => t.name )
+		return Object.assign( postType, { taxonomies } )
+	} )
+
+	return Object.assign( {}, site, {
+		info: wpClient.getSiteInfo( site ),
+		categories: wpClient.getCategories( site ),
+		postTypes
+	} )
+}
 
 export function authCallback( request ) {
 	let isAuthorized;

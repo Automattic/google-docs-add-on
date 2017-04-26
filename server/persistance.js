@@ -53,7 +53,8 @@ export function Persistance( propertieService ) {
 		return {
 			name: postType.name,
 			labels: { singular_name: postType.labels.singular_name },
-			supports: { editor: postType.supports.editor }
+			supports: { editor: postType.supports.editor },
+			taxonomies: postType.taxonomies
 		}
 	}
 

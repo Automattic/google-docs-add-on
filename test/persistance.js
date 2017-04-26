@@ -22,11 +22,13 @@ describe( 'Sites', function() {
 		postTypes: [ {
 			name: 'post',
 			labels: { singular_name: 'Post' },
-			supports: { editor: true }
+			supports: { editor: true },
+			taxonomies: [ 'category', 'post_tag' ]
 		}, {
 			name: 'page',
 			labels: { singular_name: 'Page' },
-			supports: { editor: true }
+			supports: { editor: true },
+			taxonomies: [ 'category', 'post_tag' ]
 		} ]
 	}
 

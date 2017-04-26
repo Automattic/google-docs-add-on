@@ -1,6 +1,7 @@
 export default ( { site, postType, onChoose } ) => {
 	const postTypes = site.postTypes || []
-	const postTypeName = postTypes.find( ( t ) => t.name === postType ).labels.singular_name
+	const postTypeObj = postTypes.find( ( t ) => t.name === postType )
+	const postTypeName = postTypeObj && postTypeObj.labels && postTypeObj.labels.singular_name
 
 	let field = postTypeName
 	if ( ! site.post ) {
