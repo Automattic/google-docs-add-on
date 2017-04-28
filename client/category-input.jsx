@@ -13,7 +13,7 @@ const CategoryInput = ( { categoryName, postCategories, addCategory, removeCateg
 
 export default ( { categories, postCategories, onAddCategory, onRemoveCategory, taxonomies } ) => {
 	if ( ! taxonomies.includes( 'category' ) ) {
-		return;
+		return null;
 	}
 
 	return <div>

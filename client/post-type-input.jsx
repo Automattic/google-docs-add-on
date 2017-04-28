@@ -1,4 +1,9 @@
 export default ( { site, postType, onChoose } ) => {
+	// Do not show anything if the post has been created
+	if ( site.post ) {
+		return null;
+	}
+
 	const postTypes = site.postTypes || []
 	const postTypeObj = postTypes.find( ( t ) => t.name === postType )
 	const postTypeName = postTypeObj && postTypeObj.labels && postTypeObj.labels.singular_name

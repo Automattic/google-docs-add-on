@@ -1,6 +1,6 @@
 export default ( { tagChangeHandler, postTagsStr, taxonomies } ) => {
 	if ( ! taxonomies.includes( 'post_tag' ) ) {
-		return;
+		return null;
 	}
 
 	return <div>

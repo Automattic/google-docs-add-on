@@ -16,7 +16,7 @@ export default class Site extends React.PureComponent {
 			postCategories: ( post && post.categories ) ? post.categories : [],
 			postTags,
 			postTagsStr: postTags.join( ', ' ),
-			postType: ( post && post.type ) ? post.type : 'post'
+			postType: ( post && post.type ) ? post.type : props.site.postTypes[0].name
 		}
 		this.toggleOptions = this.toggleOptions.bind( this )
 		this.updateSite = this.updateSite.bind( this )
@@ -86,13 +86,15 @@ export default class Site extends React.PureComponent {
 	render() {
 		const site = this.props.site
 		const { post } = site
+		const hasBeenPosted = !! post
 		const categories = site.categories || []
 		const blavatar = ( site.info.icon && site.info.icon.img ) ? site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
-		const previewLink = ( post ) ? <span className="sites-list__post-link"><a href={ post.URL }>Preview on { site.info.name }</a></span> : null;
+		const previewLink = ( hasBeenPosted ) ? <span className="sites-list__post-link"><a href={ post.URL }>Preview on { site.info.name }</a></span> : null;
 		const extendedStyle = ( ! this.state.optionsExpanded ) ? { display: 'none' } : {}
 		const extendedToggled = ( ! this.state.optionsExpanded ) ? 'sites-list__extended-toggle' : 'sites-list__extended-toggle is-toggled'
 		const refreshClasses = 'sites-list__update-site' + ( this.state.siteRefreshing ? ' sites-list__update-site--updating' : '' )
-		const taxonomies = site.postTypes.taxonomies
+		const selectedPostType = site.postTypes.find( ( t => t.name === this.state.postType ) )
+		const taxonomies = ( selectedPostType && selectedPostType.taxonomies ) || []
 
 		return <li>
 			<div className="sites-list__basic">
@@ -108,10 +110,10 @@ export default class Site extends React.PureComponent {
 			</div>
 			<div className="sites-list__preview">
 				{ previewLink }
+				<PostTypeInput site={ site } postType={ this.state.postType } onChoose={ this.postTypeChangeHandler } />
 			</div>
 			<div className="sites-list__extended" style={ extendedStyle }>
 				<h4>Post Settings <span>(<a title="Update site information" className={ refreshClasses } onClick={ this.updateSite }><svg height="24" width="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g><path d="M17.91 14c-.478 2.833-2.943 5-5.91 5-3.308 0-6-2.692-6-6s2.692-6 6-6h2.172l-2.086 2.086L13.5 10.5 18 6l-4.5-4.5-1.414 1.414L14.172 5H12c-4.418 0-8 3.582-8 8s3.582 8 8 8c4.08 0 7.438-3.055 7.93-7h-2.02z"></path></g></svg> Refresh</a>)</span></h4>
-				<PostTypeInput site={ site } postType={ this.state.postType } onChoose={ this.postTypeChangeHandler } />
 				<TagInput tagChangeHandler={ this.tagChangeHandler } postTagsStr={ this.state.postTagsStr } taxonomies={ taxonomies } />
 				<CategoryInput categories={ categories } postCategories={ this.state.postCategories } onAddCategory={ this.categorizePost } onRemoveCategory={ this.uncategorizePost } taxonomies={ taxonomies } />
 				<div>
