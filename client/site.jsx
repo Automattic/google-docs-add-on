@@ -88,12 +88,13 @@ export default class Site extends React.PureComponent {
 		const { post } = site
 		const hasBeenPosted = !! post
 		const categories = site.categories || []
+		const postTypes = site.postTypes || []
 		const blavatar = ( site.info.icon && site.info.icon.img ) ? site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
 		const previewLink = ( hasBeenPosted ) ? <span className="sites-list__post-link"><a href={ post.URL }>Preview on { site.info.name }</a></span> : null;
 		const extendedStyle = ( ! this.state.optionsExpanded ) ? { display: 'none' } : {}
 		const extendedToggled = ( ! this.state.optionsExpanded ) ? 'sites-list__extended-toggle' : 'sites-list__extended-toggle is-toggled'
 		const refreshClasses = 'sites-list__update-site' + ( this.state.siteRefreshing ? ' sites-list__update-site--updating' : '' )
-		const selectedPostType = site.postTypes.find( ( t => t.name === this.state.postType ) )
+		const selectedPostType = postTypes.find( ( t => t.name === this.state.postType ) )
 		const taxonomies = ( selectedPostType && selectedPostType.taxonomies ) || []
 
 		return <li>
