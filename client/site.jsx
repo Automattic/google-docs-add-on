@@ -16,7 +16,7 @@ export default class Site extends React.PureComponent {
 			postCategories: ( post && post.categories ) ? post.categories : [],
 			postTags,
 			postTagsStr: postTags.join( ', ' ),
-			postType: ( post && post.type ) ? post.type : props.site.postTypes[0].name
+			postType: ( post && post.type ) ? post.type : 'post'
 		}
 		this.toggleOptions = this.toggleOptions.bind( this )
 		this.updateSite = this.updateSite.bind( this )
