@@ -4,7 +4,7 @@ import CategoryInput from './category-input.jsx'
 import PostTypeInput from './post-type-input.jsx'
 import TagInput from './tag-input.jsx'
 
-export default class Site extends React.PureComponent {
+export default class Site extends React.Component {
 	constructor( props ) {
 		super( props );
 		const { post } = props.site
