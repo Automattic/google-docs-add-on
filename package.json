@@ -1,6 +1,6 @@
 {
   "name": "wordpress-for-google-docs",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "Post to WordPress.com from Google Docs",
   "license": "GPL-3.0",
   "directories": {
