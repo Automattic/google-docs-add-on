@@ -1,3 +1,8 @@
+1.4.0
+=====
+
+* Add support for post types on new posts
+
 1.3.1
 =====
 
