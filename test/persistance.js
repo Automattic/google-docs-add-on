@@ -18,7 +18,18 @@ describe( 'Sites', function() {
 		categories: [
 			{ name: 'foo' },
 			{ name: 'bar' }
-		]
+		],
+		postTypes: [ {
+			name: 'post',
+			labels: { singular_name: 'Post' },
+			supports: { editor: true },
+			taxonomies: [ 'category', 'post_tag' ]
+		}, {
+			name: 'page',
+			labels: { singular_name: 'Page' },
+			supports: { editor: true },
+			taxonomies: [ 'category', 'post_tag' ]
+		} ]
 	}
 
 	const post = {
@@ -68,6 +79,22 @@ describe( 'Sites', function() {
 
 		it( 'only stores the properties we need', function() {
 			const extendedSite = Object.assign( {}, site, { foo: 'bar', baz: 'bing' } )
+			store.addSite( extendedSite )
+
+			td.verify( userProps.setProperty( 'SITES', JSON.stringify( [site] ) ) )
+		} )
+
+		it( 'ignores post types without editor support', function() {
+			const extendedSite = Object.assign( {}, site, {
+				postTypes: [
+					...site.postTypes,
+					{
+						name: 'attachment',
+						labels: { singular_name: 'Media' },
+						supports: { title: true }
+					}
+				]
+			} )
 			store.addSite( extendedSite )
 
 			td.verify( userProps.setProperty( 'SITES', JSON.stringify( [site] ) ) )
