@@ -15,5 +15,5 @@ export default ( { site, postType, onChoose } ) => {
 		</select>
 	}
 
-	return <label>Post Type: { field }</label>
+	return <div className="sites-list__post-type"><label>Post Type: { field }</label></div>
 }
