@@ -1,3 +1,8 @@
+1.4.1
+=====
+
+* Fix bug showing unsupported post types the first time existing sites are shown
+
 1.4.0
 =====
 
