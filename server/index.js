@@ -33,7 +33,7 @@ const store = Persistance( PropertiesService )
 export function onOpen() {
 	DocumentApp.getUi().createAddonMenu()
 		.addItem( 'Open', 'showSidebar' )
-		.addItem( 'Clear All Site Data', 'clearSiteData' )
+		// .addItem( 'Clear All Site Data', 'clearSiteData' )
 		// .addItem( 'Dev Testing', 'devTest' )
 		.addToUi();
 }
