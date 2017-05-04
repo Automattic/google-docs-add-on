@@ -38,10 +38,17 @@ export function Persistance( propertieService ) {
 	}
 
 	function updateSite( siteArg ) {
-		persisitSites( listSites().map( site => ( site.blog_id === siteArg.blog_id )
-			? siteIdentity( siteArg )
-			: site
-		) )
+		let siteToPersist = undefined
+		persisitSites( listSites().map( site => {
+			if ( site.blog_id === siteArg.blog_id ) {
+				siteToPersist = siteIdentity( siteArg )
+				return siteToPersist
+			}
+
+			return site
+		} ) )
+
+		return siteToPersist || {}
 	}
 
 	function categoryIdentity( category ) {

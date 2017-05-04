@@ -33,7 +33,7 @@ const store = Persistance( PropertiesService )
 export function onOpen() {
 	DocumentApp.getUi().createAddonMenu()
 		.addItem( 'Open', 'showSidebar' )
-		// .addItem( 'Clear All Site Data', 'clearSiteData' )
+		.addItem( 'Clear All Site Data', 'clearSiteData' )
 		// .addItem( 'Dev Testing', 'devTest' )
 		.addToUi();
 }
@@ -134,11 +134,11 @@ export function authCallback( request ) {
 
 export function refreshSite( site_id ) {
 	const site = store.findSite( site_id )
-	const updated = updateSiteInfo( site )
-	store.updateSite( updated )
+	const updatedSite = updateSiteInfo( site )
+	const filteredSite = store.updateSite( updatedSite )
 	const cachedPostData = store.getPostStatus();
-	updated.post = cachedPostData[ site_id ]
-	return updated
+	filteredSite.post = cachedPostData[ site_id ]
+	return filteredSite
 }
 
 export function postToWordPress( site_id, { categories = [], tags = [], type = 'post' } ) {
