@@ -60,7 +60,10 @@ export function Persistance( propertieService ) {
 		return {
 			name: postType.name,
 			labels: { singular_name: postType.labels.singular_name },
-			supports: { editor: postType.supports.editor },
+			supports: {
+				editor: postType.supports.editor,
+				exclude_from_external_editors: postType.supports.exclude_from_external_editors
+			},
 			taxonomies: postType.taxonomies
 		}
 	}
@@ -83,6 +86,7 @@ export function Persistance( propertieService ) {
 		const persistPostTypes = postTypes
 			.map( postTypeIdentity )
 			.filter( ( t ) => t.supports.editor )
+			.filter( ( t ) => ! t.supports.exclude_from_external_editors )
 
 		return {
 			access_token,
