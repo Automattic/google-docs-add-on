@@ -10,13 +10,17 @@ export default class Site extends React.Component {
 		const { post } = props.site
 		const postTags = ( post && post.tags ) ? post.tags : []
 
+		const defaultPostType = ( props.site.postTypes && props.site.postTypes.length > 0 )
+			? props.site.postTypes[0].name
+			: 'post'
+
 		this.state = {
 			optionsExpanded: !! post,
 			siteRefreshing: false,
 			postCategories: ( post && post.categories ) ? post.categories : [],
 			postTags,
 			postTagsStr: postTags.join( ', ' ),
-			postType: ( post && post.type ) ? post.type : 'post'
+			postType: ( post && post.type ) ? post.type : defaultPostType
 		}
 		this.toggleOptions = this.toggleOptions.bind( this )
 		this.updateSite = this.updateSite.bind( this )
