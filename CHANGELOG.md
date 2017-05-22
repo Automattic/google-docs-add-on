@@ -1,3 +1,8 @@
+1.4.2
+=====
+
+* Hide post types with `supports.exclude_from_external_editors`
+
 1.4.1
 =====
 
