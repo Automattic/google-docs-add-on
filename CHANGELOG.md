@@ -1,3 +1,9 @@
+1.4.3
+=====
+
+* Fix an issue that prevented uploading images that had funky alt descriptions (where "funky" means "lacking a file extension")
+* Clean up the saving button so it looks nicer
+
 1.4.2
 =====
 
