@@ -38,7 +38,8 @@ export default class PostButton extends React.Component {
 
 	render() {
 		const buttonLabel = ( this.props.site.post ) ? 'Update' : 'Save';
+		const buttonText = ( this.state.disabled ) ? 'Saving...' : buttonLabel;
 
-		return <button className="sites-list__save-draft" disabled={ this.state.disabled } onClick={ this.savePost }>{ buttonLabel }</button>
+		return <button className="sites-list__save-draft" disabled={ this.state.disabled } onClick={ this.savePost }>{ buttonText }</button>
 	}
 }
