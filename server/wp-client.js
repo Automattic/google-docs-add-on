@@ -11,7 +11,7 @@ const contentTypeToExtension = {
 	'image/gif': 'gif'
 }
 
-function fileNameForBlob( blob ) {
+function filenameForBlob( blob ) {
 	if ( blob.getName() ) {
 		return blob.getName()
 	}
@@ -35,7 +35,7 @@ function makeMultipartBody( payload, boundary ) {
 			body = body.concat(
 				Utilities.newBlob(
 					'--' + boundary + CRLF
-					+ 'Content-Disposition: form-data; name="' + k + '"; filename="' + encodeURIComponent( fileNameForBlob( v ) ) + '"' + CRLF
+					+ 'Content-Disposition: form-data; name="' + k + '"; filename="' + encodeURIComponent( filenameForBlob( v ) ) + '"' + CRLF
 					+ 'Content-Type: ' + v.getContentType() + CRLF
 					// + 'Content-Transfer-Encoding: base64' + CRLF
 					+ CRLF
@@ -96,6 +96,11 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		return get( access_token, path )
 	}
 
+	const hasImageFileExtension = filename => {
+		const extension = filename.split( '.' ).pop();
+		return ( extension && extension.match( /\.(png|gif|jpeg|jpg)$/i ) );
+	}
+
 	/**
 	 * @param {Site} site { blog_id, access_token }
 	 * @param {InlineImage} image a Google InlineImage
@@ -108,7 +113,15 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 		const imageBlob = image.getBlob()
 
 		if ( ! imageBlob.getName() && image.getAltDescription ) {
-			imageBlob.setName( image.getAltDescription() )
+			// WP needs a valid file extension
+			let extension = '';
+			if ( ! hasImageFileExtension( image.getAltDescription() ) ) {
+				const mimeType = imageBlob.getContentType();
+				extension = ( contentTypeToExtension[ mimeType ] )
+					? '.' + contentTypeToExtension[ mimeType ]
+					: '';
+			}
+			imageBlob.setName( image.getAltDescription() + extension )
 		}
 		const boundary = '-----CUTHEREelH7faHNSXWNi72OTh08zH29D28Zhr3Rif3oupOaDrj'
 

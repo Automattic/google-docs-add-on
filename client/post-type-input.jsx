@@ -7,7 +7,7 @@ export default ( { site, postType, onChoose } ) => {
 	const postTypes = site.postTypes || []
 
 	if ( 1 === postTypes.length ) {
-		onChoose( postTypes[0].name )
+		onChoose( { target: { value: postTypes[0].name } } )
 		return null
 	}
 

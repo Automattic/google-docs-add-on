@@ -5,7 +5,7 @@ const contentTypeToExtension = {
 	'image/gif': 'gif' // pronounced "GIF"
 }
 
-/* globals Logger */
+/* globals Logger, DocumentApp */
 
 export function imageUploadLinker( uploadImage, imageCache ) {
 	return ( image ) => {
