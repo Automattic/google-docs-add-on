@@ -97,7 +97,7 @@ export function WPClient( PropertiesService, UrlFetchApp ) {
 	}
 
 	const hasImageFileExtension = filename => {
-		const extension = filename.split( '.' ).pop();
+		const extension = ( filename && filename.split( '.' ).pop() ) ;
 		return ( extension && extension.match( /\.(png|gif|jpeg|jpg)$/i ) );
 	}
 
