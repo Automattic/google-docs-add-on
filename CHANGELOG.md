@@ -1,3 +1,8 @@
+1.4.4
+=====
+
+* Fix a bug when an image doesn't have an alt description that was preventing images from uploading ([#80]https://github.com/Automattic/google-docs-add-on/issues/80))
+
 1.4.3
 =====
 
