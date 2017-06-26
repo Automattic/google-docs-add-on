@@ -97,6 +97,7 @@ function paragraphOf( ...elements ) {
 	paragraph.getAlignment = td.function( 'getAlignment' )
 	td.when( paragraph.getType() ).thenReturn( DocumentApp.ElementType.PARAGRAPH )
 	td.when( paragraph.getAlignment() ).thenReturn( DocumentApp.HorizontalAlignment.LEFT )
+	td.when( paragraph.getAttributes() ).thenReturn( blankAttributes() )
 	return paragraph
 }
 
@@ -169,6 +170,28 @@ describe( 'renderContainer()', function() {
 
 			expect( actual ).to.equal( link )
 		} )
+
+		it( 'ignores underlines in links', function() {
+			const link = 'http://stackoverflow.com/a/1732454'
+			const linkAttrs = Object.assign( blankAttributes(), {
+				LINK_URL: link,
+				FOREGROUND_COLOR: '#1155cc'
+			} )
+			const underlineStart = Object.assign( linkAttrs, { UNDERLINE: true  } )
+
+			const text = mockText( link )
+			const endPoint = link.length
+			td.when( text.getTextAttributeIndices() ).thenReturn( [ 0, 1, endPoint ] )
+			td.when( text.getAttributes() ).thenReturn( blankAttributes() );
+			td.when( text.getAttributes( 0 ) ).thenReturn( linkAttrs );
+			td.when( text.getAttributes( 1 ) ).thenReturn( underlineStart );
+			td.when( text.getAttributes( endPoint ) ).thenReturn( blankAttributes() );
+			const container = containerOf( text )
+
+			const actual = renderContainer( container )
+
+			expect( actual ).to.equal( link )
+		} )
 	} )
 
 	describe( 'ListItem', function() {
@@ -182,6 +205,7 @@ describe( 'renderContainer()', function() {
 				td.when( listItem.getType() ).thenReturn( DocumentApp.ElementType.LIST_ITEM )
 				td.when( listItem.getGlyphType() ).thenReturn( DocumentApp.GlyphType.BULLET )
 				td.when( listItem.getNestingLevel() ).thenReturn( 0 )
+				td.when( listItem.getAttributes() ).thenReturn( blankAttributes() )
 				return listItem
 			} );
 		} )

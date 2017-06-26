@@ -24,29 +24,22 @@ function objectDiff( obj1, obj2 ) {
 	}, {} )
 }
 
-/**
- * Convert an object diff into HTML tags
- *
- * @param {object} diffParam An object with changed attributes (e.g. `{ BOLD: true }`)
- * @returns {string} HTML tags that open or close
- */
-function tagsForAttrDiff( diffParam ) {
-	const diff = Object.assign( {}, diffParam )
+export function changedTags( elAttributes, prevAttributes ) {
+	const diff = objectDiff( prevAttributes, elAttributes )
 	let tags = '';
 
 	if ( diff.LINK_URL ) {
 		tags += `<a href="${ quoteattr( diff.LINK_URL ) }">`
-		delete diff.UNDERLINE;
-		delete diff.FOREGROUND_COLOR;
-	}
-
-	if ( diff.LINK_URL === null ) {
-		tags += '</a>'
-		delete diff.UNDERLINE;
-		delete diff.FOREGROUND_COLOR;
 	}
 
 	for ( let prop in simpleTagMap ) {
+		// Ignore underlines in links
+		if ( 'UNDERLINE' === prop ) {
+			if ( elAttributes.LINK_URL || diff.LINK_URL === null ) {
+				continue;
+			}
+		}
+
 		if ( diff[ prop ] ) {
 			tags += '<' + simpleTagMap[ prop ] + '>';
 		} else if ( diff[ prop ] === null ) {
@@ -54,10 +47,12 @@ function tagsForAttrDiff( diffParam ) {
 		}
 	}
 
+	if ( diff.LINK_URL === null ) {
+		tags += '</a>'
+	}
+
 	return tags
 }
-
-export const changedTags = ( elAttributes, prevAttributes ) => tagsForAttrDiff( objectDiff( prevAttributes, elAttributes ) )
 
 /*
  * From StackOverflow - http://stackoverflow.com/a/9756789
