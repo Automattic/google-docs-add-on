@@ -1,7 +1,7 @@
 /* global React, window */
 import { postToWordPress } from './services';
 
-const TIMEOUT_MS = 20000
+const TIMEOUT_MS = 60000
 
 const withTimeout = ( prom ) => {
 	const timeoutPromise = new Promise( ( resolve, reject ) => {
