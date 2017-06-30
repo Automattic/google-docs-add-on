@@ -1,3 +1,9 @@
+1.4.5
+=====
+
+* Fix a bug with Google Docs auto-inserted underline styling.
+* Change posting timeout to 60 seconds
+
 1.4.4
 =====
 
