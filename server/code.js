@@ -14,7 +14,8 @@ import {
 	clearSiteData,
 	refreshSite,
 	include,
-	getAuthUrl
+	getAuthUrl,
+	unlinkPost
 } from './index'
 
 global.onOpen = onOpen;
@@ -29,3 +30,4 @@ global.refreshSite = refreshSite;
 global.clearSiteData = clearSiteData;
 global.include = include;
 global.getAuthUrl = getAuthUrl;
+global.unlinkPost = unlinkPost;

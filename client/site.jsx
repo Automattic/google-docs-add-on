@@ -95,6 +95,7 @@ export default class Site extends React.Component {
 		const postTypes = site.postTypes || []
 		const blavatar = ( site.info.icon && site.info.icon.img ) ? site.info.icon.img : 'https://secure.gravatar.com/blavatar/e6392390e3bcfadff3671c5a5653d95b'
 		const previewLink = ( hasBeenPosted ) ? <span className="sites-list__post-link"><a href={ post.URL }>Preview on { site.info.name }</a></span> : null;
+		const unlinkLink = ( hasBeenPosted ) ? <span className="sites-list__post-link" onClick={ this.props.unlinkPost }>Unlink</span> : null;
 		const extendedStyle = ( ! this.state.optionsExpanded ) ? { display: 'none' } : {}
 		const extendedToggled = ( ! this.state.optionsExpanded ) ? 'sites-list__extended-toggle' : 'sites-list__extended-toggle is-toggled'
 		const refreshClasses = 'sites-list__update-site' + ( this.state.siteRefreshing ? ' sites-list__update-site--updating' : '' )
@@ -115,6 +116,7 @@ export default class Site extends React.Component {
 			</div>
 			<div className="sites-list__preview">
 				{ previewLink }
+				{ unlinkLink }
 				<PostTypeInput site={ site } postType={ this.state.postType } onChoose={ this.postTypeChangeHandler } />
 			</div>
 			<div className="sites-list__extended" style={ extendedStyle }>
@@ -122,7 +124,7 @@ export default class Site extends React.Component {
 				<TagInput tagChangeHandler={ this.tagChangeHandler } postTagsStr={ this.state.postTagsStr } taxonomies={ taxonomies } />
 				<CategoryInput categories={ categories } postCategories={ this.state.postCategories } onAddCategory={ this.categorizePost } onRemoveCategory={ this.uncategorizePost } taxonomies={ taxonomies } />
 				<div>
-					<a href="#" title="Remove site from this list" className="sites-list__delete-site" onClick={ this.props.removeSite }>Remove { site.info.name } <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Trash</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M6.187 8h11.625l-.695 11.125C17.05 20.18 16.177 21 15.12 21H8.88c-1.057 0-1.93-.82-1.997-1.875L6.187 8zM19 5v2H5V5h3V4c0-1.105.895-2 2-2h4c1.105 0 2 .895 2 2v1h3zm-9 0h4V4h-4v1z"/></g></svg></a>
+					<a title="Remove site from this list" className="sites-list__delete-site" onClick={ this.props.removeSite }>Remove { site.info.name } <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Trash</title><rect x="0" fill="none" width="24" height="24"/><g><path d="M6.187 8h11.625l-.695 11.125C17.05 20.18 16.177 21 15.12 21H8.88c-1.057 0-1.93-.82-1.997-1.875L6.187 8zM19 5v2H5V5h3V4c0-1.105.895-2 2-2h4c1.105 0 2 .895 2 2v1h3zm-9 0h4V4h-4v1z"/></g></svg></a>
 				</div>
 			</div>
 		</li>
