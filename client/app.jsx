@@ -1,5 +1,5 @@
 /* global React */
-import { loadSites, getAuthUrl, deleteSite, refreshSite } from './services';
+import { loadSites, getAuthUrl, deleteSite, refreshSite, unlinkPost } from './services';
 import Site from './site.jsx';
 import ErrorMessage from './error-message.jsx'
 
@@ -65,6 +65,16 @@ export default class App extends React.Component {
 		this.setState( { sites } )
 	}
 
+	unlinkPost( blog_id ) {
+		return unlinkPost( blog_id )
+			.then( ( success ) => {
+				if ( success ) {
+					this.setPost( blog_id, null );
+				}
+			} )
+			.catch( this.errorHandler )
+	}
+
 	/**
 	 * @param {number} blog_id unique id for the site
 	 * @returns {Promise} for new site information
@@ -106,6 +116,7 @@ export default class App extends React.Component {
 							setPost={ this.setPost.bind( this, site.blog_id ) }
 							removeSite={ this.removeSite.bind( this, site.blog_id ) }
 							refreshSite={ this.updateSite.bind( this, site.blog_id ) }
+							unlinkPost={ this.unlinkPost.bind( this, site.blog_id ) }
 							updateSiteList={ this.updateSiteList } /> ) }
 					<li className="sites-list__add-site"><a className="button button-secondary" href={ this.state.authorizationUrl } target="_blank">Add WordPress Site</a></li>
 				</ul>

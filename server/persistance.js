@@ -115,6 +115,12 @@ export function Persistance( propertieService ) {
 		return postData[ blog_id ]
 	}
 
+	function removePostFromSite( blog_id ) {
+		const postData = getPostStatus();
+		delete postData[ blog_id ];
+		docProps().setProperty( POST_PERSISTANCE_KEY, JSON.stringify( postData ) )
+	}
+
 	function postIdentity( post ) {
 		const { date, URL, ID, modified, type, categories, tags } = post
 		const postCategories = Object.keys( categories )
@@ -145,6 +151,7 @@ export function Persistance( propertieService ) {
 		findSite,
 		deleteSite,
 		savePostToSite,
+		removePostFromSite,
 		getPostStatus
 	}
 }

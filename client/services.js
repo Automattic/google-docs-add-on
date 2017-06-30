@@ -49,3 +49,12 @@ export function getAuthUrl() {
 			.getAuthUrl();
 	} )
 }
+
+export function unlinkPost( blogId ) {
+	return new Promise( ( resolve, reject ) => {
+		google.script.run
+			.withSuccessHandler( resolve )
+			.withFailureHandler( reject )
+			.unlinkPost( blogId );
+	} )
+}

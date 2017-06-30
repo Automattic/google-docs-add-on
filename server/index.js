@@ -225,6 +225,22 @@ export function deleteSite( site_id ) {
 	return;
 }
 
+export function unlinkPost( site_id ) {
+	const ui = DocumentApp.getUi();
+	const promptResponse = ui.alert(
+		'Are you sure you want to unlink this document from the WordPress post?',
+		'If you choose "Yes" you can create a new post for this document.',
+		ui.ButtonSet.YES_NO
+	);
+
+	if ( promptResponse !== ui.Button.YES ) {
+		return false;
+	}
+
+	store.removePostFromSite( site_id );
+	return true;
+}
+
 export function devTest() {
 	// const doc = DocumentApp.getActiveDocument();
 	// const body = doc.getBody();
