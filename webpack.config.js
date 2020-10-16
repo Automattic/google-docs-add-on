@@ -4,11 +4,11 @@ var webpack = require( 'webpack' ),
 
 module.exports = [
 	{
-		entry: './server/code.js',
+		entry: './src/server/code.js',
 		output: {
 			libraryTarget: 'this',
 			filename: 'Code.js',
-			path: './src'
+			path: './dist'
 		},
 		module: {
 			loaders: [ {
@@ -29,10 +29,10 @@ module.exports = [
 		plugins: [ new GasPlugin() ]
 	},
 	{
-		entry: './client/index.jsx',
+		entry: './src/client/index.jsx',
 		output: {
 			filename: 'javascript.html',
-			path: './src'
+			path: './dist'
 		},
 		module: {
 			loaders: [ {

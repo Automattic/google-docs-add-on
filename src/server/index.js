@@ -8,8 +8,8 @@
  * presented to users will reflect this limited scope.
  */
 
-/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, Logger */
-import { OAuth2 } from 'imports-loader?_=./Underscore.gs!apps-script-oauth2/dist/OAuth2.gs'
+/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, Logger, OAuth2 */
+// import { OAuth2 } from 'imports-loader?_=./Underscore.gs!apps-script-oauth2/dist/OAuth2.gs'
 
 import { WPClient } from './wp-client';
 import { DocService } from './doc-service';
