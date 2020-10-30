@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import td from 'testdouble';
-import { ImageCache } from '../server/image-cache'
+import { ImageCache } from '../src/server/image-cache'
 
 describe( 'ImageCache', function() {
 	let imageCache, docProps, hasher, site

@@ -3,3 +3,4 @@ gapps.config.json*
 src/Code.js
 src/javascript.html
 .vscode
+src/server/secrets.js

@@ -117,7 +117,7 @@ export function authCallback( request ) {
 	}
 
 	if ( isAuthorized ) {
-		let site = oauthClient().getToken_()
+		let site = oauthClient().getToken()
 		try {
 			site = updateSiteInfo( site )
 		} catch ( e ) {

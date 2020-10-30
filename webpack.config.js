@@ -17,11 +17,6 @@ module.exports = [
 				loader: 'babel-loader',
 				query: {
 					presets: [ 'es2015' ],
-					plugins: [
-						'transform-runtime',
-						'transform-es3-property-literals',
-						'transform-es3-member-expression-literals'
-					]
 				}
 			}],
 			resolveLoader: { modulesDirectories: [ 'server' ] }
