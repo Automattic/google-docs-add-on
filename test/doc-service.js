@@ -78,7 +78,7 @@ function mockText( text = MOCK_TEXT ) {
 }
 
 function containerOf( ...elements ) {
-	const container = td.object( ['getNumChildren', 'getChild', 'getType', 'getPreviousSibling', 'getNextSibling', 'getAttributes', 'getPositionedImages'] )
+	const container = td.object( ['getNumChildren', 'getChild', 'getType', 'getPreviousSibling', 'getNextSibling', 'getAttributes', 'getPositionedImages', 'getText'] )
 
 	elements.forEach( ( el, i ) => {
 		td.when( container.getChild( i ) ).thenReturn( el )
@@ -206,6 +206,7 @@ describe( 'renderContainer()', function() {
 				td.when( listItem.getGlyphType() ).thenReturn( DocumentApp.GlyphType.BULLET )
 				td.when( listItem.getNestingLevel() ).thenReturn( 0 )
 				td.when( listItem.getAttributes() ).thenReturn( blankAttributes() )
+				td.when( listItem.getText() ).thenReturn( 'Example ' + i )
 				return listItem
 			} );
 		} )
@@ -215,10 +216,10 @@ describe( 'renderContainer()', function() {
 
 			const actual = renderContainer( body )
 
-			expect( actual.startsWith( '<ul>' ) ).to.equal( true )
+			expect( actual ).to.match( /^<ul>/ );
 			expect( actual.match( /<li>/g ) ).to.have.length( 4 )
 			expect( actual.match( /<\/li>/g ) ).to.have.length( 4 )
-			expect( actual.endsWith( '</ul>\n' ) ).to.equal( true )
+			expect( actual ).to.match( /<\/ul>\n$/ );
 		} )
 
 		it( 'can render an ordered list', function() {
@@ -241,7 +242,7 @@ describe( 'renderContainer()', function() {
 
 			const actual = renderContainer( body );
 
-			expect( actual.startsWith( '<ol type="I">' ) ).to.equal( true )
+			expect( actual ).to.match( /^<ol type="I">/ );
 			expect( actual.endsWith( '</ol>\n' ) ).to.equal( true )
 		} )
 
@@ -264,7 +265,8 @@ describe( 'renderContainer()', function() {
 			const actual = renderContainer( containerOf( ...listItems ) )
 			const expected =
 `<ul>
-<li>Example 0<ol>
+<li>Example 0</li>
+<li><ol>
 <li>Example 1</li>
 <li>Example 2</li>
 </ol>
