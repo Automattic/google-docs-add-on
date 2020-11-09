@@ -21,7 +21,7 @@ export function DocService(DocumentApp, imageLinker) {
 		const { LIST_ITEM } = DocumentApp.ElementType;
 		const listItemsToList = new Map();
 
-		return elements.reduce((processedElements, el, idx, elements) => {
+		return elements.reduce((processedElements, el) => {
 			const type = el.getType();
 			if (type !== LIST_ITEM) {
 				return [...processedElements, el];
