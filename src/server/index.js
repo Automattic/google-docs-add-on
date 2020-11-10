@@ -282,7 +282,7 @@ function oauthClient() {
 }
 
 function md5( message ) {
-	return Utilities.computeDigest( Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.US_ASCII )
+	return Utilities.computeDigest( Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.UTF_8)
 		.map( ( byte ) => {
 			let char = '';
 			if ( byte < 0 ) {
