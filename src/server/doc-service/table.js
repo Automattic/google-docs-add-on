@@ -1,21 +1,35 @@
-export function Table( renderContainer ) {
-	function renderTableRow( row ) {
+import { getCommentDelimitedContent } from './block';
+
+export function Table(renderContainer, renderBlocks = true) {
+	function renderTableRow(row) {
 		let tRow = '<tr>';
+		const cells = [];
 		const numCells = row.getNumCells();
-		for ( let i = 0; i < numCells; i++ ) {
-			tRow += '<td>'
-			+ renderContainer( row.getCell( i ) )
-			+ '</td>';
+		let cellContent = '';
+		for (let i = 0; i < numCells; i++) {
+			cellContent = renderContainer(row.getCell(i), false);
+			tRow += '<td>' + cellContent + '</td>';
+			cells.push(cellContent);
 		}
-		return tRow + '</tr>'
+		tRow += '</tr>';
+		return { tRow, cells };
 	}
 
-	return function renderTable( table ) {
+	return function renderTable(table) {
 		const numRows = table.getNumRows();
-		let tBody = '<table><tbody>'
-		for ( let i = 0; i < numRows; i++ ) {
-			tBody += renderTableRow( table.getRow( i ) )
+		const rows = [];
+		let tBody = '<table><tbody>';
+		for (let i = 0; i < numRows; i++) {
+			let { tRow, cells } = renderTableRow(table.getRow(i));
+			tBody += tRow;
+			rows.push(cells);
 		}
-		return tBody + '</tbody></table>'
-	}
+		const content = tBody + '</tbody></table>';
+		if (renderBlocks) {
+			const attributes = { body: rows };
+			return getCommentDelimitedContent( 'core/table', attributes, content );
+		}
+
+		return content;
+	};
 }

@@ -1,14 +1,15 @@
 import { quoteattr } from './tags'
+import { getCommentDelimitedContent } from './block';
 
-export function InlineImage( imageLinker ) {
+export function InlineImage( imageLinker, renderBlock = true ) {
 	return function renderInlineImage( image ) {
 		const url = imageLinker( image );
 		if ( !url ) {
 			return '';
 		}
 
-		const imgWidth = image.getWidth()
-		const imgHeight = image.getHeight()
+		const width = image.getWidth()
+		const height = image.getHeight()
 		const title = ( image.getAltTitle && image.getAltTitle() )
 			? quoteattr( image.getAltTitle() )
 			: ''
@@ -16,6 +17,17 @@ export function InlineImage( imageLinker ) {
 			? quoteattr( image.getAltDescription() )
 			: ''
 
-		return `<img src="${ url }" width="${ imgWidth }" height="${ imgHeight }" alt="${ alt }" title="${ title }">`
+		const content = `<figure><img src="${ url }" width="${ width }" height="${ height }" alt="${ alt }" title="${ title }"></figure>`;
+		if ( renderBlock ) {
+			const attributes = {
+				url,
+				alt,
+				width,
+				height
+			}
+			return getCommentDelimitedContent( 'core/image', attributes, content );
+		}
+
+		return content;
 	}
 }
