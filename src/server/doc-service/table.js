@@ -27,7 +27,7 @@ export function Table(renderContainer, renderBlocks = true) {
 		const content = tBody + '</tbody></table>';
 		if (renderBlocks) {
 			const attributes = { body: rows };
-			return getCommentDelimitedContent( 'core/table', attributes, content );
+			return getCommentDelimitedContent( 'core/table', attributes, content ) + '\n';
 		}
 
 		return content;

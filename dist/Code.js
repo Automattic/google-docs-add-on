@@ -299,8 +299,8 @@ function getAuthUrl() {
 		var imageUrlMapper = (0, _imageUploadLinker.imageUploadLinker)(upload, imageCache);
 		var renderContainer = (0, _docService.DocService)(DocumentApp, imageUrlMapper);
 		var content = renderContainer(doc.getBody());
-		// DocumentApp.getUi().alert( content );
-		// throw 'Foo';
+		DocumentApp.getUi().alert(content);
+		throw 'Foo';
 		var postParams = { title: title, content: content, categories: categories, tags: tags, type: type };
 		var response = wpClient.postToWordPress(site, postId, postParams);
 		return store.savePostToSite(response, site);

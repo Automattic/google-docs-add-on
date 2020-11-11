@@ -25,7 +25,7 @@ export function InlineImage( imageLinker, renderBlock = true ) {
 				width,
 				height
 			}
-			return getCommentDelimitedContent( 'core/image', attributes, content );
+			return getCommentDelimitedContent( 'core/image', attributes, content ) + '\n';
 		}
 
 		return content;
