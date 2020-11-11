@@ -34,80 +34,23 @@ export function DocService(DocumentApp, imageLinker) {
 	const groupListItems = (elements) => {
 		const { LIST_ITEM } = DocumentApp.ElementType;
 		const listItemsToList = new Map();
+		const lists = new Map();
 
-		return elements.reduce((processedElements, el, idx) => {
+		return elements.reduce((processedElements, el) => {
 			if (el.getType() !== LIST_ITEM) {
 				return [...processedElements, el];
 			}
 
-			const prevSibling = el.getPreviousSibling();
-			const previousElementIsListItem =
-				prevSibling && prevSibling.getType() === LIST_ITEM;
-
-			let list,
-				returnValue = [...processedElements];
-
-			if (previousElementIsListItem) {
-				const previousNestingWasShallower =
-					prevSibling.getNestingLevel() < el.getNestingLevel();
-				const previousNestingWasDeeper =
-					prevSibling.getNestingLevel() > el.getNestingLevel();
-
-				const previousListContainer = listItemsToList.get(prevSibling);
-				// if ( ! previousListContainer ) {
-				// 	throw JSON.stringify({
-				// 		m: 'Cant find previous list container!',
-				// 		listMap: [...listItemsToList.entries()].map( ),
-				// 	})
-				// }
-
-				if (previousNestingWasDeeper) {
-					// no this won't work because if there are 3 nesting levels this will only get the top one, need a while loop
-					list = previousListContainer.parent;
-				} else if (previousNestingWasShallower) {
-					list = new ListElement(previousListContainer);
-					if (
-						!previousListContainer ||
-						!previousListContainer.addListItem
-					) {
-						throw {
-							previousIsListItem: previousElementIsListItem,
-							processedElements,
-							m: 'No previous list container',
-							listMap: [...listItemsToList.entries()],
-						};
-					}
-					previousListContainer.addListItem(list);
-				} else {
-					list = previousListContainer;
-				}
-			} else {
-				list = new ListElement();
-				returnValue = [...processedElements, list];
+			const listId = el.getListId();
+			if ( lists.has( listId ) ) {
+				lists.get( listId ).addListItem( el );
+				return processedElements;
 			}
 
-			if (!list || !list.addListItem) {
-				throw JSON.stringify({
-					previousIsListItem: previousElementIsListItem,
-					idx,
-					types: elements.map((e, i) => ({
-						i,
-						type: e.getType(),
-						nesting:
-							e.getType() == LIST_ITEM && e.getNestingLevel(),
-						glyph: e.getType() == LIST_ITEM && e.getGlyphType(),
-						listId: e.getType() == LIST_ITEM && e.getListId(),
-						text: e.getText && e.getText(),
-					})),
-					m: 'No list container at all!',
-					listMap: [...listItemsToList.entries()],
-				});
-			}
-
-			list.addListItem(el);
-			listItemsToList.set(el, list);
-
-			return returnValue;
+			const list = new ListElement( listId );
+			list.addListItem( el );
+			lists.set( listId, list );
+			return [...processedElements, list];
 		}, []);
 	};
 

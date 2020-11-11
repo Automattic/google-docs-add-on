@@ -1,12 +1,13 @@
 import { blankAttributes } from './attributes';
-import { changedTags } from './tags'
+import { changedTags } from './tags';
+import { getCommentDelimitedContent } from './block';
 
 export const LIST_ELEMENT = 'A8c.List';
 export class ListElement {
 	constructor(parent) {
 		this.items = [];
 		this.parent = parent;
-		this._id = Math.floor( (Math.random() * 100000) );
+		this._id = Math.floor(Math.random() * 100000);
 	}
 
 	getType() {
@@ -32,47 +33,96 @@ export function List(DocumentApp, renderContainer) {
 			default:
 				return 'ul';
 		}
-	}
+	};
 
-	const typeForList = (listItem) => {
+	function typeForList(listItem) {
 		switch (listItem.getGlyphType()) {
 			case DocumentApp.GlyphType.LATIN_UPPER:
-				return ' type="A"';
+				return 'A';
 			case DocumentApp.GlyphType.LATIN_LOWER:
-				return ' type="a"';
+				return 'a';
 			case DocumentApp.GlyphType.ROMAN_UPPER:
-				return ' type="I"';
+				return 'I';
 			case DocumentApp.GlyphType.ROMAN_LOWER:
-				return ' type="i"';
+				return 'i';
 			case DocumentApp.GlyphType.NUMBER:
 			case DocumentApp.GlyphType.BULLET:
 			default:
-				return '';
+				return null;
 		}
 	}
 
-	const renderList = (list) => {
-		const openTag =
-			'<' +
-			tagForList(list.items[0]) +
-			typeForList(list.items[0]) +
-			'>\n';
-		const body = list.items.map( renderListItem );
-		const closeTag = '</' + tagForList(list.items[0]) + '>\n';
+	const renderList = (list, renderBlock = true) => {
+		const nestedListTags = [];
+		const content = list.items
+			.map((li) => renderListItem(li, nestedListTags))
+			.join('');
 
-		return openTag + body.join('\n') + '\n' + closeTag;
+		return renderBlock
+			? getCommentDelimitedContent('core/list', {}, content)
+			: content;
 	};
 
-	function renderListItem( li ) {
-		let output = '<li>';
-		if ( li.getType() === LIST_ELEMENT ) {
-			output += renderList( li );
-		} else {
-			const openTags = changedTags( li.getAttributes(), blankAttributes ),
-			closedTags = changedTags( blankAttributes, li.getAttributes() );
-			output += openTags + renderContainer( li ) + closedTags;
+	function renderListItem(listItem, nestedListTags) {
+		let rendered = '';
+
+		const type = typeForList(listItem),
+			typeAttr = type ? ` type="${type}"` : '';
+
+		const prevSibling = listItem.getPreviousSibling();
+		const previousIsListItem =
+			prevSibling &&
+			prevSibling.getType() === DocumentApp.ElementType.LIST_ITEM;
+		const previousIsLessNested =
+			previousIsListItem &&
+			prevSibling.getNestingLevel() < listItem.getNestingLevel();
+		const previousIsMoreNested =
+			previousIsListItem &&
+			prevSibling.getNestingLevel() > listItem.getNestingLevel();
+
+		// Open list tags
+		if (!previousIsListItem) {
+			rendered += '<' + tagForList(listItem) + typeAttr + '>\n';
+		} else if (previousIsLessNested) {
+			const tag = tagForList(listItem);
+			rendered += '<' + tag + typeAttr + '>\n';
+			nestedListTags.push(tag);
 		}
-		return output + '</li>';
+
+		if (previousIsMoreNested) {
+			let nestingLevel = prevSibling.getNestingLevel();
+			const targetLevel = listItem.getNestingLevel();
+			while (nestingLevel > targetLevel) {
+				const tag = nestedListTags.pop();
+				rendered += `</${tag}>\n</li>\n`;
+				nestingLevel--;
+			}
+		}
+
+		const openTags = changedTags(listItem.getAttributes(), blankAttributes),
+			closedTags = changedTags(blankAttributes, listItem.getAttributes());
+
+		rendered += `<li>${openTags}${renderContainer(listItem)}${closedTags}`;
+
+		const nextSibling = listItem.getNextSibling();
+		const nextIsListItem =
+			nextSibling &&
+			nextSibling.getType() === DocumentApp.ElementType.LIST_ITEM;
+		const nextListItemIsNested =
+			nextIsListItem &&
+			nextSibling.getNestingLevel() > listItem.getNestingLevel();
+
+		if (!nextIsListItem) {
+			let tag = tagForList(listItem);
+			while (tag) {
+				rendered += `</li>\n</${tag}>\n`;
+				tag = nestedListTags.pop();
+			}
+		} else if (!nextListItemIsNested) {
+			rendered += '</li>\n';
+		}
+
+		return rendered;
 	}
 
 	return renderList;

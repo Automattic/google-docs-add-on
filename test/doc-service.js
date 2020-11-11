@@ -234,12 +234,14 @@ describe('renderContainer()', function () {
 				const listItem = containerOf(mockText('Example ' + i));
 				listItem.getGlyphType = td.function('getGlyphType');
 				listItem.getNestingLevel = td.function('getNestingLevel');
+				listItem.getListId = td.function('getListId');
 				td.when(listItem.getType()).thenReturn(
 					DocumentApp.ElementType.LIST_ITEM
 				);
 				td.when(listItem.getGlyphType()).thenReturn(
 					DocumentApp.GlyphType.BULLET
 				);
+				td.when(listItem.getListId()).thenReturn('kix.8qdf1wb1kj56');
 				td.when(listItem.getNestingLevel()).thenReturn(0);
 				td.when(listItem.getAttributes()).thenReturn(blankAttributes());
 				td.when(listItem.getText()).thenReturn('Example ' + i);
@@ -252,10 +254,10 @@ describe('renderContainer()', function () {
 
 			const actual = renderContainer(body);
 
-			expect(actual).to.match(/^<ul>/);
+			expect(actual).to.match(/^<!-- wp:list -->\n<ul>/);
 			expect(actual.match(/<li>/g)).to.have.length(4);
 			expect(actual.match(/<\/li>/g)).to.have.length(4);
-			expect(actual).to.match(/<\/ul>\n$/);
+			expect(actual).to.match(/<\/ul>\n\n<!-- \/wp:list -->$/);
 		});
 
 		it('can render an ordered list', function () {
@@ -268,8 +270,8 @@ describe('renderContainer()', function () {
 
 			const actual = renderContainer(body);
 
-			expect(actual.startsWith('<ol>')).to.equal(true);
-			expect(actual.endsWith('</ol>\n')).to.equal(true);
+			expect(actual).to.match(/^<!-- wp:list -->\n<ol>/);
+			expect(actual).to.match(/<\/ol>\n\n<!-- \/wp:list -->$/);
 		});
 
 		it('can render an ordered list with different glyphs', function () {
@@ -282,8 +284,8 @@ describe('renderContainer()', function () {
 
 			const actual = renderContainer(body);
 
-			expect(actual).to.match(/^<ol type="I">/);
-			expect(actual.endsWith('</ol>\n')).to.equal(true);
+			expect(actual).to.match(/^<!-- wp:list -->\n<ol type="I">/);
+			expect(actual).to.match(/<\/ol>\n\n<!-- \/wp:list -->$/);
 		});
 
 		it('renders links inside lists', function () {
@@ -296,7 +298,12 @@ describe('renderContainer()', function () {
 			const actual = renderContainer(containerOf(listItem));
 
 			expect(actual).to.equal(
-				'<ul>\n<li><a href="http://www.example.com/">Example 0</a></li>\n</ul>\n'
+`<!-- wp:list -->
+<ul>
+<li><a href="http://www.example.com/">Example 0</a></li>
+</ul>
+
+<!-- /wp:list -->`
 			);
 		});
 
@@ -311,16 +318,17 @@ describe('renderContainer()', function () {
 			);
 
 			const actual = renderContainer(containerOf(...listItems));
-			const expected = `<ul>
-<li>Example 0</li>
-<li><ol>
+			const expected = `<!-- wp:list -->
+<ul>
+<li>Example 0<ol>
 <li>Example 1</li>
 <li>Example 2</li>
 </ol>
 </li>
 <li>Example 3</li>
 </ul>
-`;
+
+<!-- /wp:list -->`;
 			expect(actual).to.equal(expected);
 		});
 	});

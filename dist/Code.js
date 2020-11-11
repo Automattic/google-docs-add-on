@@ -299,8 +299,8 @@ function getAuthUrl() {
 		var imageUrlMapper = (0, _imageUploadLinker.imageUploadLinker)(upload, imageCache);
 		var renderContainer = (0, _docService.DocService)(DocumentApp, imageUrlMapper);
 		var content = renderContainer(doc.getBody());
-		DocumentApp.getUi().alert(content);
-		throw 'Foo';
+		// DocumentApp.getUi().alert( content );
+		// throw 'Foo';
 		var postParams = { title: title, content: content, categories: categories, tags: tags, type: type };
 		var response = wpClient.postToWordPress(site, postId, postParams);
 		return store.savePostToSite(response, site);
@@ -660,75 +660,23 @@ function getAuthUrl() {
 			var LIST_ITEM = DocumentApp.ElementType.LIST_ITEM;
 
 			var listItemsToList = new Map();
+			var lists = new Map();
 
-			return elements.reduce(function (processedElements, el, idx) {
+			return elements.reduce(function (processedElements, el) {
 				if (el.getType() !== LIST_ITEM) {
 					return [].concat(_toConsumableArray(processedElements), [el]);
 				}
 
-				var prevSibling = el.getPreviousSibling();
-				var previousElementIsListItem = prevSibling && prevSibling.getType() === LIST_ITEM;
-
-				var list = void 0,
-				    returnValue = [].concat(_toConsumableArray(processedElements));
-
-				if (previousElementIsListItem) {
-					var previousNestingWasShallower = prevSibling.getNestingLevel() < el.getNestingLevel();
-					var previousNestingWasDeeper = prevSibling.getNestingLevel() > el.getNestingLevel();
-
-					var previousListContainer = listItemsToList.get(prevSibling);
-					// if ( ! previousListContainer ) {
-					// 	throw JSON.stringify({
-					// 		m: 'Cant find previous list container!',
-					// 		listMap: [...listItemsToList.entries()].map( ),
-					// 	})
-					// }
-
-					if (previousNestingWasDeeper) {
-						// no this won't work because if there are 3 nesting levels this will only get the top one, need a while loop
-						list = previousListContainer.parent;
-					} else if (previousNestingWasShallower) {
-						list = new _list.ListElement(previousListContainer);
-						if (!previousListContainer || !previousListContainer.addListItem) {
-							throw {
-								previousIsListItem: previousElementIsListItem,
-								processedElements: processedElements,
-								m: 'No previous list container',
-								listMap: [].concat(_toConsumableArray(listItemsToList.entries()))
-							};
-						}
-						previousListContainer.addListItem(list);
-					} else {
-						list = previousListContainer;
-					}
-				} else {
-					list = new _list.ListElement();
-					returnValue = [].concat(_toConsumableArray(processedElements), [list]);
+				var listId = el.getListId();
+				if (lists.has(listId)) {
+					lists.get(listId).addListItem(el);
+					return processedElements;
 				}
 
-				if (!list || !list.addListItem) {
-					throw JSON.stringify({
-						previousIsListItem: previousElementIsListItem,
-						idx: idx,
-						types: elements.map(function (e, i) {
-							return {
-								i: i,
-								type: e.getType(),
-								nesting: e.getType() == LIST_ITEM && e.getNestingLevel(),
-								glyph: e.getType() == LIST_ITEM && e.getGlyphType(),
-								listId: e.getType() == LIST_ITEM && e.getListId(),
-								text: e.getText && e.getText()
-							};
-						}),
-						m: 'No list container at all!',
-						listMap: [].concat(_toConsumableArray(listItemsToList.entries()))
-					});
-				}
-
+				var list = new _list.ListElement(listId);
 				list.addListItem(el);
-				listItemsToList.set(el, list);
-
-				return returnValue;
+				lists.set(listId, list);
+				return [].concat(_toConsumableArray(processedElements), [list]);
 			}, []);
 		};
 
@@ -18386,7 +18334,7 @@ function getAuthUrl() {
 			var content = tBody + '</tbody></table>';
 			if (renderBlocks) {
 				var attributes = { body: rows };
-				return (0, _block.getCommentDelimitedContent)('core/table', attributes, content);
+				return (0, _block.getCommentDelimitedContent)('core/table', attributes, content) + '\n';
 			}
 
 			return content;
@@ -18430,7 +18378,7 @@ function getAuthUrl() {
 					width: width,
 					height: height
 				};
-				return (0, _block.getCommentDelimitedContent)('core/image', attributes, content);
+				return (0, _block.getCommentDelimitedContent)('core/image', attributes, content) + '\n';
 			}
 
 			return content;
@@ -18455,6 +18403,8 @@ function getAuthUrl() {
 	var _attributes = __webpack_require__(5);
 
 	var _tags = __webpack_require__(6);
+
+	var _block = __webpack_require__(7);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -18500,41 +18450,84 @@ function getAuthUrl() {
 			}
 		};
 
-		var typeForList = function typeForList(listItem) {
+		function typeForList(listItem) {
 			switch (listItem.getGlyphType()) {
 				case DocumentApp.GlyphType.LATIN_UPPER:
-					return ' type="A"';
+					return 'A';
 				case DocumentApp.GlyphType.LATIN_LOWER:
-					return ' type="a"';
+					return 'a';
 				case DocumentApp.GlyphType.ROMAN_UPPER:
-					return ' type="I"';
+					return 'I';
 				case DocumentApp.GlyphType.ROMAN_LOWER:
-					return ' type="i"';
+					return 'i';
 				case DocumentApp.GlyphType.NUMBER:
 				case DocumentApp.GlyphType.BULLET:
 				default:
-					return '';
+					return null;
 			}
-		};
+		}
 
 		var renderList = function renderList(list) {
-			var openTag = '<' + tagForList(list.items[0]) + typeForList(list.items[0]) + '>\n';
-			var body = list.items.map(renderListItem);
-			var closeTag = '</' + tagForList(list.items[0]) + '>\n';
+			var renderBlock = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
-			return openTag + body.join('\n') + '\n' + closeTag;
+			var nestedListTags = [];
+			var content = list.items.map(function (li) {
+				return renderListItem(li, nestedListTags);
+			}).join('');
+
+			return renderBlock ? (0, _block.getCommentDelimitedContent)('core/list', {}, content) : content;
 		};
 
-		function renderListItem(li) {
-			var output = '<li>';
-			if (li.getType() === LIST_ELEMENT) {
-				output += renderList(li);
-			} else {
-				var openTags = (0, _tags.changedTags)(li.getAttributes(), _attributes.blankAttributes),
-				    closedTags = (0, _tags.changedTags)(_attributes.blankAttributes, li.getAttributes());
-				output += openTags + renderContainer(li) + closedTags;
+		function renderListItem(listItem, nestedListTags) {
+			var rendered = '';
+
+			var type = typeForList(listItem),
+			    typeAttr = type ? ' type="' + type + '"' : '';
+
+			var prevSibling = listItem.getPreviousSibling();
+			var previousIsListItem = prevSibling && prevSibling.getType() === DocumentApp.ElementType.LIST_ITEM;
+			var previousIsLessNested = previousIsListItem && prevSibling.getNestingLevel() < listItem.getNestingLevel();
+			var previousIsMoreNested = previousIsListItem && prevSibling.getNestingLevel() > listItem.getNestingLevel();
+
+			// Open list tags
+			if (!previousIsListItem) {
+				rendered += '<' + tagForList(listItem) + typeAttr + '>\n';
+			} else if (previousIsLessNested) {
+				var tag = tagForList(listItem);
+				rendered += '<' + tag + typeAttr + '>\n';
+				nestedListTags.push(tag);
 			}
-			return output + '</li>';
+
+			if (previousIsMoreNested) {
+				var nestingLevel = prevSibling.getNestingLevel();
+				var targetLevel = listItem.getNestingLevel();
+				while (nestingLevel > targetLevel) {
+					var _tag = nestedListTags.pop();
+					rendered += '</' + _tag + '>\n</li>\n';
+					nestingLevel--;
+				}
+			}
+
+			var openTags = (0, _tags.changedTags)(listItem.getAttributes(), _attributes.blankAttributes),
+			    closedTags = (0, _tags.changedTags)(_attributes.blankAttributes, listItem.getAttributes());
+
+			rendered += '<li>' + openTags + renderContainer(listItem) + closedTags;
+
+			var nextSibling = listItem.getNextSibling();
+			var nextIsListItem = nextSibling && nextSibling.getType() === DocumentApp.ElementType.LIST_ITEM;
+			var nextListItemIsNested = nextIsListItem && nextSibling.getNestingLevel() > listItem.getNestingLevel();
+
+			if (!nextIsListItem) {
+				var _tag2 = tagForList(listItem);
+				while (_tag2) {
+					rendered += '</li>\n</' + _tag2 + '>\n';
+					_tag2 = nestedListTags.pop();
+				}
+			} else if (!nextListItemIsNested) {
+				rendered += '</li>\n';
+			}
+
+			return rendered;
 		}
 
 		return renderList;
