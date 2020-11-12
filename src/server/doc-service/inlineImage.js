@@ -1,8 +1,8 @@
 import { quoteattr } from './tags'
 import { getCommentDelimitedContent } from './block';
 
-export function InlineImage( imageLinker, renderBlock = true ) {
-	return function renderInlineImage( image ) {
+export function InlineImage( imageLinker ) {
+	return function renderInlineImage( image, renderBlock = true ) {
 		const url = imageLinker( image );
 		if ( !url ) {
 			return '';

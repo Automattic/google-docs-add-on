@@ -3,6 +3,7 @@ import { Table } from './table';
 import { InlineImage } from './inlineImage';
 import { List, LIST_ELEMENT, ListElement } from './list';
 import { renderText } from './text';
+import { getCommentDelimitedContent } from './block';
 
 // http://stackoverflow.com/a/10050831
 const range = (size) => [...Array(size).keys()];
@@ -11,6 +12,11 @@ const childrenOf = (element) =>
 	range(element.getNumChildren()).map((i) => element.getChild(i));
 
 export function DocService(DocumentApp, imageLinker) {
+	/**
+	 * By default, everything gets wrapped in a paragraph element, which we do
+	 * not want
+	 * @param {GoogleApps.DocumentApp.Element} el
+	 */
 	const removeUselessParagraphs = (el) => {
 		if (
 			el.getType() === DocumentApp.ElementType.PARAGRAPH &&
@@ -31,43 +37,31 @@ export function DocService(DocumentApp, imageLinker) {
 	 * elements to put consecutive list elements into a list (or nested list) if
 	 * the nesting level changes
 	 */
-	const groupListItems = (elements) => {
-		const { LIST_ITEM } = DocumentApp.ElementType;
-		const listItemsToList = new Map();
-		const lists = new Map();
+	const groupListItems = (lists = new Map()) => (processedElements, el) => {
+		if (el.getType() !== DocumentApp.ElementType.LIST_ITEM) {
+			return [...processedElements, el];
+		}
 
-		return elements.reduce((processedElements, el) => {
-			if (el.getType() !== LIST_ITEM) {
-				return [...processedElements, el];
-			}
+		const listId = el.getListId();
+		if (lists.has(listId)) {
+			lists.get(listId).addListItem(el);
+			return processedElements;
+		}
 
-			const listId = el.getListId();
-			if ( lists.has( listId ) ) {
-				lists.get( listId ).addListItem( el );
-				return processedElements;
-			}
-
-			const list = new ListElement( listId );
-			list.addListItem( el );
-			lists.set( listId, list );
-			return [...processedElements, list];
-		}, []);
+		const list = new ListElement(listId);
+		list.addListItem(el);
+		lists.set(listId, list);
+		return [...processedElements, list];
 	};
-
-	const renderPositionedImages = (container) =>
-		container.getPositionedImages
-			? container.getPositionedImages().map(renderImage)
-			: [];
 
 	/**
 	 * renderContainer will render a container element like a paragraph or list
 	 * item by rendering all of its children
 	 */
 	const renderContainer = (element, renderBlocks = true) => {
-		const groupedChildren = groupListItems(
-			childrenOf(element).map(removeUselessParagraphs)
-		);
-		return groupedChildren
+		return childrenOf(element)
+			.map(removeUselessParagraphs)
+			.reduce(groupListItems(new Map()), [])
 			.map((el) => renderElement(el, renderBlocks))
 			.concat(renderPositionedImages(element))
 			.map(removeAutolinkedUrls)
@@ -78,7 +72,17 @@ export function DocService(DocumentApp, imageLinker) {
 	const renderTable = Table(renderContainer);
 	const renderImage = InlineImage(imageLinker);
 	const renderList = List(DocumentApp, renderContainer);
-	const renderHorizontalRule = () => '<hr>';
+
+	const renderHorizontalRule = (element, renderBlocks) =>
+		renderBlocks
+			? getCommentDelimitedContent('core/separator', {}, '<hr>')
+			: '<hr>';
+
+	function renderPositionedImages(container) {
+		return container.getPositionedImages
+			? container.getPositionedImages().map( i => renderImage( i, false ) )
+			: [];
+	}
 
 	function renderElement(element, renderBlocks = true) {
 		switch (element.getType()) {

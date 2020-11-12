@@ -1,6 +1,6 @@
 import { getCommentDelimitedContent } from './block';
 
-export function Table(renderContainer, renderBlocks = true) {
+export function Table(renderContainer) {
 	function renderTableRow(row) {
 		let tRow = '<tr>';
 		const cells = [];
@@ -15,7 +15,7 @@ export function Table(renderContainer, renderBlocks = true) {
 		return { tRow, cells };
 	}
 
-	return function renderTable(table) {
+	return function renderTable(table, renderBlocks = true) {
 		const numRows = table.getNumRows();
 		const rows = [];
 		let tBody = '<table><tbody>';

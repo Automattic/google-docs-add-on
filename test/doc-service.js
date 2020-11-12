@@ -500,7 +500,7 @@ describe('renderContainer()', function () {
 
 			const actual = renderContainer(p);
 			expect(actual).to.equal(
-				'Who knew we owned 8000 salad plates<img src="https://cdn.wapuu.jp/wp-content/uploads/2015/12/wapuu_mcfly.png" width="717" height="716" alt="" title="">'
+				'Who knew we owned 8000 salad plates<figure><img src="https://cdn.wapuu.jp/wp-content/uploads/2015/12/wapuu_mcfly.png" width="717" height="716" alt="" title=""></figure>'
 			);
 		});
 	});
@@ -560,7 +560,11 @@ describe('renderContainer()', function () {
 
 			const actual = renderContainer(containerOf(hr));
 
-			expect(actual).to.equal('<hr>');
+			expect(actual).to.equal(
+`<!-- wp:separator -->
+<hr>
+<!-- /wp:separator -->`
+			);
 		});
 	});
 
