@@ -387,7 +387,8 @@ describe('renderContainer()', function () {
 				containerOf(h1, h2, title, subtitle)
 			);
 
-			expect(actual).to.equal( `<!-- wp:heading {"level":1} -->
+			expect(actual).to.equal(
+`<!-- wp:heading {"level":1} -->
 <h1>theres no earthly way of knowing</h1>
 <!-- /wp:heading -->
 <!-- wp:heading {"level":2} -->
@@ -432,14 +433,14 @@ describe('renderContainer()', function () {
 			);
 
 			expect(actual).to.equal(
-`<!-- wp:paragraph -->
-<p style="text-align: center;">Out there theres a world outside of Yonkers</p>
+`<!-- wp:paragraph {"align":"center"} -->
+<p class="has-text-align-center">Out there theres a world outside of Yonkers</p>
 <!-- /wp:paragraph -->
-<!-- wp:paragraph -->
-<p style="text-align: justify;">Way out there beyond this hick town Barnaby theres a slick town Barnaby</p>
+<!-- wp:paragraph {"align":"justify"} -->
+<p class="has-text-align-justify">Way out there beyond this hick town Barnaby theres a slick town Barnaby</p>
 <!-- /wp:paragraph -->
-<!-- wp:paragraph -->
-<p style="text-align: right;">Put on your Sunday clothes theres lots of world out there</p>
+<!-- wp:paragraph {"align":"right"} -->
+<p class="has-text-align-right">Put on your Sunday clothes theres lots of world out there</p>
 <!-- /wp:paragraph -->
 `
 			);

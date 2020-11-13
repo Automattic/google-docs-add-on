@@ -625,6 +625,8 @@ function getAuthUrl() {
 
 	var _text = __webpack_require__(13);
 
+	var _block = __webpack_require__(7);
+
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 	// http://stackoverflow.com/a/10050831
@@ -639,6 +641,11 @@ function getAuthUrl() {
 	};
 
 	function DocService(DocumentApp, imageLinker) {
+		/**
+	  * By default, everything gets wrapped in a paragraph element, which we do
+	  * not want
+	  * @param {GoogleApps.DocumentApp.Element} el
+	  */
 		var removeUselessParagraphs = function removeUselessParagraphs(el) {
 			if (el.getType() === DocumentApp.ElementType.PARAGRAPH && el.getNumChildren() == 1) {
 				var child = el.getChild(0);
@@ -656,14 +663,10 @@ function getAuthUrl() {
 	  * elements to put consecutive list elements into a list (or nested list) if
 	  * the nesting level changes
 	  */
-		var groupListItems = function groupListItems(elements) {
-			var LIST_ITEM = DocumentApp.ElementType.LIST_ITEM;
-
-			var listItemsToList = new Map();
-			var lists = new Map();
-
-			return elements.reduce(function (processedElements, el) {
-				if (el.getType() !== LIST_ITEM) {
+		var groupListItems = function groupListItems() {
+			var lists = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new Map();
+			return function (processedElements, el) {
+				if (el.getType() !== DocumentApp.ElementType.LIST_ITEM) {
 					return [].concat(_toConsumableArray(processedElements), [el]);
 				}
 
@@ -677,11 +680,7 @@ function getAuthUrl() {
 				list.addListItem(el);
 				lists.set(listId, list);
 				return [].concat(_toConsumableArray(processedElements), [list]);
-			}, []);
-		};
-
-		var renderPositionedImages = function renderPositionedImages(container) {
-			return container.getPositionedImages ? container.getPositionedImages().map(renderImage) : [];
+			};
 		};
 
 		/**
@@ -691,8 +690,7 @@ function getAuthUrl() {
 		var renderContainer = function renderContainer(element) {
 			var renderBlocks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
-			var groupedChildren = groupListItems(childrenOf(element).map(removeUselessParagraphs));
-			return groupedChildren.map(function (el) {
+			return childrenOf(element).map(removeUselessParagraphs).reduce(groupListItems(new Map()), []).map(function (el) {
 				return renderElement(el, renderBlocks);
 			}).concat(renderPositionedImages(element)).map(removeAutolinkedUrls).join('');
 		};
@@ -701,9 +699,16 @@ function getAuthUrl() {
 		var renderTable = (0, _table.Table)(renderContainer);
 		var renderImage = (0, _inlineImage.InlineImage)(imageLinker);
 		var renderList = (0, _list.List)(DocumentApp, renderContainer);
-		var renderHorizontalRule = function renderHorizontalRule() {
-			return '<hr>';
+
+		var renderHorizontalRule = function renderHorizontalRule(element, renderBlocks) {
+			return renderBlocks ? (0, _block.getCommentDelimitedContent)('core/separator', {}, '<hr>') : '<hr>';
 		};
+
+		function renderPositionedImages(container) {
+			return container.getPositionedImages ? container.getPositionedImages().map(function (i) {
+				return renderImage(i, false);
+			}) : [];
+		}
 
 		function renderElement(element) {
 			var renderBlocks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
@@ -790,51 +795,66 @@ function getAuthUrl() {
 			}
 		}
 
-		function levelForHeading(heading) {
-			switch (heading.getHeading()) {
-				case DocumentApp.ParagraphHeading.HEADING1:
-				case DocumentApp.ParagraphHeading.TITLE:
-					return 1;
-				case DocumentApp.ParagraphHeading.HEADING2:
-				case DocumentApp.ParagraphHeading.SUBTITLE:
-					return 2;
-				case DocumentApp.ParagraphHeading.HEADING3:
-					return 3;
-				case DocumentApp.ParagraphHeading.HEADING4:
-					return 4;
-				case DocumentApp.ParagraphHeading.HEADING5:
-					return 5;
-				case DocumentApp.ParagraphHeading.HEADING6:
-					return 6;
-				case DocumentApp.ParagraphHeading.NORMAL:
+		function classesForTag(paragraph) {
+			switch (paragraph.getAlignment()) {
+				// This is the default, right?
+				// case DocumentApp.HorizontalAlignment.LEFT:
+				// 	return 'has-text-align-left';
+				case DocumentApp.HorizontalAlignment.CENTER:
+					return 'has-text-align-center';
+				case DocumentApp.HorizontalAlignment.RIGHT:
+					return 'has-text-align-right';
+				case DocumentApp.HorizontalAlignment.JUSTIFY:
+					return 'has-text-align-justify';
 				default:
-					return undefined;
+					return;
 			}
 		}
 
-		function stylesForTag(paragraph) {
-			var styles = {};
-			var alignment = paragraph.getAlignment();
-
-			switch (alignment) {
+		function googleAttributesToGutenberg(paragraph) {
+			var attributes = {};
+			switch (paragraph.getAlignment()) {
+				// This is the default, right?
+				// case DocumentApp.HorizontalAlignment.LEFT:
+				// 	attributes.align = 'left';
+				// 	break;
 				case DocumentApp.HorizontalAlignment.CENTER:
-					styles['text-align'] = 'center';
+					attributes.align = 'center';
 					break;
 				case DocumentApp.HorizontalAlignment.RIGHT:
-					styles['text-align'] = 'right';
+					attributes.align = 'right';
 					break;
 				case DocumentApp.HorizontalAlignment.JUSTIFY:
-					styles['text-align'] = 'justify';
+					attributes.align = 'justify';
+					break;
+				default:
 					break;
 			}
-			return styles;
-		}
 
-		function renderStyles(styles) {
-			var cssReducer = function cssReducer(css, prop) {
-				return css + (prop + ': ' + styles[prop] + ';');
-			};
-			return Object.keys(styles).reduce(cssReducer, '');
+			switch (paragraph.getHeading()) {
+				case DocumentApp.ParagraphHeading.HEADING1:
+				case DocumentApp.ParagraphHeading.TITLE:
+					attributes.level = 1;
+					break;
+				case DocumentApp.ParagraphHeading.HEADING2:
+				case DocumentApp.ParagraphHeading.SUBTITLE:
+					attributes.level = 2;
+					break;
+				case DocumentApp.ParagraphHeading.HEADING3:
+					attributes.level = 3;
+					break;
+				case DocumentApp.ParagraphHeading.HEADING4:
+					attributes.level = 4;
+					break;
+				case DocumentApp.ParagraphHeading.HEADING5:
+					attributes.level = 5;
+					break;
+				case DocumentApp.ParagraphHeading.HEADING6:
+					attributes.level = 6;
+					break;
+			}
+
+			return attributes;
 		}
 
 		function renderParagraph(paragraph) {
@@ -842,22 +862,15 @@ function getAuthUrl() {
 
 			var tag = tagForParagraph(paragraph),
 			    blockName = tag === 'p' ? 'core/paragraph' : 'core/heading',
-			    attributes = {},
-			    styles = renderStyles(stylesForTag(paragraph)),
+			    classes = classesForTag(paragraph),
 			    openTags = (0, _tags.changedTags)(paragraph.getAttributes(), _attributes.blankAttributes),
 			    closedTags = (0, _tags.changedTags)(_attributes.blankAttributes, paragraph.getAttributes()),
 			    contents = renderContainer(paragraph, false);
 
-			var styleAttr = '';
-			if (styles) {
-				styleAttr = ' style="' + styles + '"';
-			}
+			var classAttr = classes ? ' class="' + classes + '"' : '';
 
-			if (tag !== 'p') {
-				attributes.level = levelForHeading(paragraph);
-			}
-			var content = '<' + tag + styleAttr + '>' + openTags + contents + closedTags + ('</' + tag + '>');
-			return (renderBlock ? (0, _block.getCommentDelimitedContent)(blockName, attributes, content) : content) + '\n';
+			var content = '<' + tag + classAttr + '>' + openTags + contents + closedTags + ('</' + tag + '>');
+			return (renderBlock ? (0, _block.getCommentDelimitedContent)(blockName, googleAttributesToGutenberg(paragraph), content) : content) + '\n';
 		}
 
 		return renderParagraph;
@@ -18303,8 +18316,6 @@ function getAuthUrl() {
 	var _block = __webpack_require__(7);
 
 	function Table(renderContainer) {
-		var renderBlocks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
 		function renderTableRow(row) {
 			var tRow = '<tr>';
 			var cells = [];
@@ -18320,6 +18331,8 @@ function getAuthUrl() {
 		}
 
 		return function renderTable(table) {
+			var renderBlocks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
 			var numRows = table.getNumRows();
 			var rows = [];
 			var tBody = '<table><tbody>';
@@ -18357,9 +18370,9 @@ function getAuthUrl() {
 	var _block = __webpack_require__(7);
 
 	function InlineImage(imageLinker) {
-		var renderBlock = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
 		return function renderInlineImage(image) {
+			var renderBlock = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
 			var url = imageLinker(image);
 			if (!url) {
 				return '';

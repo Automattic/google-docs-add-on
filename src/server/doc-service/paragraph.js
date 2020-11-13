@@ -25,56 +25,72 @@ export function Paragraph(DocumentApp, renderContainer) {
 		}
 	}
 
-	function levelForHeading(heading) {
-		switch (heading.getHeading()) {
-			case DocumentApp.ParagraphHeading.HEADING1:
-			case DocumentApp.ParagraphHeading.TITLE:
-				return 1;
-			case DocumentApp.ParagraphHeading.HEADING2:
-			case DocumentApp.ParagraphHeading.SUBTITLE:
-				return 2;
-			case DocumentApp.ParagraphHeading.HEADING3:
-				return 3;
-			case DocumentApp.ParagraphHeading.HEADING4:
-				return 4;
-			case DocumentApp.ParagraphHeading.HEADING5:
-				return 5;
-			case DocumentApp.ParagraphHeading.HEADING6:
-				return 6;
-			case DocumentApp.ParagraphHeading.NORMAL:
+	function classesForTag(paragraph) {
+		switch (paragraph.getAlignment()) {
+			// This is the default, right?
+			// case DocumentApp.HorizontalAlignment.LEFT:
+			// 	return 'has-text-align-left';
+			case DocumentApp.HorizontalAlignment.CENTER:
+				return 'has-text-align-center';
+			case DocumentApp.HorizontalAlignment.RIGHT:
+				return 'has-text-align-right';
+			case DocumentApp.HorizontalAlignment.JUSTIFY:
+				return 'has-text-align-justify';
 			default:
-				return undefined;
+				return;
 		}
 	}
 
-	function stylesForTag(paragraph) {
-		const styles = {};
-		const alignment = paragraph.getAlignment();
-
-		switch (alignment) {
+	function googleAttributesToGutenberg(paragraph) {
+		const attributes = {};
+		switch (paragraph.getAlignment()) {
+			// This is the default, right?
+			// case DocumentApp.HorizontalAlignment.LEFT:
+			// 	attributes.align = 'left';
+			// 	break;
 			case DocumentApp.HorizontalAlignment.CENTER:
-				styles['text-align'] = 'center';
+				attributes.align = 'center';
 				break;
 			case DocumentApp.HorizontalAlignment.RIGHT:
-				styles['text-align'] = 'right';
+				attributes.align = 'right';
 				break;
 			case DocumentApp.HorizontalAlignment.JUSTIFY:
-				styles['text-align'] = 'justify';
+				attributes.align = 'justify';
+				break;
+			default:
 				break;
 		}
-		return styles;
-	}
 
-	function renderStyles(styles) {
-		const cssReducer = (css, prop) => css + `${prop}: ${styles[prop]};`;
-		return Object.keys(styles).reduce(cssReducer, '');
+		switch (paragraph.getHeading()) {
+			case DocumentApp.ParagraphHeading.HEADING1:
+			case DocumentApp.ParagraphHeading.TITLE:
+				attributes.level = 1;
+				break;
+			case DocumentApp.ParagraphHeading.HEADING2:
+			case DocumentApp.ParagraphHeading.SUBTITLE:
+				attributes.level = 2;
+				break;
+			case DocumentApp.ParagraphHeading.HEADING3:
+				attributes.level = 3;
+				break;
+			case DocumentApp.ParagraphHeading.HEADING4:
+				attributes.level = 4;
+				break;
+			case DocumentApp.ParagraphHeading.HEADING5:
+				attributes.level = 5;
+				break;
+			case DocumentApp.ParagraphHeading.HEADING6:
+				attributes.level = 6;
+				break;
+		}
+
+		return attributes;
 	}
 
 	function renderParagraph(paragraph, renderBlock = true) {
 		const tag = tagForParagraph(paragraph),
 			blockName = tag === 'p' ? 'core/paragraph' : 'core/heading',
-			attributes = {},
-			styles = renderStyles(stylesForTag(paragraph)),
+			classes = classesForTag(paragraph),
 			openTags = changedTags(paragraph.getAttributes(), blankAttributes),
 			closedTags = changedTags(
 				blankAttributes,
@@ -82,21 +98,23 @@ export function Paragraph(DocumentApp, renderContainer) {
 			),
 			contents = renderContainer(paragraph, false);
 
-		let styleAttr = '';
-		if (styles) {
-			styleAttr = ` style="${styles}"`;
-		}
+		const classAttr = classes ? ` class="${classes}"` : '';
 
-		if (tag !== 'p') {
-			attributes.level = levelForHeading(paragraph);
-		}
 		const content =
-			`<${tag}${styleAttr}>` +
+			`<${tag}${classAttr}>` +
 			openTags +
 			contents +
 			closedTags +
 			`</${tag}>`;
-		return (renderBlock ? getCommentDelimitedContent(blockName, attributes, content) : content) + '\n';
+		return (
+			(renderBlock
+				? getCommentDelimitedContent(
+						blockName,
+						googleAttributesToGutenberg(paragraph),
+						content
+				  )
+				: content) + '\n'
+		);
 	}
 
 	return renderParagraph;
