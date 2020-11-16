@@ -1,10 +1,13 @@
 version: 2.1
+orbs:
+  node: circleci/node@1.1
 jobs:
   build:
-    docker:
-      - image: cimg/node:14.10.1 # the primary container, where your job's commands are run
+    executor:
+      name: node/default
+      tag: '12'
     steps:
-      - checkout # check out the code in the project directory
+      - checkout
       - node/with-cache:
           steps:
             - run: npm install
