@@ -299,8 +299,6 @@ function getAuthUrl() {
 		var imageUrlMapper = (0, _imageUploadLinker.imageUploadLinker)(upload, imageCache);
 		var renderContainer = (0, _docService.DocService)(DocumentApp, imageUrlMapper);
 		var content = renderContainer(doc.getBody());
-		// DocumentApp.getUi().alert( content );
-		// throw 'Foo';
 		var postParams = { title: title, content: content, categories: categories, tags: tags, type: type };
 		var response = wpClient.postToWordPress(site, postId, postParams);
 		return store.savePostToSite(response, site);
@@ -18525,7 +18523,6 @@ function getAuthUrl() {
 			    closedTags = (0, _tags.changedTags)(_attributes.blankAttributes, listItem.getAttributes());
 
 			rendered += '<li>' + openTags + renderContainer(listItem) + closedTags;
-
 			var nextSibling = listItem.getNextSibling();
 			var nextIsListItem = nextSibling && nextSibling.getType() === DocumentApp.ElementType.LIST_ITEM;
 			var nextListItemIsNested = nextIsListItem && nextSibling.getNestingLevel() > listItem.getNestingLevel();
@@ -18579,12 +18576,14 @@ function getAuthUrl() {
 
 		var lastAttributes = text.getAttributes();
 
-		return attributeIndices.reduce(function (markup, attrIdx, chunkIdx) {
+		var rendered = attributeIndices.reduce(function (markup, attrIdx, chunkIdx) {
 			var attrs = text.getAttributes(attrIdx);
 			var newTags = (0, _tags.changedTags)(attrs, lastAttributes);
 			lastAttributes = attrs;
 			return markup + newTags + chunks[chunkIdx];
 		}, '');
+
+		return rendered + (0, _tags.changedTags)(text.getAttributes(), lastAttributes);
 	}
 
 /***/ }),

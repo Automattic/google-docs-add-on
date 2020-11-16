@@ -176,6 +176,26 @@ describe('renderContainer()', function () {
 			);
 		});
 
+		it('closes tags at the end', function() {
+			const text = mockText();
+			const boldAttrs = Object.assign(blankAttributes(), { BOLD: true });
+
+			td.when(text.getTextAttributeIndices()).thenReturn([
+				0,
+				10,
+			]);
+			td.when(text.getText()).thenReturn('More test tests');
+			td.when(text.getAttributes()).thenReturn(blankAttributes());
+			td.when(text.getAttributes(0)).thenReturn(blankAttributes());
+			td.when(text.getAttributes(10)).thenReturn(boldAttrs);
+			const container = containerOf(text);
+
+			const actual = renderContainer(container);
+			expect(actual).to.equal(
+				'More test <b>tests</b>'
+			)
+		})
+
 		it('does not link an auto-linked URL', function () {
 			const link = 'http://stackoverflow.com/a/1732454';
 			const linkAttrs = Object.assign(blankAttributes(), {

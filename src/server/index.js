@@ -168,8 +168,6 @@ export function postToWordPress( site_id, { categories = [], tags = [], type = '
 	const imageUrlMapper = imageUploadLinker( upload, imageCache )
 	const renderContainer = DocService( DocumentApp, imageUrlMapper )
 	const content = renderContainer( doc.getBody() )
-	// DocumentApp.getUi().alert( content );
-	// throw 'Foo';
 	const postParams = { title, content, categories, tags, type }
 	const response = wpClient.postToWordPress( site, postId, postParams )
 	return store.savePostToSite( response, site )
