@@ -402,7 +402,7 @@ function getAuthUrl() {
 	}
 
 	function md5(message) {
-		return Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.UTF_8).map(function (byte) {
+		return Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, message).map(function (byte) {
 			var char = '';
 			if (byte < 0) {
 				byte += 255;
@@ -18523,6 +18523,7 @@ function getAuthUrl() {
 			    closedTags = (0, _tags.changedTags)(_attributes.blankAttributes, listItem.getAttributes());
 
 			rendered += '<li>' + openTags + renderContainer(listItem) + closedTags;
+
 			var nextSibling = listItem.getNextSibling();
 			var nextIsListItem = nextSibling && nextSibling.getType() === DocumentApp.ElementType.LIST_ITEM;
 			var nextListItemIsNested = nextIsListItem && nextSibling.getNestingLevel() > listItem.getNestingLevel();
@@ -18653,7 +18654,7 @@ function getAuthUrl() {
 		function pathForImage(image) {
 			var blog_id = site.blog_id;
 
-			var imageHash = hasher(image.getBlob().getDataAsString());
+			var imageHash = hasher(image.getBlob().getBytes());
 			return 'image:' + blog_id + ':' + imageHash;
 		}
 

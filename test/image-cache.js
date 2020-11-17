@@ -15,10 +15,10 @@ describe( 'ImageCache', function() {
 	describe( 'get()', function() {
 		it( 'returns the image url if found', function() {
 			const image = td.object( ['getBlob'] );
-			const imageBlob = td.object( ['getDataAsString'] );
+			const imageBlob = td.object( ['getBytes'] );
 			td.when( image.getBlob() ).thenReturn( imageBlob )
-			td.when( imageBlob.getDataAsString() ).thenReturn( '98765' );
-			td.when( hasher( '98765' ) ).thenReturn( 'abcdef0123456789' )
+			td.when( imageBlob.getBytes() ).thenReturn( [9,8,7,6,5] );
+			td.when( hasher( [9,8,7,6,5] ) ).thenReturn( 'abcdef0123456789' )
 			td.when( docProps.getProperty( 'image:12345:abcdef0123456789' ) ).thenReturn( 'http://placekitten.com/640/480' )
 
 			const actual = imageCache.get( image )
@@ -30,10 +30,10 @@ describe( 'ImageCache', function() {
 	describe( 'set()', function() {
 		it( 'adds an image url', function() {
 			const image = td.object( ['getBlob'] );
-			const imageBlob = td.object( ['getDataAsString'] );
+			const imageBlob = td.object( ['getBytes'] );
 			td.when( image.getBlob() ).thenReturn( imageBlob )
-			td.when( imageBlob.getDataAsString() ).thenReturn( '98765' );
-			td.when( hasher( '98765' ) ).thenReturn( 'abcdef0123456789' )
+			td.when( imageBlob.getBytes() ).thenReturn( [9,8,7,6,5] );
+			td.when( hasher( [9,8,7,6,5] ) ).thenReturn( 'abcdef0123456789' )
 
 			imageCache.set( image, 'http://placekitten.com/640/480' )
 

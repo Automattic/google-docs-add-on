@@ -2,7 +2,7 @@ export function ImageCache( site, docProps, hasher ) {
 
 	function pathForImage( image ) {
 		const { blog_id } = site
-		const imageHash = hasher( image.getBlob().getDataAsString() )
+		const imageHash = hasher( image.getBlob().getBytes() )
 		return 'image:' + blog_id + ':' + imageHash
 	}
 
