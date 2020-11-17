@@ -216,6 +216,9 @@ function getAuthUrl() {
 
 	var updateSiteInfo = function updateSiteInfo(site) {
 		var postTypes = wpClient.getPostTypes(site).map(function (postType) {
+			if (!postType.publicly_queryable) {
+				return postType;
+			}
 			var taxonomies = wpClient.getTaxonomiesForPostType(site, postType).map(function (t) {
 				return t.name;
 			});

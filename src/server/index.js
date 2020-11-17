@@ -97,6 +97,9 @@ function wpDieTemplate( template, error ) {
 
 const updateSiteInfo = site => {
 	const postTypes = wpClient.getPostTypes( site ).map( postType => {
+		if ( ! postType.publicly_queryable ) {
+			return postType;
+		}
 		const taxonomies = wpClient.getTaxonomiesForPostType( site, postType ).map( t => t.name )
 		return Object.assign( {}, postType, { taxonomies } )
 	} )
