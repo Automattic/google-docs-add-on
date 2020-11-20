@@ -4,11 +4,11 @@ var webpack = require( 'webpack' ),
 
 module.exports = [
 	{
-		entry: './server/code.js',
+		entry: './src/server/code.js',
 		output: {
 			libraryTarget: 'this',
 			filename: 'Code.js',
-			path: './src'
+			path: './dist'
 		},
 		module: {
 			loaders: [ {
@@ -17,11 +17,6 @@ module.exports = [
 				loader: 'babel-loader',
 				query: {
 					presets: [ 'es2015' ],
-					plugins: [
-						'transform-runtime',
-						'transform-es3-property-literals',
-						'transform-es3-member-expression-literals'
-					]
 				}
 			}],
 			resolveLoader: { modulesDirectories: [ 'server' ] }
@@ -29,10 +24,10 @@ module.exports = [
 		plugins: [ new GasPlugin() ]
 	},
 	{
-		entry: './client/index.jsx',
+		entry: './src/client/index.jsx',
 		output: {
 			filename: 'javascript.html',
-			path: './src'
+			path: './dist'
 		},
 		module: {
 			loaders: [ {

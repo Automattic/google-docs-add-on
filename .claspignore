@@ -1,0 +1,5 @@
+webpack.config.js
+test/**
+node_modules/**
+.prettierrc.js
+src/**

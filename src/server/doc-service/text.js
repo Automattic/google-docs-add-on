@@ -20,10 +20,12 @@ export function renderText( text ) {
 
 	let lastAttributes = text.getAttributes();
 
-	return attributeIndices.reduce( ( markup, attrIdx, chunkIdx ) => {
+	const rendered = attributeIndices.reduce( ( markup, attrIdx, chunkIdx ) => {
 		const attrs = text.getAttributes( attrIdx )
 		const newTags = changedTags( attrs, lastAttributes )
 		lastAttributes = attrs
 		return markup + newTags + chunks[ chunkIdx ]
-	}, '' )
+	}, '' );
+
+	return rendered + changedTags( text.getAttributes(), lastAttributes );
 }

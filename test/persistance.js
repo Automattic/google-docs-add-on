@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import td from 'testdouble';
-import { Persistance } from '../server/persistance'
+import { Persistance } from '../src/server/persistance'
 
 describe( 'Sites', function() {
 	let store, userProps, docProps;

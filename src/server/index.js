@@ -8,8 +8,8 @@
  * presented to users will reflect this limited scope.
  */
 
-/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, Logger */
-import { OAuth2 } from 'imports-loader?_=./Underscore.gs!apps-script-oauth2/dist/OAuth2.gs'
+/* globals PropertiesService, DocumentApp, UrlFetchApp, Utilities, HtmlService, Logger, OAuth2 */
+// import { OAuth2 } from 'imports-loader?_=./Underscore.gs!apps-script-oauth2/dist/OAuth2.gs'
 
 import { WPClient } from './wp-client';
 import { DocService } from './doc-service';
@@ -97,6 +97,9 @@ function wpDieTemplate( template, error ) {
 
 const updateSiteInfo = site => {
 	const postTypes = wpClient.getPostTypes( site ).map( postType => {
+		if ( ! postType.publicly_queryable ) {
+			return postType;
+		}
 		const taxonomies = wpClient.getTaxonomiesForPostType( site, postType ).map( t => t.name )
 		return Object.assign( {}, postType, { taxonomies } )
 	} )
@@ -117,7 +120,7 @@ export function authCallback( request ) {
 	}
 
 	if ( isAuthorized ) {
-		let site = oauthClient().getToken_()
+		let site = oauthClient().getToken()
 		try {
 			site = updateSiteInfo( site )
 		} catch ( e ) {
@@ -282,7 +285,7 @@ function oauthClient() {
 }
 
 function md5( message ) {
-	return Utilities.computeDigest( Utilities.DigestAlgorithm.MD5, message, Utilities.Charset.US_ASCII )
+	return Utilities.computeDigest( Utilities.DigestAlgorithm.MD5, message)
 		.map( ( byte ) => {
 			let char = '';
 			if ( byte < 0 ) {
