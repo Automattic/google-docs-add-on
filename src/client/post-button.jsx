@@ -21,6 +21,11 @@ export default class PostButton extends React.Component {
 
 	savePost() {
 		this.setState( { disabled: true } )
+
+		_tkq = window._tkq || [];
+		const eventName = ( this.props.site.post ) ? 'gdocsaddon_post_update' : 'gdocsaddon_post_create';
+		_tkq.push( [ 'recordEvent', eventName, { blog_id: this.props.site.blog_id } ] );
+
 		withTimeout( postToWordPress( this.props.site.blog_id, {
 			categories: this.props.postCategories,
 			tags: this.props.postTags,

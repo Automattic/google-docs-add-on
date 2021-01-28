@@ -1,8 +1,32 @@
 {
   "timeZone": "America/New_York",
   "dependencies": {
-    "libraries": []
+    "libraries": [
+      {
+        "userSymbol": "OAuth2",
+        "libraryId": "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF",
+        "version": "21"
+      }
+    ]
+  },
+  "webapp": {
+    "access": "ANYONE",
+    "executeAs": "USER_ACCESSING"
+  },
+  "addOns": {
+    "common": {
+      "logoUrl": "https://lh3.googleusercontent.com/AVmlFw9XfrlQSZ7pExiNVAM2lOcshvk4hS4rHDtYBppYv3rsGwqRK0SoasNzQBbQoDB2PX4xBg",
+      "name": "WordPress.com for Google Docs",
+      "openLinkUrlPrefixes": ["https://public-api.wordpress.com/"]
+    },
+    "docs": {}
   },
   "exceptionLogging": "STACKDRIVER",
-  "runtimeVersion": "V8"
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/documents.currentonly",
+    "https://www.googleapis.com/auth/script.container.ui",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/script.scriptapp'"
+  ]
 }
