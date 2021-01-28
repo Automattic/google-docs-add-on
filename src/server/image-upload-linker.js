@@ -15,7 +15,7 @@ export function imageUploadLinker( uploadImage, imageCache ) {
 		}
 
 		const imageBlob = image.getBlob()
-		if ( ! imageBlob.getName() ) {
+		if ( ! imageBlob.getName() || imageBlob.getName() === 'null' ) {
 			const contentType = imageBlob.getContentType()
 			if ( contentTypeToExtension[ contentType ] ) {
 				Logger.log( 'Setting name to image.' + contentTypeToExtension[ contentType ] )

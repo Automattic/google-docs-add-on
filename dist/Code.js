@@ -18617,7 +18617,7 @@ function getAuthUrl() {
 			}
 
 			var imageBlob = image.getBlob();
-			if (!imageBlob.getName()) {
+			if (!imageBlob.getName() || imageBlob.getName() === 'null') {
 				var contentType = imageBlob.getContentType();
 				if (contentTypeToExtension[contentType]) {
 					Logger.log('Setting name to image.' + contentTypeToExtension[contentType]);
