@@ -16,7 +16,7 @@
   "author": "George Hotelling <george.hotelling@automattic.com>",
   "devDependencies": {
     "babel-core": "^6.18.2",
-    "babel-loader": "^6.2.8",
+    "babel-loader": "^9.1.0",
     "babel-plugin-transform-es3-member-expression-literals": "^6.8.0",
     "babel-plugin-transform-es3-property-literals": "^6.8.0",
     "babel-plugin-transform-runtime": "^6.15.0",
@@ -28,7 +28,7 @@
     "mocha": "^3.1.2",
     "node-google-apps-script": "^1.1.5",
     "testdouble": "^1.9.0",
-    "webpack": "^1.13.3"
+    "webpack": "^5.74.0"
   },
   "dependencies": {
     "@wordpress/prettier-config": "^0.4.0",
