@@ -37,3 +37,4 @@ document to test with.
 
 That will open a new window with your document. You will then see your project
 in the Add-ons menu.
+test
