@@ -5,3 +5,4 @@ src/javascript.html
 .vscode
 src/server/secrets.js
 .clasp.json
+.git/
